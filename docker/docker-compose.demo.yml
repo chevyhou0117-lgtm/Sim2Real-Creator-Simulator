@@ -121,6 +121,13 @@ services:
         VITE_KIT_STREAM_MODE: ${VITE_KIT_STREAM_MODE:-direct}
         # VITE_BACKEND_DIRECT_URL：Kit 服务端回拉事件用，必须是宿主可达的后端地址（即上面发布的 :8000）。
         VITE_BACKEND_DIRECT_URL: ${VITE_BACKEND_DIRECT_URL:-http://localhost:8000}
+    # ★ 运行期 Kit 主机注入：换机/换 IP 只需改 docker/.env 的 KIT_HOST_IP 后 `up -d`，
+    #   容器启动脚本(docker-runtime-config.sh)会按它重写 runtime-config.js，【无需 rebuild】。
+    #   这些 runtime env 覆盖上面构建期烤进的 VITE_* 默认值（浏览器优先读 window.__RUNTIME_CONFIG__）。
+    environment:
+      KIT_HOST_IP: ${KIT_HOST_IP:-127.0.0.1}    # Kit 宿主可达 IP（远程访问填局域网 IP，本机演示留 127.0.0.1）
+      KIT_API_PORT: ${KIT_API_PORT:-8011}        # Kit /ov 控制端口
+      BACKEND_PORT: ${BACKEND_PORT:-8000}        # sim 后端发布端口（Kit 回拉事件用）
     depends_on:
       - sim-backend
     # 覆盖健康检查：镜像默认 wget http://localhost/ 会解析到 IPv6 ::1（nginx 只听 IPv4）→ 误报 unhealthy；改用 127.0.0.1。
@@ -141,6 +148,10 @@ services:
     build:
       context: ../src/aifactory_frontend
       dockerfile: Dockerfile.prod
+    # ★ 运行期 Kit 主机注入：aifactory 前端的 /api、/ov 走 nginx 同源反代，唯独 WebRTC（浏览器直连
+    #   Kit 的 12333/12334）需要 Kit IP。换 IP 改 docker/.env 的 KIT_HOST_IP 后 `up -d` 即可，无需 rebuild。
+    environment:
+      KIT_HOST_IP: ${KIT_HOST_IP:-127.0.0.1}
     depends_on:
       - aifactory-backend
     extra_hosts:

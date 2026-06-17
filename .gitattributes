@@ -1,0 +1,4 @@
+# Shell 脚本强制 LF：这些脚本在 Linux 容器内执行，CRLF 会导致 `/bin/sh^M: bad interpreter`。
+# 只针对 .sh，避免对整个仓库做行尾重规范化（不引入无关 diff）。
+*.sh text eol=lf
+docker-runtime-config.sh text eol=lf

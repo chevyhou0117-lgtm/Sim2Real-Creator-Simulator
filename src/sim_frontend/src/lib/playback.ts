@@ -4,8 +4,9 @@
 //   1. ingest()    把后端的事件流推给 Kit PlaybackEngine（一次性装载）
 //   2. control()   play / pause / seek / speed / stop
 //   3. state()     查询当前播放头位置 + 速度 + 状态（用于 UI 同步）
+import { kitApiUrl } from './runtimeConfig';
 
-const KIT_BASE = (import.meta.env.VITE_KIT_API_URL ?? 'http://localhost:8011').replace(/\/+$/, '');
+const KIT_BASE = kitApiUrl(import.meta.env.VITE_KIT_API_URL ?? 'http://localhost:8011').replace(/\/+$/, '');
 
 const DEFAULT_TIMEOUT_MS = 5000;
 // 大规模模拟单次回放事件可达数十万条（实测 P9 ≈ 69.5 万条 / 265 MB）：

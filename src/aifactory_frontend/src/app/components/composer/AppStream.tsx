@@ -20,6 +20,7 @@ import {
   StreamType,
 } from "@nvidia/omniverse-webrtc-streaming-library";
 import StreamConfig from "../../../../stream.config.json";
+import { kitHost } from "../../utils/runtimeConfig";
 
 interface AppStreamProps {
   sessionId: string;
@@ -98,9 +99,9 @@ export default class AppStream extends Component<
           audioElementId: "remote-audio",
           authenticate: true,
           maxReconnects: 20,
-          signalingServer: StreamConfig.local.server,
+          signalingServer: kitHost(StreamConfig.local.server),
           signalingPort: StreamConfig.local.signalingPort,
-          mediaServer: StreamConfig.local.server,
+          mediaServer: kitHost(StreamConfig.local.server),
           ...(StreamConfig.local.mediaPort != null && {
             mediaPort: StreamConfig.local.mediaPort,
           }),

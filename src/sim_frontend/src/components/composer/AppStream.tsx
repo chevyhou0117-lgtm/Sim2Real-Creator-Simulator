@@ -26,6 +26,7 @@ import type {
   GFNConfig,
 } from "@nvidia/omniverse-webrtc-streaming-library";
 import StreamConfig from "../../../stream.config.json";
+import { kitHost } from "../../lib/runtimeConfig";
 
 interface AppStreamProps {
   sessionId: string;
@@ -98,9 +99,9 @@ export default class AppStream extends Component<
           // 否则报 "Invalid prop accessToken: must be provided if the authenticate prop is true."
           authenticate: false,
           maxReconnects: 20,
-          signalingServer: StreamConfig.local.server,
+          signalingServer: kitHost(StreamConfig.local.server),
           signalingPort: StreamConfig.local.signalingPort,
-          mediaServer: StreamConfig.local.server,
+          mediaServer: kitHost(StreamConfig.local.server),
           ...(StreamConfig.local.mediaPort != null && {
             mediaPort: StreamConfig.local.mediaPort,
           }),

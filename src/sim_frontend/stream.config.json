@@ -13,7 +13,7 @@
     "cmsId": 0
   },
   "local": {
-    "$comment": "source=local 必填。server=Kit 主机（本机演示=127.0.0.1）。",
+    "$comment": "source=local 必填。server 仅作【构建期默认/dev 回退】；生产/跨机的真实 Kit IP 由 docker/.env 的 KIT_HOST_IP 在容器启动时运行期注入(window.__RUNTIME_CONFIG__)，不要在这里写死。",
     "server": "127.0.0.1",
     "signalingPort": 12334,
     "mediaPort": 12333,

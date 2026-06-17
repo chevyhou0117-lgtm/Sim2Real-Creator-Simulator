@@ -5,6 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>web</title>
+    <!-- 运行期 Kit 主机配置：生产容器启动时由 docker-runtime-config.sh 按 KIT_HOST_IP 重写；dev 时为空，前端回退构建期默认。 -->
+    <script src="/runtime-config.js"></script>
   </head>
   <body>
     <div id="root"></div>

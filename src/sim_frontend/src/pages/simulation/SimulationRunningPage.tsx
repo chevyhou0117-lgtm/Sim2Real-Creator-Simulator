@@ -33,9 +33,11 @@ import { WalkMode } from '@/components/WalkMode';
 import { DeviceStatusOverlay } from '@/components/DeviceStatusOverlay';
 import { LineProgressPanel } from '@/components/LineProgressPanel';
 import { KitViewport } from '@/components/KitViewport';
+import { backendDirectUrl } from '@/lib/runtimeConfig';
 
 const KIT_STREAM_URL = (import.meta.env.VITE_KIT_STREAM_URL ?? '').trim();
-const BACKEND_DIRECT_URL = (import.meta.env.VITE_BACKEND_DIRECT_URL ?? 'http://localhost:8000').trim();
+// 运行期优先用容器注入的 BACKEND_DIRECT_URL（按 KIT_HOST_IP 生成），回退构建期 VITE_BACKEND_DIRECT_URL。
+const BACKEND_DIRECT_URL = backendDirectUrl(import.meta.env.VITE_BACKEND_DIRECT_URL ?? 'http://localhost:8000').trim();
 
 // PREPARED：4 步全部完成、场景已加载好，但还没点「回放」——展示完成的步骤 + 可点的回放按钮
 type PageState = 'STARTING' | 'RUNNING' | 'PREPARED' | 'READY' | 'FAILED' | 'NOT_RUN';

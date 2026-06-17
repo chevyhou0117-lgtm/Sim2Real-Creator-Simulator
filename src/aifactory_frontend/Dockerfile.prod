@@ -26,6 +26,11 @@ RUN rm -f /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/aifactory.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# 运行期注入 Kit 主机配置：nginx 官方镜像启动前会按序执行 /docker-entrypoint.d/*.sh。
+# 本脚本据 KIT_HOST_IP 生成 runtime-config.js，故换 Kit IP 只需重启容器、无需 rebuild。
+COPY docker-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
+RUN chmod +x /docker-entrypoint.d/40-runtime-config.sh
+
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1

@@ -1,7 +1,9 @@
 // Kit (Omniverse) FastAPI 客户端 —— 控制 USD viewport 视角 / prim 选择
 // Kit FastAPI 服务在独立进程，默认 http://localhost:8011（可通过 VITE_KIT_API_URL 覆盖）
+import { kitApiUrl } from './runtimeConfig';
 
-const KIT_BASE = (import.meta.env.VITE_KIT_API_URL ?? 'http://localhost:8011').replace(/\/+$/, '');
+// 运行期优先用容器注入的 KIT_API_URL（按 KIT_HOST_IP 生成），回退构建期 VITE_KIT_API_URL，再回退 localhost。
+const KIT_BASE = kitApiUrl(import.meta.env.VITE_KIT_API_URL ?? 'http://localhost:8011').replace(/\/+$/, '');
 
 const DEFAULT_TIMEOUT_MS = 5000;
 
