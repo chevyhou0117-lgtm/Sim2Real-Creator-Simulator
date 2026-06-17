@@ -53,10 +53,10 @@ docker compose -f docker/docker-compose.demo.yml logs -f sim-backend
 ## 4. 已知限制与排障（本机演示口径）
 
 - **「重启 Kit」按钮在容器内失效**：`admin.py` 用 `pgrep/os.kill/setsid` 操作宿主 Kit 进程，容器看不到宿主 PID。**只影响这个按钮，不影响串流本身**。需要它就手动在宿主重启 Kit，或后续把 watchdog 改成调宿主 agent。
-- **Kit 控制端口 8011 vs 8233**：`kit.ts` 默认回退 `:8011`，仓库 `.env` 写 `:8233`。`/ov` + `/kit/playback` 实际在哪个端口要以你运行的 Kit 扩展为准；不符就改 `docker/.env` 的 `VITE_KIT_API_URL` 后 **重构 sim-frontend**。
+- **Kit 控制端口 8011 vs 8233**：`kit.ts` 默认回退 `:8011`。`/ov` + `/kit/playback` 实际在哪个端口以你运行的 Kit 扩展为准；不符就改 `docker/.env` 的 `KIT_API_PORT` 后 `up -d` 重建前端容器（运行期注入，无需 rebuild）。
 - **Kit 的 CORS**：前端从 `:8080` 跨域调 Kit，需 Kit 扩展放行该源。Kit 在本仓库之外，需在 Kit 侧确认。
-- **直连 WebRTC 配置**：sim 前端已改为像 aifactory 那样直接连 Kit 的 WebRTC（移植 `@nvidia/omniverse-webrtc-streaming-library`，见 [src/components/composer/AppStream.tsx](../源码/sim_frontend/src/components/composer/AppStream.tsx) + [KitViewport.tsx](../源码/sim_frontend/src/components/KitViewport.tsx)）。连接目标在 [源码/sim_frontend/stream.config.json](../源码/sim_frontend/stream.config.json)：`local.server`(默认 127.0.0.1) / `mediaPort` 12333 / `signalingPort` 12334。`VITE_KIT_STREAM_URL` 现在只作开关（非空=启用，留空=2D mock）。远程多机：把 `stream.config.json` 的 `server` 改成 Kit 宿主 IP 后 **重构 sim-frontend**。
-- **3D 黑屏/无画面**：① Kit 的 `:12333/:12334` 是否在监听、浏览器能否直达；② Kit 扩展是否对 `:8080` 源放行 CORS（控制面跨域）。**3D 只开场景不动画**：检查 sim-backend 的 `:8000` 是否真发布到宿主、`VITE_BACKEND_DIRECT_URL` 是否 = 宿主可达的后端地址。
+- **直连 WebRTC 配置**：sim 前端已改为像 aifactory 那样直接连 Kit 的 WebRTC（移植 `@nvidia/omniverse-webrtc-streaming-library`，见 [src/components/composer/AppStream.tsx](../源码/sim_frontend/src/components/composer/AppStream.tsx) + [KitViewport.tsx](../源码/sim_frontend/src/components/KitViewport.tsx)）。`mediaPort` 12333 / `signalingPort` 12334；[源码/sim_frontend/stream.config.json](../源码/sim_frontend/stream.config.json) 的 `local.server`(默认 127.0.0.1) 仅作 dev/回退默认。`VITE_KIT_STREAM_URL` 现在只作开关（非空=启用，留空=2D mock）。**远程多机：改 `docker/.env` 的 `KIT_HOST_IP` 为 Kit 宿主 IP 后 `up -d` 重建前端容器即可（启动时运行期注入 `runtime-config.js`，无需 rebuild、无需手改 `stream.config.json`）。**
+- **3D 黑屏/无画面**：① Kit 的 `:12333/:12334` 是否在监听、浏览器能否直达；② Kit 扩展是否对 `:8080` 源放行 CORS（控制面跨域）。**3D 只开场景不动画**：检查 sim-backend 的 `:8000` 是否真发布到宿主、`docker/.env` 的 `KIT_HOST_IP`/`BACKEND_PORT` 拼出的后端地址是否宿主可达。
 - **路径含中文 `源码/`**：Docker 29 一般可正常解析 UTF-8 build context。若构建报路径错误，临时把 `源码` 建一个 ASCII 软链/junction（如 `mklink /J codes 源码`）并把 compose 的 `context` 改成 `../codes/...`。
 - **重灌种子**：`down -v` 清 DB 卷后再 `up` 会重新迁移 + 灌 P9。种子门控按 `md_factory` 是否为空，普通重启不会重灌。
 
