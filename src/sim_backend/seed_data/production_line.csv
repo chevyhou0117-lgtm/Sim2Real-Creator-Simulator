@@ -1,0 +1,11 @@
+line_code,stage_code,line_name,status,sort_order
+SMT01,SMT,SMT Line 01,ACTIVE,1
+SMT02,SMT,SMT Line 02,ACTIVE,2
+PTH01,PTH,PTH Line,ACTIVE,1
+ModuleAssy01,ModuleAssy,Module Assembly Line,ACTIVE,1
+MainAssy01,MainAssy,Main Assembly Line,ACTIVE,1
+TrayAssy01,TrayAssy,Tray Assembly Line,ACTIVE,1
+FT01,FT,Final Test Line,ACTIVE,1
+TrayDisAssy01,TrayDisAssy,Tray Disassembly Line (Sorting),ACTIVE,1
+CPDisAssy01,CPDisAssy,Cold Plate Disassembly Line,ACTIVE,1
+Packing01,Packing,Packing Line,ACTIVE,1

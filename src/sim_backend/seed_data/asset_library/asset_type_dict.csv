@@ -1,0 +1,6 @@
+code,name,is_deleted
+equipment_model,设备型号,f
+equipment_type,设备类型,f
+line_model,线体模型,f
+line_type,线体类型,f
+process,工序,f

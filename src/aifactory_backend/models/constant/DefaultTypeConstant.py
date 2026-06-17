@@ -1,0 +1,8 @@
+
+
+"""
+默认线体类型和 默认设备类型 的id
+"""
+DEFAULT_LINE_TYPE_ID= 2001
+DEFAULT_EQUIPMENT_TYPE_ID=2002
+

@@ -1,0 +1,11 @@
+bop_version,product_code,line_code,is_active,created_by
+v1.0,PG548,SMT01,TRUE,gen_fullfactory
+v1.0,PG548,SMT02,TRUE,gen_fullfactory
+v1.0,PG548,PTH01,TRUE,gen_fullfactory
+v1.0,PG548,ModuleAssy01,TRUE,gen_fullfactory
+v1.0,PG548,MainAssy01,TRUE,gen_fullfactory
+v1.0,PG548,TrayAssy01,TRUE,gen_fullfactory
+v1.0,PG548,FT01,TRUE,gen_fullfactory
+v1.0,PG548,TrayDisAssy01,TRUE,gen_fullfactory
+v1.0,PG548,CPDisAssy01,TRUE,gen_fullfactory
+v1.0,PG548,Packing01,TRUE,gen_fullfactory

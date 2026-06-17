@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 本地环境 / 密钥（用 .env.example 作为模板）
+.env
+
+# 临时检查脚本
+_*.py
+
+# 旧的 BIGSERIAL DDL（Phase 1 改用 ORM create_all；Phase 2 由 sim_backend creator_tables.sql 统一拥有）
+# 保留 sql/ 供参考但不再执行

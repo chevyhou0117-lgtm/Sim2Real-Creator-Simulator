@@ -1,0 +1,73 @@
+# Simulation 生产/离线交付编排
+#
+# 与 docker-compose.yml(开发) 的区别：
+#   - 镜像自包含：源码烤进镜像，不挂 volume、无热重载
+#   - 前端是 nginx 托管的静态资源(Dockerfile.prod)，不是 vite dev server
+#   - 后端去掉 --reload，多 worker
+#   - PG 不对外暴露端口(仅容器网络内可达，更安全)
+#   - 每个服务都钉了固定 image: tag，便于 docker save/load 离线交付
+#
+# 你(交付方)：用 scripts/package-offline.ps1 构建 + 打 tar 包
+# 客户(离线)：docker load -i sim-images-*.tar 后，docker compose -f docker-compose.prod.yml up -d
+#
+# 访问：前端 http://<主机>:8080   (前端 nginx 反代 /api → 后端，浏览器只碰前端同源)
+
+name: simulation-prod
+
+services:
+  sim-postgres:
+    image: postgres:16-alpine
+    container_name: sim-postgres
+    environment:
+      POSTGRES_USER: postgres
+      # ⚠️ 交付前改成强密码，并同步改下方 sim-backend 的 DATABASE_URL
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aifactory_simulation
+    command: ["postgres", "-c", "jit=off"]   # 大批量事件写入防崩，见记忆 pg-jit-segfault-fix
+    volumes:
+      - sim_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d aifactory_simulation"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    # 生产不对宿主暴露 5432；如需本地排障再临时加 ports
+
+  sim-backend:
+    image: sim2real/sim-backend:1.0
+    build:
+      context: ./codes/sim_backend
+      dockerfile: Dockerfile
+    container_name: sim-backend
+    depends_on:
+      sim-postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@sim-postgres:5432/aifactory_simulation
+      PYTHONUNBUFFERED: "1"
+    # 覆盖镜像里的开发 CMD：去掉 --reload，多 worker。entrypoint 仍先迁移+灌种子再 exec 本行。
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+    restart: unless-stopped
+    # 后端不直接对外，由前端 nginx 反代；如需直连调试再临时加 ports: ["8000:8000"]
+
+  sim-frontend:
+    image: sim2real/sim-frontend:1.0
+    build:
+      context: ./codes/sim_frontend
+      dockerfile: Dockerfile.prod
+      args:
+        # 浏览器端 Kit/直连地址，构建期烤入。打包给具体客户时按其 Kit 主机覆盖：
+        #   $env:VITE_KIT_API_URL='http://10.0.0.5:8233'; ... ; docker compose -f docker-compose.prod.yml build
+        VITE_KIT_API_URL: ${VITE_KIT_API_URL:-http://localhost:8233}
+        VITE_KIT_STREAM_URL: ${VITE_KIT_STREAM_URL:-http://localhost:5183}
+        VITE_BACKEND_DIRECT_URL: ${VITE_BACKEND_DIRECT_URL:-}
+    container_name: sim-frontend
+    depends_on:
+      - sim-backend
+    ports:
+      - "8080:80"          # 宿主 8080 → 容器 nginx 80
+    restart: unless-stopped
+
+volumes:
+  sim_pgdata:

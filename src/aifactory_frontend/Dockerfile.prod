@@ -1,0 +1,31 @@
+# aifactory_frontend 生产镜像：多阶段构建
+#   阶段1 (builder)：node 把 React 源码编译成静态 dist/
+#   阶段2 (runtime)：nginx 托管 dist/ + 反代 /api、/static → aifactory_backend，/ov → 宿主 Kit
+#
+# 关键点（与 sim_frontend/Dockerfile.prod 同套路）：
+#   - 不拷 .npmrc：仓库 .npmrc 把 @nvidia 钉到 NVIDIA 私有源 edge.urm.nvidia.com（容器内连不上）。
+#     不拷它 + `npm ci --registry=npmmirror`，让 @nvidia 等从国内镜像源拉（sim 已验证可行）。
+#   - 强制 outDir=dist：项目 vite.config 里 outDir 是 ../../dist/aiFactory，在容器内会落到 /app 外。
+#   - base 已是 "./"（相对路径），适合 nginx 根目录托管。
+
+# ---------- 阶段1：构建 ----------
+FROM node:22-alpine AS builder
+WORKDIR /app
+
+# 先装依赖命中层缓存。npm ci 严格按 lock 复现（含作为 peer 装入的 react），--registry 改走国内源。
+COPY package.json package-lock.json ./
+RUN npm ci --registry=https://registry.npmmirror.com
+
+COPY . .
+# 覆盖 outDir 到本地 /app/dist；--emptyOutDir 避免「输出在项目根外」的交互式确认。
+RUN npx vite build --outDir dist --emptyOutDir
+
+# ---------- 阶段2：运行 ----------
+FROM nginx:alpine AS runtime
+RUN rm -f /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/aifactory.conf
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1

@@ -1,0 +1,49 @@
+# ───────────────────────────── Python ─────────────────────────────
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.so
+
+# ───────────────────────────── Node / 前端 ─────────────────────────
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+.eslintcache
+
+# 构建产物前端目录（部署交付物，不入库）
+*_dist/
+
+# ───────────────────────── 环境变量 / 密钥 ─────────────────────────
+# 真实 .env 含本地连接串/密码，不入库；模板 .env.example / *.example 保留入库
+.env
+.env.local
+.env.*.local
+
+# ───────────────────────── 本地存储 / 资产库 ───────────────────────
+# AIFACTORY 资产/缩略图/USD 库（可达 GB 级），不入库
+storage/
+docker/storage-data/
+*.usd.bak
+
+# ───────────────────────────── 日志 ───────────────────────────────
+*.log
+logs/
+
+# ───────────────────────── 编辑器 / 系统 ──────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini

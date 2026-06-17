@@ -1,0 +1,87 @@
+import logging
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from common.BaseResponse import BaseResponse
+from common.ErrorCode import ErrorCode
+from common.PageResponse import Page
+from commonutils.Logs import init_logging
+from commonutils.SnowflakeUtils import SnowflakeIdIn
+from config.PgSqlConfig import get_db
+from exception.ExceptionClass import BusinessException
+from models.dto.DictEquipmentTypeDto import (
+    DictEquipmentTypeCreateDto,
+    DictEquipmentTypeUpdateDto,
+    DictEquipmentTypeDeleteDto,
+    DictEquipmentTypeQueryDto,
+)
+from models.vo.DictEquipmentTypeVo import DictEquipmentTypeVo
+from result.ResultUtils import ResultUtils
+from service.DictEquipmentTypeService import DictEquipmentTypeService
+
+init_logging()
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/dict/equipment-type")
+_service = DictEquipmentTypeService()
+
+
+def get_service() -> DictEquipmentTypeService:
+    return _service
+
+
+@router.post("/create", response_model=BaseResponse[str], summary="创建设备类型字典")
+async def create(
+    dto: DictEquipmentTypeCreateDto,
+    db: AsyncSession = Depends(get_db),
+    service: DictEquipmentTypeService = Depends(get_service),
+):
+    type_id = await service.create(dto, db)
+    return ResultUtils.ok(data=type_id, message="创建成功")
+
+
+@router.put("/update", response_model=BaseResponse[str], summary="更新设备类型字典")
+async def update(
+    dto: DictEquipmentTypeUpdateDto,
+    db: AsyncSession = Depends(get_db),
+    service: DictEquipmentTypeService = Depends(get_service),
+):
+    if not dto.equipment_type_id:
+        raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="ID不合法")
+    type_id = await service.update(dto.equipment_type_id, dto, db)
+    return ResultUtils.ok(data=type_id, message="更新成功")
+
+
+@router.delete("/delete", response_model=BaseResponse[str], summary="删除设备类型字典")
+async def delete(
+    dto: DictEquipmentTypeDeleteDto,
+    db: AsyncSession = Depends(get_db),
+    service: DictEquipmentTypeService = Depends(get_service),
+):
+    if not dto.equipment_type_id:
+        raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="ID不合法")
+    type_id = await service.delete(dto.equipment_type_id, db)
+    return ResultUtils.ok(data=type_id, message="删除成功")
+
+
+@router.get("/{type_id}", response_model=BaseResponse[DictEquipmentTypeVo], summary="根据ID查询设备类型字典")
+async def get_by_id(
+    type_id: SnowflakeIdIn,
+    db: AsyncSession = Depends(get_db),
+    service: DictEquipmentTypeService = Depends(get_service),
+):
+    if not type_id:
+        raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="ID不合法")
+    result = await service.get_by_id(type_id, db)
+    return ResultUtils.ok(data=result, message="查询成功")
+
+
+@router.post("/query", response_model=BaseResponse[Page[DictEquipmentTypeVo]], summary="查询设备类型字典列表")
+async def query(
+    query: DictEquipmentTypeQueryDto,
+    db: AsyncSession = Depends(get_db),
+    service: DictEquipmentTypeService = Depends(get_service),
+):
+    result = await service.query(query, db)
+    return ResultUtils.ok(data=result, message="查询成功")

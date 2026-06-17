@@ -1,0 +1,160 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Sim2Real 单机本机演示 · 一体化编排（两个后端 + PostgreSQL + sim 前端）
+#
+# 用途：在【一台机器】上用 Docker 起全部 *后端*，并用已 seed 的 P9 工厂跑通 3D 串流。
+#       Kit（Omniverse，需 RTX GPU）仍【在宿主机原生运行，不进 Docker】。
+#
+# 与同目录另两个 compose 的区别：
+#   - docker-compose.yml      ：旧·开发模式，仅 sim 三件套，build context 写成 ./codes/（本仓库没有该目录，会构建失败）
+#   - docker-compose.prod.yml ：旧·离线交付，仅 sim 三件套，依赖缺失的 package-offline.ps1
+#   - 本文件                  ：修正 build context 为 ../源码/，并补齐 aifactory_backend，端口/依赖/串流一次配好
+#
+# 起停：
+#   docker compose -f docker/docker-compose.demo.yml build          # 构建镜像（首次较慢：国内源装依赖 + npm ci）
+#   docker compose -f docker/docker-compose.demo.yml up -d          # 起全部
+#   docker compose -f docker/docker-compose.demo.yml logs -f sim-backend   # 看迁移/灌种子/uvicorn 日志
+#   docker compose -f docker/docker-compose.demo.yml down           # 停（保留 DB 卷）
+#   docker compose -f docker/docker-compose.demo.yml down -v        # 停并清空 DB 卷（下次重新迁移+灌种子）
+#
+# 访问：sim 前端 http://localhost:8080 ｜ sim 后端 http://localhost:8000/docs ｜ aifactory 后端 http://localhost:8129/docs
+#
+# ⚠️ 可被 docker/.env（见 .env.demo.example）覆盖的变量：POSTGRES_PASSWORD / AIFACTORY_STORAGE_HOST /
+#    VITE_KIT_API_URL / VITE_KIT_STREAM_URL / VITE_BACKEND_DIRECT_URL
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: sim2real-demo
+
+services:
+  # ── PostgreSQL（sim 与 aifactory 共用同一库 aifactory_simulation）────────────
+  sim-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: aifactory_simulation
+    command: ["postgres", "-c", "jit=off"]   # 大批量事件 COPY 写入防段错误（见后端 Dockerfile 注释）
+    ports:
+      - "5432:5432"          # 暴露给宿主，便于本机 psql / DBeaver 直连排障；不需要可删
+    volumes:
+      - sim_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d aifactory_simulation"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # ── sim_backend（仿真引擎 + 数据库 schema 拥有者）─────────────────────────────
+  # entrypoint 顺序：等 PG → alembic upgrade head → 若 md_factory 为空则 load_seed.py
+  #   （建 md_*/sim_*/res_* + 执行 creator_tables.sql 建 aifactory 专有表 + 灌资产库 + 灌 P9 主数据）
+  #   → exec 下面的 command 起 uvicorn。故它 healthy 时，全部表 + 种子都已就绪。
+  sim-backend:
+    image: sim2real/sim-backend:demo
+    build:
+      context: ../src/sim_backend       # ← 关键修正：实际源码在 源码/ 下，不是 ./codes/
+      dockerfile: Dockerfile
+    depends_on:
+      sim-postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@sim-postgres:5432/aifactory_simulation
+      PYTHONUNBUFFERED: "1"
+    # 覆盖镜像里的开发 CMD：去掉 --reload；单 worker（DES 引擎的 COPY+索引重建假设单写者，演示足够）
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"          # ★ 必须发布：宿主上的 Kit 通过 http://localhost:8000 拉事件（playback load-from-backend）
+    restart: unless-stopped
+
+  # ── aifactory_backend（3D 资产/工厂实例管理 · 纯消费 sim 建好的表）──────────────
+  aifactory-backend:
+    image: sim2real/aifactory-backend:demo
+    build:
+      context: ../src/aifactory_backend  # ← 同样修正路径
+      dockerfile: Dockerfile
+    depends_on:
+      sim-backend:
+        condition: service_healthy        # 等 sim-backend 把表建好+种子灌完（schema 由它拥有）
+    environment:
+      ENVIRONMENT: production
+      # 连同一个 PG（用 compose 服务名 sim-postgres，不是 localhost）
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_HOST: sim-postgres
+      DB_PORT: "5432"
+      DB_NAME: aifactory_simulation
+      AIFACTORY_CREATE_ALL: "false"        # 不自己建表，依赖 sim_backend 的 creator_tables.sql
+      AIFACTORY_STORAGE_ROOT: /data/storage
+    # 不覆盖 command：用镜像内置 CMD（uvicorn main:app --port 8128 --workers 2）。
+    # 覆盖健康检查：镜像默认查 /api/v1 与 /health 都会 404 → 永远 unhealthy；改查 /docs（200）。
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8128/docs || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    ports:
+      - "8129:8128"          # 宿主 8129 → 容器 8128，对齐部署文档/前端对 aifactory :8129 的预期
+    volumes:
+      # 资产/缩略图/USD 库根目录。默认指向 docker/storage-data（空目录也能启动，main.py 会 makedirs）。
+      # 有真实 31GB 资产库时：在 docker/.env 把 AIFACTORY_STORAGE_HOST 指到宿主实际目录（如 d:/Sim2Real/storage）。
+      - ${AIFACTORY_STORAGE_HOST:-./storage-data}:/data/storage
+    restart: unless-stopped
+
+  # ── sim_frontend（用于在本机验证串流；非“后端”，但跑通 3D 必需，故一并起）──────────
+  # nginx 托管 dist + 同源反代 /api → sim-backend:8000。
+  # 浏览器端的 3 个 Kit/直连 URL 在【构建期】烤入静态产物，故改了要 rebuild（见下方 args）。
+  sim-frontend:
+    image: sim2real/sim-frontend:demo
+    build:
+      context: ../src/sim_frontend
+      dockerfile: Dockerfile.prod
+      args:
+        # 本机演示：浏览器、Kit、后端都在同一台机器，localhost 即可。
+        # VITE_KIT_API_URL：Kit 的 /ov + /kit/playback 控制端点。kit.ts 默认回退 :8011（aifactory.service）；
+        #   若你的 Kit 把这些端点放在 :8233，改这里再 rebuild。
+        VITE_KIT_API_URL: ${VITE_KIT_API_URL:-http://localhost:8011}
+        # VITE_KIT_STREAM_URL：现在只作【3D 视口开关】——非空=启用「直连 WebRTC」（前端自己连 Kit 的
+        # media:12333/signal:12334，**不再需要单独起 5183 串流页**）；留空=降级 2D mock。
+        # 实际连接目标(Kit 主机/端口)在 源码/sim_frontend/stream.config.json（默认 127.0.0.1:12333/12334）。
+        VITE_KIT_STREAM_URL: ${VITE_KIT_STREAM_URL:-enabled}
+        # 串流方式：direct=直连 WebRTC（默认）；iframe=回退到 5183 串流页（逃生门，需把上面 VITE_KIT_STREAM_URL 设成真实 5183 地址）。
+        VITE_KIT_STREAM_MODE: ${VITE_KIT_STREAM_MODE:-direct}
+        # VITE_BACKEND_DIRECT_URL：Kit 服务端回拉事件用，必须是宿主可达的后端地址（即上面发布的 :8000）。
+        VITE_BACKEND_DIRECT_URL: ${VITE_BACKEND_DIRECT_URL:-http://localhost:8000}
+    depends_on:
+      - sim-backend
+    # 覆盖健康检查：镜像默认 wget http://localhost/ 会解析到 IPv6 ::1（nginx 只听 IPv4）→ 误报 unhealthy；改用 127.0.0.1。
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    ports:
+      - "8080:80"            # 宿主 8080 → 容器 nginx 80
+    restart: unless-stopped
+
+  # ── aifactory_frontend（Creator UI · 资产库 + 工厂实例编排 + 3D 视口）─────────────
+  # nginx 托管 dist + 反代 /api,/static → aifactory-backend，/ov → 宿主 Kit。
+  aifactory-frontend:
+    image: sim2real/aifactory-frontend:demo
+    build:
+      context: ../src/aifactory_frontend
+      dockerfile: Dockerfile.prod
+    depends_on:
+      - aifactory-backend
+    extra_hosts:
+      # 让容器内 nginx 能把 /ov 反代到【宿主机】上原生运行的 Kit :8011
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    ports:
+      - "8081:80"            # 宿主 8081 → 容器 nginx 80
+    restart: unless-stopped
+
+volumes:
+  sim_pgdata:

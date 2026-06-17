@@ -1,0 +1,5 @@
+code,name,description,status,created_at,updated_at,is_deleted
+EQUIPMENT,设备,设备节点，对应 base_equipment,ACTIVE,2026-04-30 06:56:32.966016+00,2026-04-30 06:56:32.966016+00,f
+FACTORY,工厂,工厂根节点，对应 base_factory,ACTIVE,2026-05-09 06:29:58.135877+00,2026-05-09 06:29:58.135877+00,f
+LINE,线体,产线节点，对应 base_production_line,ACTIVE,2026-04-30 06:56:32.966016+00,2026-04-30 06:56:32.966016+00,f
+STAGE,制程,工段/制程节点，对应 base_stage,ACTIVE,2026-04-30 06:56:32.966016+00,2026-04-30 06:56:32.966016+00,f

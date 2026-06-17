@@ -1,0 +1,79 @@
+# Simulation 三件套（前端 + 后端 + PostgreSQL）开发模式部署
+#
+#   docker compose up -d --build        # 首次：构建并起全部
+#   docker compose logs -f sim-backend  # 看后端迁移/灌种子/uvicorn 日志
+#   docker compose down                 # 停（保留 DB 卷）
+#   docker compose down -v              # 停并清空 DB 卷（下次重新迁移+灌种子）
+#
+# 访问：前端 http://localhost:5174   后端 http://localhost:8000/docs
+#
+# 开发模式：源码以 volume 挂入容器，改代码即时热重载（已为 Windows bind-mount 开轮询）。
+# 范围：仅 sim 前端/后端/PG。Omniverse Kit 与 aifactory_backend 仍在容器外（见下方 Kit 说明）。
+
+name: simulation
+
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────
+  sim-postgres:
+    image: postgres:16-alpine
+    container_name: sim-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aifactory_simulation
+    command: ["postgres", "-c", "jit=off"]
+    ports:
+      - "5432:5432"          # 暴露给宿主，方便本地 psql / DBeaver 直连
+    volumes:
+      - sim_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d aifactory_simulation"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # ── sim_backend (FastAPI) ───────────────────────────────────────────────
+  sim-backend:
+    build:
+      context: ./codes/sim_backend
+      dockerfile: Dockerfile
+    container_name: sim-backend
+    depends_on:
+      sim-postgres:
+        condition: service_healthy
+    environment:
+      # 覆盖 .env 里的 localhost：pydantic-settings 中环境变量优先于 .env 文件
+      DATABASE_URL: postgresql://postgres:postgres@sim-postgres:5432/aifactory_simulation
+      # Windows bind-mount 无 inotify，强制 watchfiles 轮询，否则 --reload 不触发
+      WATCHFILES_FORCE_POLLING: "true"
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./codes/sim_backend:/app      # 源码热挂载
+    extra_hosts:
+      # 容器内访问宿主机（如需调宿主 Kit 的 HTTP 端点）用 host.docker.internal
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # ── sim_frontend (Vite dev) ─────────────────────────────────────────────
+  sim-frontend:
+    build:
+      context: ./codes/sim_frontend
+      dockerfile: Dockerfile
+    container_name: sim-frontend
+    depends_on:
+      - sim-backend
+    environment:
+      VITE_PROXY_TARGET: http://sim-backend:8000   # /api 代理到后端服务名
+      VITE_USE_POLLING: "true"                      # 同后端：Windows 挂载需轮询
+    ports:
+      - "5174:5174"
+    volumes:
+      - ./codes/sim_frontend:/app     # 源码热挂载
+      - /app/node_modules             # 匿名卷：保留容器内 npm install 结果，不被宿主覆盖
+    restart: unless-stopped
+
+volumes:
+  sim_pgdata:

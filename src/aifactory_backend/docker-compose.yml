@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  app:
+    # 从当前目录构建镜像
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # 容器名称
+    container_name: ai-factory-usd-library-app
+    # 端口映射：宿主机8128 -> 容器8128
+    ports:
+      - "8128:8128"
+    # 环境变量配置（包含所有业务和系统配置）
+    environment:
+      ENVIRONMENT: production
+      PYTHONPATH: /app  # 双重保障：和Dockerfile保持一致
+
+      # 数据库连接配置
+      DB_USER: postgres
+      DB_PASSWORD: "JymAdmin1357!!"
+      DB_HOST: 192.168.40.111
+#      DB_HOST: 106.54.167.106
+#      DB_PORT: "8011"
+      DB_PORT: "8015"
+      DB_NAME: postgres
+
+      # MinIO对象存储配置
+      MINIO_ENDPOINT: 192.168.40.111:9000
+#      MINIO_ENDPOINT: 106.54.167.106:8111
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: "JymAdmin1357!!"
+      MINIO_BUCKET_NAME: ov-usd-bucket
+
+      # RabbitMQ消息队列配置
+      RABBITMQ_URL: amqp://admin:admin123!@106.54.167.106:8172/
+      QUEUE_NAME: ov_queue
+      EXCHANGE_NAME: ov_exchange
+      ROUTING_KEY: ov_routing
+
+      # Kafka配置
+      KAFKA_BOOTSTRAP_SERVERS: 106.54.167.106:8174
+      KAFKA_TOPIC: default_topic
+      KAFKA_GROUP_ID: default_group
+      KAFKA_CLIENT_ID: ai_factory_producer
+      KAFKA_USERNAME: admin
+      KAFKA_PASSWORD: admin123!
+    # 数据卷挂载
+    volumes:
+      # 日志目录：持久化日志，提前授权
+      - /opt/ai-factory-usd-library--logs:/app/logs
+    # 启动命令，设置一下，启动参数
+    command: uvicorn main:app --host 0.0.0.0 --port 8128 --workers 10 --log-level info
+    # 重启策略：除非手动停止，否则异常退出自动重启
+    restart: unless-stopped
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8128/api/v1"]
+      interval: 30s        # 检查间隔
+      timeout: 10s         # 单次检查超时时间
+      start_period: 60s    # 服务启动后等待时间（避免未就绪误判）
+      retries: 3           # 失败重试次数
+
+
+#    # 用户权限：和Dockerfile中的appuser一致（UID=1000）
+#    user: "1000:1000"

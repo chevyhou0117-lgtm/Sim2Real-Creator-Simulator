@@ -1,0 +1,23 @@
+{
+  "$comment": "sim_frontend 直连 Kit 的 WebRTC 配置（替代原 5183 iframe 页）。source=local 时浏览器直接连本机 Kit。端口对齐 fii.houyiming_streaming.kit 的 streamPort=12333(media)/signalPort=12334。远程多机访问时把 server 改成 Kit 宿主的可达 IP。",
+  "source": "local",
+  "stream": {
+    "$comment": "source=stream 时用；本机直连不需要。",
+    "appServer": "",
+    "streamServer": ""
+  },
+  "gfn": {
+    "$comment": "source=gfn 时用；本机直连不需要。",
+    "catalogClientId": "",
+    "clientId": "",
+    "cmsId": 0
+  },
+  "local": {
+    "$comment": "source=local 必填。server=Kit 主机（本机演示=127.0.0.1）。",
+    "server": "127.0.0.1",
+    "signalingPort": 12334,
+    "mediaPort": 12333,
+    "streamWidth": 3840,
+    "streamHeight": 2720
+  }
+}

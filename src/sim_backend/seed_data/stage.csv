@@ -1,0 +1,10 @@
+stage_code,stage_name,sequence,stage_type,status
+SMT,Surface Mount Technology,1,,ACTIVE
+PTH,Through-Hole Assembly,2,,ACTIVE
+ModuleAssy,Auto Module Assembly,3,,ACTIVE
+MainAssy,Auto Main Assembly,4,,ACTIVE
+TrayAssy,Tray Assembly,5,,ACTIVE
+FT,Final Test,6,,ACTIVE
+TrayDisAssy,Tray Disassembly (incl. Sorting),7,,ACTIVE
+CPDisAssy,Cold Plate Disassembly,8,,ACTIVE
+Packing,Packing,9,,ACTIVE

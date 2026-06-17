@@ -1,0 +1,99 @@
+operation_code,stage_code,operation_name,operation_name_cn,sequence,operation_type,is_key_operation,status
+SMT_OP01,SMT,stick +C5:C25el,PCB Carrier Attachment,1,,,ACTIVE
+SMT_OP02,SMT,Bottom Print,Bottom Solder Paste Printing,2,,,ACTIVE
+SMT_OP03,SMT,Bottom   API,Bottom SPI Solder Paste Inspection,3,,,ACTIVE
+SMT_OP04,SMT,Bottom High  Speed  Mounting (1),Bottom High-Speed Mounter 1,4,,,ACTIVE
+SMT_OP05,SMT,Bottom High  Speed  Mounting (2),Bottom High-Speed Mounter 2,5,,,ACTIVE
+SMT_OP06,SMT,Bottom High  Speed  Mounting (3),Bottom High-Speed Mounter 3,6,,,ACTIVE
+SMT_OP07,SMT,Bottom High  Speed  Mounting (4),Bottom High-Speed Mounter 4,7,,,ACTIVE
+SMT_OP08,SMT,Bottom High  Speed  Mounting (5),Bottom High-Speed Mounter 5,8,,,ACTIVE
+SMT_OP09,SMT,Bottom Multi-function mounting(1),Bottom Multi-Function Mounter 1,9,,,ACTIVE
+SMT_OP10,SMT,Bottom AOI before Reflow,Bottom AOI Before Reflow,10,,,ACTIVE
+SMT_OP11,SMT,Reflow,Reflow Soldering (Bottom),11,,,ACTIVE
+SMT_OP12,SMT,Bottom AOI after Reflow,Bottom AOI After Reflow,12,,,ACTIVE
+SMT_OP13,SMT,Top Print,Top Solder Paste Printing,13,,,ACTIVE
+SMT_OP14,SMT,Top   API,Top SPI Solder Paste Inspection,14,,,ACTIVE
+SMT_OP15,SMT,Top High  Speed  Mounting  (1),Top High-Speed Mounter 1,15,,,ACTIVE
+SMT_OP16,SMT,Top High Speed  Mounting   (2),Top High-Speed Mounter 2,16,,,ACTIVE
+SMT_OP17,SMT,Top High  Speed  Mounting  (3),Top High-Speed Mounter 3,17,,,ACTIVE
+SMT_OP18,SMT,Top Multi-function mounting(1),Top Multi-Function Mounter 1,18,,,ACTIVE
+SMT_OP19,SMT,Top Multi-function mounting(2),Top Multi-Function Mounter 2,19,,,ACTIVE
+SMT_OP20,SMT,Top  AOI  before reflow,Top AOI Before Reflow,20,,,ACTIVE
+SMT_OP21,SMT,Reflow,Reflow Soldering (Top),21,,,ACTIVE
+SMT_OP22,SMT,Top  AOI after reflow,Top AOI After Reflow,22,,,ACTIVE
+SMT_OP23,SMT,Router(Carry recycel),Router (Carrier Recycle),23,,,ACTIVE
+SMT_OP24,SMT,AVI,Automated Visual Inspection (AVI),24,,,ACTIVE
+SMT_OP25,SMT,X-Ray (SMT) (50% SMT UPH),SMT X-Ray Inspection (50% UPH),25,,,ACTIVE
+PTH_OP01,PTH,MDA Test,MDA Test,1,,,ACTIVE
+PTH_OP02,PTH,Edge Bonding_Put the PCBA,Edge Bonding - Load PCBA,2,,,ACTIVE
+PTH_OP03,PTH,Edge Bonding_Dispensing,Edge Bonding - Dispensing,3,,,ACTIVE
+PTH_OP04,PTH,Edge Bonding_AOI,Edge Bonding - AOI Inspection,4,,,ACTIVE
+PTH_OP05,PTH,Edge Bonding_Put the PCBA into furnace,Edge Bonding - Load PCBA Into Furnace,5,,,ACTIVE
+PTH_OP06,PTH,Edge Bonding_Furnace,Edge Bonding - Curing Furnace,6,,,ACTIVE
+PTH_OP07,PTH,"Edge Bonding_Take the 548 , VI",Edge Bonding - Unload 548 Board & Visual Inspection,7,,,ACTIVE
+PTH_OP08,PTH,"Visual inspection material, press-fit,scan",Incoming Visual Inspection + Press-Fit + Scan,8,,,ACTIVE
+PTH_OP09,PTH,"Pre-locking screws Bottom connector*12 and manual re-lock screw connector*12,VI, scan (Low RPM)",Bottom Connector Screw Pre-Lock x12 + Re-Lock + Visual Inspection + Scan (Low RPM),9,,,ACTIVE
+PTH_OP10,PTH,"Pre-Locking TOP Screw*4 and lock screw*4 ,VI,scan (Low RPM)",Top Screw Pre-Lock x4 + Lock x4 + Visual Inspection + Scan (Low RPM),10,,,ACTIVE
+PTH_OP11,PTH,X-Ray (PTH),PTH X-Ray Inspection,11,,,ACTIVE
+PTH_OP12,PTH,ISP Test,ISP Programming,12,,,ACTIVE
+PTH_OP13,PTH,ICT Test,ICT In-Circuit Test,13,,,ACTIVE
+ModuleAssy_OP01,ModuleAssy,"ASSY / ASSY Input,Put Top Stiffeneer",Assembly Loading - Place Top Stiffener,1,,,ACTIVE
+ModuleAssy_OP02,ModuleAssy,Auto Top stick thermal pad-1 (Material Input),Top Auto Thermal Pad Attach 1 (Material Input),2,,,ACTIVE
+ModuleAssy_OP03,ModuleAssy,Auto Top stick thermal pad-2 (Material Input),Top Auto Thermal Pad Attach 2 (Material Input),3,,,ACTIVE
+ModuleAssy_OP04,ModuleAssy,Auto Top stick thermal pad-3 (Material Input),Top Auto Thermal Pad Attach 3 (Material Input),4,,,ACTIVE
+ModuleAssy_OP05,ModuleAssy,Auto Top stick thermal pad-4 (Material Input),Top Auto Thermal Pad Attach 4 (Material Input),5,,,ACTIVE
+ModuleAssy_OP06,ModuleAssy,Auto Top stick thermal pad-5 (Material Input),Top Auto Thermal Pad Attach 5 (Material Input),6,,,ACTIVE
+ModuleAssy_OP07,ModuleAssy,Auto Top stick thermal pad-6 (Material Input),Top Auto Thermal Pad Attach 6 (Material Input),7,,,ACTIVE
+ModuleAssy_OP08,ModuleAssy,Auto Top stick thermal pad-7 (Material Input),Top Auto Thermal Pad Attach 7 (Material Input),8,,,ACTIVE
+ModuleAssy_OP09,ModuleAssy,Auto Top stick thermal pad-8 (Material Input),Top Auto Thermal Pad Attach 8 (Material Input),9,,,ACTIVE
+ModuleAssy_OP10,ModuleAssy,Auto Top stick thermal pad-9 (Material Input),Top Auto Thermal Pad Attach 9 (Material Input),10,,,ACTIVE
+ModuleAssy_OP11,ModuleAssy,PCBA Input,PCBA Loading,11,,,ACTIVE
+ModuleAssy_OP12,ModuleAssy,Auto press,Auto Press (Top),12,,,ACTIVE
+ModuleAssy_OP13,ModuleAssy,Install Automatic locking  connector screws,Auto Lock Connector Screws,13,,,ACTIVE
+ModuleAssy_OP14,ModuleAssy,Auto Bottom stick thermal pad-1 (Material Input),Bottom Auto Thermal Pad Attach 1 (Material Input),14,,,ACTIVE
+ModuleAssy_OP15,ModuleAssy,Auto Bottom stick thermal pad-2 (Material Input),Bottom Auto Thermal Pad Attach 2 (Material Input),15,,,ACTIVE
+ModuleAssy_OP16,ModuleAssy,Auto Bottom stick thermal pad-3 (Material Input),Bottom Auto Thermal Pad Attach 3 (Material Input),16,,,ACTIVE
+ModuleAssy_OP17,ModuleAssy,Auto Bottom stick thermal pad-4 (Material Input),Bottom Auto Thermal Pad Attach 4 (Material Input),17,,,ACTIVE
+ModuleAssy_OP18,ModuleAssy,Auto assemble bottom Stiffeneer,Auto Assemble Bottom Stiffener,18,,,ACTIVE
+ModuleAssy_OP19,ModuleAssy,Auto press,Auto Press (Bottom),19,,,ACTIVE
+ModuleAssy_OP20,ModuleAssy,Install Automatic locking  PCBA screws,Auto Lock PCBA Screws,20,,,ACTIVE
+ModuleAssy_OP21,ModuleAssy,"Print label & stick label,VI",Print & Apply Label + Visual Inspection,21,,,ACTIVE
+MainAssy_OP01,MainAssy,Subpan Input,Subpan Loading,1,,,ACTIVE
+MainAssy_OP02,MainAssy,PCBA module Input and VI,PCBA Module Loading + Visual Inspection,2,,,ACTIVE
+MainAssy_OP03,MainAssy,Install Automatic locking  PCBA  screws,Auto Lock PCBA Screws,3,,,ACTIVE
+MainAssy_OP04,MainAssy,Auto Install MCIO board (CX8) (Material Input),Auto Install MCIO Board (CX8 - Material Input),4,,,ACTIVE
+MainAssy_OP05,MainAssy,Auto MCIO board (CX8)  screws,Auto Lock MCIO Board Screws,5,,,ACTIVE
+MainAssy_OP06,MainAssy,Abnormal workstation- Manual Instal or locking MCIO board or PCBA  or Sub pan screws,Abnormal Station - Manual Install or Lock MCIO/PCBA/Subpan Screws,6,,,ACTIVE
+MainAssy_OP07,MainAssy,"Cold plate Input and use manual screwdriver to check the cold plate brackets with screws*12, VI (Include graphene &cold ",Cold Plate Loading + Bracket Pre-Press x12 + Visual Inspection (incl. Graphene/Cold Plate),7,,,ACTIVE
+MainAssy_OP08,MainAssy,Auto assemble Cold plate,Auto Assemble Cold Plate,8,,,ACTIVE
+MainAssy_OP09,MainAssy,Auto locking  Cold plate screws -1,Auto Lock Cold Plate Screws 1,9,,,ACTIVE
+MainAssy_OP10,MainAssy,Auto locking  Cold plate screws -2,Auto Lock Cold Plate Screws 2,10,,,ACTIVE
+MainAssy_OP11,MainAssy,Auto locking  Cold plate screws -3,Auto Lock Cold Plate Screws 3,11,,,ACTIVE
+TrayAssy_OP01,TrayAssy,Manual-Organize Cold plate pipelines,Manual - Organize Cold Plate Pipelines,1,,,ACTIVE
+TrayAssy_OP02,TrayAssy,"Manual attachment of the lock to the cold plate,VI",Manual - Attach Lock to Cold Plate + Visual Inspection,2,,,ACTIVE
+TrayAssy_OP03,TrayAssy,"Manual-Install L&R assemble protective cover*8 Left & Right PG548 Assy /Subpan into Tray,manual lock screw*2,install L&R",Manual - Install L&R Protective Covers x8 + Load Into Tray + Manual Lock Screws x2,3,,,ACTIVE
+TrayAssy_OP04,TrayAssy,Manual-Diss Cold plate cold plate brackets with screws*12,Manual - Remove Cold Plate Bracket Screws x12,4,,,ACTIVE
+TrayAssy_OP05,TrayAssy,"Manual-Install  L&R cable*4,install L&R IO board*4 and Paddle board*2 and remove L&R assemble protective cover*8",Manual - Install L&R Cables x4 + IO Boards x4 + Paddle Boards x2 + Remove Protective Covers x8,5,,,ACTIVE
+TrayAssy_OP06,TrayAssy,Manual-Pre-locking  L&R Busbar screw*16,Manual - Pre-Lock L&R Busbar Screws x16,6,,,ACTIVE
+TrayAssy_OP07,TrayAssy,Manual-Locking L&R Busbar screw*16,Manual - Lock L&R Busbar Screws x16,7,,,ACTIVE
+TrayAssy_OP08,TrayAssy,"Manual-690+Binding_2,print label & stick label,scan label for SN CHECK_3",Manual - 690 Binding + Print & Apply Label + Scan SN Check,8,,,ACTIVE
+TrayAssy_OP09,TrayAssy,"Manual-Assy VI, Assembly top cover and lock screws *2",Manual - Assembly Visual Inspection + Install Top Cover + Lock Screws x2,9,,,ACTIVE
+FT_OP01,FT,TEST,Functional Test (FT),1,,,ACTIVE
+TrayDisAssy_OP01,TrayDisAssy,"Manual-Put the orange protective cover*4 Diss test tray top cover  screws*2,VI (Check for loose screws and defective app",Manual - Place Orange Protective Covers x4 + Remove Top Cover Screws x2 + Visual Inspection,1,,,ACTIVE
+TrayDisAssy_OP02,TrayDisAssy,"Manual-Placement of busbar fixture ,Unlock busbar screws*16,Remove busbar fixture",Manual - Install Busbar Fixture + Remove Busbar Screws x16 + Remove Fixture,2,,,ACTIVE
+TrayDisAssy_OP03,TrayDisAssy,"Manual-Diss L&R cable*4,remove L&R IO board*4 and Paddle board*2",Manual - Remove L&R Cables x4 + IO Boards x4 + Paddle Boards x2,3,,,ACTIVE
+CPDisAssy_OP01,CPDisAssy,"Manual-Remove L&R Cold plate pipelines ,Placement of cold plate bracket",Manual - Remove L&R Cold Plate Pipelines + Place Cold Plate Bracket,1,,,ACTIVE
+CPDisAssy_OP02,CPDisAssy,Manual-Locking L&R cold plate bracket with screws*12,Manual - Lock L&R Cold Plate Bracket Screws x12,2,,,ACTIVE
+CPDisAssy_OP03,CPDisAssy,"Manual- Diss subpan screw,release L&R subpan,CP+PCBA",Manual - Remove Subpan Screws + Release L&R Subpan & CP+PCBA,3,,,ACTIVE
+CPDisAssy_OP04,CPDisAssy,Manual-VI PCB,Manual - PCB Visual Inspection,4,,,ACTIVE
+CPDisAssy_OP05,CPDisAssy,Manual-VI CP,Manual - Cold Plate Visual Inspection,5,,,ACTIVE
+Packing_OP01,Packing,Clean &Put the PCBA & Remove label &Placing  label*1,Clean + Place PCBA + Remove Old Label + Apply New Label x1,1,,,ACTIVE
+Packing_OP02,Packing,Print label & stick label*2,Print & Apply Label x2,2,,,ACTIVE
+Packing_OP03,Packing,VI,Visual Inspection,3,,,ACTIVE
+Packing_OP04,Packing,Auto take picture,Auto Photo Capture,4,,,ACTIVE
+Packing_OP05,Packing,Scaning and packing into ESD bag place the desiccant-clay & stick  ESD Label,Scan + Pack Into ESD Bag + Add Desiccant + Apply ESD Label,5,,,ACTIVE
+Packing_OP06,Packing,Printing label on line and stick it on single box &Packing into individual box,Inline Label Printing + Apply to Single Box + Pack Into Single Box,6,,,ACTIVE
+Packing_OP07,Packing,SN_check for inner box &  outer boxes,Inner & Outer Box SN Check,7,,,ACTIVE
+Packing_OP08,Packing,Stick on  tape for  individual  box & Place board with bubble bag in the individual box & add top foam,Apply Single-Box Tape + Add Bubble Bag + Add Top Foam,8,,,ACTIVE
+Packing_OP09,Packing,Packing into bulk box &  stack outer boxes to pallets,Pack Into Bulk Box + Palletize Outer Boxes,9,,,ACTIVE
+Packing_OP10,Packing,Material repackaging: Unpack incoming packaging materials / Bag and prepare for inner box / Initially seal the bottom of,Material Repackaging (Unpack Incoming / Bag / Initial Seal Inner Box Bottom),10,,,ACTIVE
