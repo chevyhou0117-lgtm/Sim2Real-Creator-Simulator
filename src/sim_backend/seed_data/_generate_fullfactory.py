@@ -1,4 +1,4 @@
-"""一次性生成器：全厂 Houston P9 seed_data/*.csv。
+"""一次性生成器：全厂 富士康烟台 seed_data/*.csv。
 
 数据源（自包含，运行时直接读）：
   - demo520.usd：/home/remond/Workspace/P9_animations/Houston_F_NV/demo520.usd
@@ -28,7 +28,7 @@ USD = "/home/remond/Workspace/P9_animations/Houston_F_NV/demo520.usd"
 FXPG = "/home/remond/Downloads/FXPG548 Detail CT update-20250905-MP-GB300.xlsx"
 FXPG_SHEET = "900-2G548-0081-XXX"
 
-FACTORY_CODE = "Houston P9"
+FACTORY_CODE = "FOXCONN-NME"
 PRODUCT_CODE = "PG548"
 PRODUCT_NAME = "NVD Bianca PG548 GB300"
 BOP_VER = "v1.0"
@@ -177,12 +177,12 @@ def main():
     print("=== 生成全厂 seed_data ===")
     # factory
     w("factory.csv", ["factory_code", "factory_name", "location", "timezone", "status"],
-      [[FACTORY_CODE, "Houston P9 工厂", "Houston, TX", "America/Chicago", "ACTIVE"]])
+      [[FACTORY_CODE, "富士康烟台", "山东烟台", "Asia/Shanghai", "ACTIVE"]])
     # creator_project（全局；plan 关联它 → 前端按 creator_url 开 demo520.usd）
     w("creator_project.csv",
       ["project_name", "project_version", "project_status", "creator_url", "description"],
-      [["Houston P9 全厂 — demo520", "v1.0", "PUBLISHED", USD,
-        "Houston P9 全厂 OV 场景（10 线/9 制程，含内建动画）"]])
+      [["富士康烟台 全厂 — demo520", "v1.0", "PUBLISHED", USD,
+        "富士康烟台 全厂 OV 场景（10 线/9 制程，含内建动画）"]])
     # stage
     w("stage.csv", ["stage_code", "stage_name", "sequence", "stage_type", "status"],
       [[c, nm, seq, "", "ACTIVE"] for c, nm, seq, _s, _sl in STAGES])

@@ -288,7 +288,7 @@ class FactoryModelUploadService:
                 db.add(FactoryAsset3dModel(
                     factory_asset_id=factory_root.id,
                     usd_name=factory_entry_usd_name,
-                    root_usd_path=factory_entry_usd_minio,
+                    root_usd_path=_to_host_abs(factory_entry_usd_minio),
                     bucket_name=minioConfig.bucket_name,
                     prim_path=f"/{folder_00}",
                     location_path=f"/{folder_00}",
@@ -335,7 +335,7 @@ class FactoryModelUploadService:
                     db.add(FactoryAsset3dModel(
                         factory_asset_id=line_node.id,
                         usd_name=f"{line_name}.usd",
-                        root_usd_path=line_usd_minio or factory_entry_usd_minio or "",
+                        root_usd_path=_to_host_abs(line_usd_minio or factory_entry_usd_minio or ""),
                         bucket_name=minioConfig.bucket_name,
                         prim_path=line_prim,
                         location_path="/World",
@@ -383,7 +383,7 @@ class FactoryModelUploadService:
                         db.add(FactoryAsset3dModel(
                             factory_asset_id=eq_node.id,
                             usd_name=eq_name,
-                            root_usd_path=factory_entry_usd_minio or "",
+                            root_usd_path=_to_host_abs(factory_entry_usd_minio or ""),
                             bucket_name=minioConfig.bucket_name,
                             prim_path=eq_prim,
                             location_path="/World",
@@ -543,7 +543,7 @@ class FactoryModelUploadService:
                 db.add(FactoryAsset3dModel(
                     factory_asset_id=factory_root.id,
                     usd_name=factory_entry_usd_name,
-                    root_usd_path=factory_entry_usd_minio,
+                    root_usd_path=_to_host_abs(factory_entry_usd_minio),
                     bucket_name=minioConfig.bucket_name,
                     prim_path=f"/{folder_00}",
                     location_path=f"/{folder_00}",
@@ -590,7 +590,7 @@ class FactoryModelUploadService:
                     db.add(FactoryAsset3dModel(
                         factory_asset_id=line_node.id,
                         usd_name=f"{line_name}.usd",
-                        root_usd_path=line_usd_minio or factory_entry_usd_minio or "",
+                        root_usd_path=_to_host_abs(line_usd_minio or factory_entry_usd_minio or ""),
                         bucket_name=minioConfig.bucket_name,
                         prim_path=line_prim,
                         location_path="/World",
@@ -634,7 +634,7 @@ class FactoryModelUploadService:
                         db.add(FactoryAsset3dModel(
                             factory_asset_id=eq_node.id,
                             usd_name=eq_name,
-                            root_usd_path=factory_entry_usd_minio or "",
+                            root_usd_path=_to_host_abs(factory_entry_usd_minio or ""),
                             bucket_name=minioConfig.bucket_name,
                             prim_path=eq_prim,
                             location_path="/World",
@@ -728,6 +728,20 @@ def _get_zip_root_dir(names: List[str]) -> str:
         if parts[0]:
             return parts[0] + "/"
     return ""
+
+
+def _to_host_abs(rel_path: str) -> str:
+    """zip 内相对路径 → Kit 可直接打开的【宿主绝对路径】（USD_HOST_ROOT + rel）。
+
+    Kit 的 _build_full_url 对绝对路径（C:/... 或 C:\\...）原样打开、绕开其 USD_ROOT，故后端文件
+    即便落在与 Kit USD_ROOT 不同的盘也能被 Kit 直接打开。空值 / 已是绝对路径或 URL 则原样返回。
+    """
+    rel = (rel_path or "").strip()
+    if not rel:
+        return rel
+    if rel.startswith(("http://", "https://", "s3://", "file://", "omniverse://")) or (len(rel) >= 2 and rel[1] == ":"):
+        return rel
+    return f"{minioConfig.usd_host_root}/{rel.lstrip('/')}"
 
 
 def _batch_upload_to_minio(

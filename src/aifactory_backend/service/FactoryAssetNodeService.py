@@ -76,7 +76,10 @@ class FactoryAssetNodeService:
         try:
             all_result = await db.execute(
                 select(FactoryAssetNode)
-                .where(FactoryAssetNode.factory_projects_id == factory_projects_id)
+                .where(
+                    FactoryAssetNode.factory_projects_id == factory_projects_id,
+                    FactoryAssetNode.is_deleted == False,   # 排除软删节点，否则删了还显示
+                )
                 .order_by(FactoryAssetNode.created_at.asc())
             )
             all_nodes: List[FactoryAssetNode] = list(all_result.scalars().all())
@@ -116,7 +119,10 @@ class FactoryAssetNodeService:
         try:
             all_result = await db.execute(
                 select(FactoryAssetNode)
-                .where(FactoryAssetNode.factory_projects_id == factory_projects_id)
+                .where(
+                    FactoryAssetNode.factory_projects_id == factory_projects_id,
+                    FactoryAssetNode.is_deleted == False,   # 排除软删节点，否则删了还显示
+                )
                 .order_by(FactoryAssetNode.created_at.asc())
             )
             all_nodes: List[FactoryAssetNode] = list(all_result.scalars().all())
@@ -499,14 +505,18 @@ class FactoryAssetNodeService:
                     cat = cat_map.get(em.category_id)
                     eq_name = cat.name if cat else (em.model or em.category or "UnknownEquipment")
                     eq_code = cat.code if cat else ""
-                    # 设备 prim_path 拼接规则（与资产库 USD 层级一致）
+                    # 设备 prim_path 拼接规则（对齐拖拽实例化后【实际 stage】的层级）：
+                    #   {线体容器}/{线体名}/ASSET_PROD/asset_{线体名}_PROD/t_{instance}/{instance}
+                    # 其中 instance_name 形如 id_FCCATMH100_TAKE01；末段是 t_<inst> 与 <inst> 两层。
+                    # 旧公式多塞了 t_id_{name}_instance_001/id_{name}_instance_001 且 {name} 重复一层、
+                    # 末段又少一层，导致与真实 prim 对不上、focus/highlight 失败。
+                    inst = rel.instance_name or eq_name
                     eq_prim_path = (
                         f"{dto.prim_path}"
-                        f"/t_id_{node_name}_instance_001"
-                        f"/id_{node_name}_instance_001"
-                        f"/{node_name}/{node_name}"
+                        f"/{node_name}"
                         f"/ASSET_PROD/asset_{node_name}_PROD"
-                        f"/t_{rel.instance_name or eq_name}"
+                        f"/t_{inst}"
+                        f"/{inst}"
                     )
                     eq_node = FactoryAssetNode(
                         factory_projects_id=dto.factory_project_id,

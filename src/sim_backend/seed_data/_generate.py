@@ -65,7 +65,7 @@ def _w(name, header, rows):
 def main():
     _w("factory.csv",
        ["factory_code", "factory_name", "location", "timezone", "status"],
-       [["HST_P9", "Houston P9 Factory", "Houston, TX, USA", "America/Chicago", "ACTIVE"]])
+       [["FOXCONN-NME", "富士康烟台", "山东烟台", "Asia/Shanghai", "ACTIVE"]])
 
     _w("stage.csv",
        ["stage_code", "stage_name", "sequence", "stage_type", "status"],

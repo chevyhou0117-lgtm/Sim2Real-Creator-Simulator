@@ -1,6 +1,6 @@
 """PRD §2.1.x 基础数据快照机制：READY→RUNNING 时把方案关联的所有 md_* 行复制一份。
 
-复制策略（简化版，按整厂复制；对 HST_P9 这种 ~150 行的工厂足够）：
+复制策略（简化版，按整厂复制；对 FOXCONN-NME 这种 ~150 行的工厂足够）：
 - 拉 plan_id IS NULL 的所有相关行
 - 为每行生成新 UUID 作 PK，plan_id=X
 - 维护 old_id → new_id 的 mapping

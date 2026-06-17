@@ -39,10 +39,10 @@ def uid() -> str:
 factory_id = uid()
 db.add(Factory(
     factory_id=factory_id,
-    factory_code="HST_P9",
-    factory_name="Houston P9 Factory",
-    location="Houston, TX, USA",
-    timezone="America/Chicago",
+    factory_code="FOXCONN-NME",
+    factory_name="富士康烟台",
+    location="山东烟台",
+    timezone="Asia/Shanghai",
     status="ACTIVE",
 ))
 
@@ -52,7 +52,7 @@ db.add(Factory(
 creator_project_id = uid()
 db.add(CreatorProject(
     creator_project_id=creator_project_id,
-    project_name="Houston P9 — Main Module + Packaging",
+    project_name="富士康烟台 — Main Module + Packaging",
     project_version="v1.2.8",
     project_status="PUBLISHED",
     factory_id=factory_id,
@@ -62,12 +62,12 @@ db.add(CreatorProject(
 ))
 db.add(CreatorProject(
     creator_project_id=uid(),
-    project_name="Houston P9 — Main Module only (旧版)",
+    project_name="富士康烟台 — Main Module only (旧版)",
     project_version="v1.0.3",
     project_status="DEPRECATED",
     factory_id=factory_id,
     description="仅含主模组制程的早期 USD scene，已弃用",
-    creator_url="omniverse://localhost/Projects/HST_P9/legacy_mm.usd",
+    creator_url="omniverse://localhost/Projects/FOXCONN-NME/legacy_mm.usd",
     published_at=datetime(2025, 11, 2, 14, 15),
 ))
 
@@ -584,7 +584,7 @@ bop_count = db.query(BOP).count()
 wo_count = db.query(WorkOrder).count()
 task_count = db.query(ProductionTask).count()
 print("Seed complete:")
-print("  Factory:     1 (Houston P9)")
+print("  Factory:     1 (富士康烟台)")
 print("  Stages:      2 (Main Module, Packaging)")
 print("  Lines:       4 (MM-01, MM-02, PK-01, PK-02)")
 print(f"  Main Module: {mm_ops_count} operations, {mm_eq_count} equipment")

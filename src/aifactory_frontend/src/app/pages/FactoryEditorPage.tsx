@@ -46,6 +46,8 @@ import {
   bindLineNodeApi,
   saveOVModelApi,
   getFactoryProjectDetailByNodeIdApi,
+  focusPerspectiveApi,
+  deleteOvPrimApi,
   deleteFactoryAssetNodeApi,
 } from "../api";
 import { toast } from "sonner";
@@ -192,6 +194,24 @@ export function FactoryEditorPage() {
           `[FactoryEditor] 节点 ${node.name} (${node.type}) 详情:`,
           res.data,
         );
+        // 设备节点：平滑运镜到该设备 + 高亮（参考 fastapi.service.setup 的 focus-perspective）
+        const isEquipment = String(node.type).toUpperCase() === "EQUIPMENT";
+        const primPath =
+          (node as any)?.detail?.primPath ||
+          (res.data as any)?.primPath ||
+          (res.data as any)?.detail?.primPath ||
+          (node as any)?.primPath ||
+          "";
+        if (isEquipment && primPath) {
+          focusPerspectiveApi({ primPath }).catch((err) =>
+            console.error("[FactoryEditor] focus-perspective 失败:", err),
+          );
+        } else if (isEquipment) {
+          console.warn(
+            "[FactoryEditor] 设备节点缺少 primPath，无法聚焦:",
+            node,
+          );
+        }
       } else {
         console.warn(
           `[FactoryEditor] 获取节点 ${nodeId} 详情失败:`,
@@ -283,8 +303,35 @@ export function FactoryEditorPage() {
 
   const handleDeleteNode = async (nodeId: string) => {
     try {
+      // 删前取 prim_path：删 LINE 容器会连带移除其下全部设备；删 EQUIPMENT 删单个。
+      // primPath 在 node.detail 里（VO 顶层没有）；拿不到再走详情接口（与双击高亮同源，已验证可用）。
+      const node = findNode(factoryTree, nodeId);
+      let primPath =
+        (node as any)?.detail?.primPath || (node as any)?.primPath || "";
+      if (!primPath) {
+        try {
+          const d = await getFactoryProjectDetailByNodeIdApi(nodeId);
+          primPath =
+            (d?.data as any)?.primPath ||
+            (d?.data as any)?.detail?.primPath ||
+            "";
+        } catch (e) {
+          console.warn("[FactoryEditor] 取节点详情拿 primPath 失败:", e);
+        }
+      }
       const res = await deleteFactoryAssetNodeApi(nodeId);
       if (res?.code === 200) {
+        // 同步从 Kit stage 删除对应 prim，否则 3D 场景里模型还在
+        if (primPath) {
+          deleteOvPrimApi(primPath).catch((e) =>
+            console.error("[FactoryEditor] OV prim 删除失败:", e),
+          );
+        } else {
+          console.warn(
+            "[FactoryEditor] 节点无 primPath，跳过 OV prim 删除:",
+            nodeId,
+          );
+        }
         toast.success(t("common.deleteSuccess"));
         fetchProjectAssetById();
       } else {

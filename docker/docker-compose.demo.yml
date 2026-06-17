@@ -84,6 +84,9 @@ services:
       DB_NAME: aifactory_simulation
       AIFACTORY_CREATE_ALL: "false"        # 不自己建表，依赖 sim_backend 的 creator_tables.sql
       AIFACTORY_STORAGE_ROOT: /data/storage
+      # 宿主存储绝对路径（= 下方挂载源 AIFACTORY_STORAGE_HOST）。后端据此给新建工厂项目的 root_usd_path
+      # 生成【绝对路径】，让 Kit（宿主原生）能直接打开（绕开 Kit USD_ROOT，兼容后端文件落在不同盘）。
+      AIFACTORY_USD_HOST_ROOT: ${AIFACTORY_STORAGE_HOST:-/data/storage}
     # 不覆盖 command：用镜像内置 CMD（uvicorn main:app --port 8128 --workers 2）。
     # 覆盖健康检查：镜像默认查 /api/v1 与 /health 都会 404 → 永远 unhealthy；改查 /docs（200）。
     healthcheck:

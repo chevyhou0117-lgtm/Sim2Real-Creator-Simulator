@@ -1400,12 +1400,12 @@ function FactoryConfigPanel({
       <ConfigSection title="Basic Information">
         <ConfigRow
           label="Factory Name"
-          value={node?.name || "Houston P9 AI Factory"}
+          value={node?.name || "富士康烟台"}
           editing={editing}
         />
         <ConfigRow
           label="Factory Layer"
-          value={node?.name || "Houston P9 AI Factory"}
+          value={node?.name || "富士康烟台"}
           editing={editing}
         />
         <ConfigRow
@@ -1415,13 +1415,13 @@ function FactoryConfigPanel({
         />
         <ConfigRow
           label="3D USD Name"
-          value="Houston P9 AI Factory.USD"
+          value="富士康烟台.USD"
           editing={editing}
           dropdown
         />
         <ConfigRow
           label="3D USD ID"
-          value="Houston P9 AI Factory.USD"
+          value="富士康烟台.USD"
           editing={editing}
           dropdown
         />

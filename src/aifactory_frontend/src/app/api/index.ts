@@ -161,6 +161,21 @@ export const highlightNodeApi = (params: { primPath: string[] }) => {
   return Http.post(`${ovBaseUrl}/highlight`, params);
 };
 
+// 选中设备并平滑运镜到斜俯透视（focus-perspective）：双击设备节点用，视角平滑移动 + 高亮
+export const focusPerspectiveApi = (params: {
+  primPath: string;
+  azimuthDeg?: number;
+  elevationDeg?: number;
+  distanceFactor?: number;
+}) => {
+  return Http.post(`${ovBaseUrl}/focus-perspective`, params);
+};
+
+// 删除 Kit stage 里的 prim（删产线/设备时同步移除 3D 模型；删 LINE 容器会连带其下设备）
+export const deleteOvPrimApi = (primPath: string) => {
+  return Http.del(`${ovBaseUrl}/delete/assets`, { primPath });
+};
+
 // 保存 ov 模型
 export const saveOVModelApi = (params: any) => {
   return Http.post(`${ovBaseUrl}/stage/save`, params);

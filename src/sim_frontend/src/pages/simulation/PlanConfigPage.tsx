@@ -49,7 +49,7 @@ interface TreeNode {
 // ── Data ───────────────────────────────────────────────────────────────────────
 let ASSET_TREE: TreeNode[] = [
   {
-    id: 'factory', label: 'Houston P9', type: 'factory',
+    id: 'factory', label: '富士康烟台', type: 'factory',
     children: [
   {
     id: 'lines', label: 'Participating Lines', type: 'group',

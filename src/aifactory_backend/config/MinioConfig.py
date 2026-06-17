@@ -27,6 +27,14 @@ STATIC_BASE = os.getenv("AIFACTORY_STATIC_BASE", "/static").rstrip("/")
 # 注意：不要指向 Kit 的 P9_animations（那里只有 Library 没有 Line_Library）。
 ASSET_LIBRARY_ROOT = os.getenv("AIFACTORY_ASSET_LIBRARY_ROOT") or STORAGE_ROOT
 
+# Kit 端可达的【宿主绝对路径】根：用于给新建项目/上传的工厂 USD 生成【绝对】root_usd_path。
+# Kit 的 _build_full_url 对绝对 Windows 路径（C:/... 或 C:\...）原样打开，绕开其 USD_ROOT，
+# 故后端文件即便落在与 Kit USD_ROOT 不同的盘，也能被 Kit 直接打开（避免相对路径拼错根的问题）。
+#   - 原生运行：STORAGE_ROOT 本身即宿主绝对路径 → 默认 = STORAGE_ROOT。
+#   - docker 运行：容器内 STORAGE_ROOT=/data/storage，须用 AIFACTORY_USD_HOST_ROOT 覆盖为宿主真实路径
+#     （即 compose 挂载源 AIFACTORY_STORAGE_HOST，如 C:/Workspace/Sim2Real/storage）。
+USD_HOST_ROOT = (os.getenv("AIFACTORY_USD_HOST_ROOT") or STORAGE_ROOT).replace("\\", "/").rstrip("/")
+
 
 class LocalStorageConfig:
     """本地存储配置。属性名沿用旧 MinIO 配置，便于历史调用点平滑过渡。"""
@@ -35,6 +43,7 @@ class LocalStorageConfig:
         self.storage_root = STORAGE_ROOT
         self.static_base = STATIC_BASE
         self.asset_library_root = ASSET_LIBRARY_ROOT
+        self.usd_host_root = USD_HOST_ROOT
         # 下列属性仅为兼容历史代码保留；本地化后不再用于拼 URL。
         self.bucket_name = ""
         self.minio_endpoint = ""

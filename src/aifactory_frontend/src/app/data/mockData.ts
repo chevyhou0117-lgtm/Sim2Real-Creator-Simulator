@@ -158,7 +158,7 @@ export interface ValidationReport {
 }
 
 export function generateValidationReport(
-  factoryName = "Houston P9 AI Factory",
+  factoryName = "富士康烟台",
 ): ValidationReport {
   const issues: ValidationIssue[] = [
     {
@@ -356,7 +356,7 @@ export function generateValidationReport(
 // ───────────────────────────────────────────────
 export const houstonFactoryTree: FactoryNode = {
   id: "houston-p9",
-  name: "Houston P9 AI Factory",
+  name: "富士康烟台",
   type: "factory",
   code: "HOUSTON-P9",
   children: [
@@ -651,7 +651,7 @@ export const californiaFactoryTree: FactoryNode = {
 export const mockFactoryProjects: FactoryProject[] = [
   {
     id: "houston-p9",
-    name: "Houston P9 AI Factory",
+    name: "富士康烟台",
     projectVersion: "_V1",
     status: "published",
     thumbnail:
@@ -818,7 +818,7 @@ export const assetLibraryCategories: AssetLibraryCategory[] = [
             //     id: 'sm471-v2', versionLabel: 'V2.0', status: 'active',
             //     usdPath: '/assets/usd/sm471_v2.usd', polyCount: '138,200', fileSize: '21.4 MB',
             //     createdAt: '2023-11-05', createdBy: 'Li Ming',
-            //     description: 'Updated nozzle head geometry and feeder rail detail. Used in Houston P9 factory (legacy line).',
+            //     description: 'Updated nozzle head geometry and feeder rail detail. Used in 富士康烟台 factory (legacy line).',
             //     referencedByProjects: 2,
             //   },
             //   {
@@ -1522,7 +1522,7 @@ export const mockAuditLogs: AuditLog[] = [
     user: "Grace Liu",
     module: "Factory Project",
     action: "Save Version",
-    target: "Houston P9 AI Factory v2.3.0",
+    target: "富士康烟台 v2.3.0",
     result: "success",
     ip: "192.168.1.101",
   },
@@ -1603,7 +1603,7 @@ export const mockAuditLogs: AuditLog[] = [
     user: "Grace Liu",
     module: "Factory Project",
     action: "Export Layout",
-    target: "Houston P9 - Floor Plan PDF",
+    target: "富士康烟台 - Floor Plan PDF",
     result: "success",
     ip: "192.168.1.101",
   },
@@ -2001,7 +2001,7 @@ export interface ProjectIntegration {
 export const projectIntegrations: ProjectIntegration[] = [
   {
     projectId: "houston-p9",
-    projectName: "Houston P9 AI Factory",
+    projectName: "富士康烟台",
     overallStatus: "partial",
     lastUpdated: "2025-12-20 14:30",
     sources: [
@@ -2138,7 +2138,7 @@ export const factoryInfos: FactoryInfo[] = [
   },
   {
     id: "houston-p9",
-    name: "Houston P9",
+    name: "富士康烟台",
     factoryId: "USAHSTP9AIFactory001",
     address: "8303 Fallbrook Dr., Houston, TX 77064, USA",
     description: "Houston Texas P9 AI Server Manufacturing Factory",

@@ -1,3 +1,4 @@
+import asyncio
 import math
 import logging
 import uuid
@@ -33,9 +34,24 @@ from models.enums.ProjectStatusEnum import ProjectStatus
 from models.enums.InstanceAssetTypeEnum import InstanceAssetType
 from models.enums.BindStatusEnum import BindStatus
 from service.MinioService import MinioManagerService
+from config.MinioConfig import minioConfig
 
 init_logging()
 logger = logging.getLogger(__name__)
+
+# 全新工厂项目根节点的空 root USD 模板（usda 文本写入 .usd 文件；USD/Kit 按内容识别格式，故扩展名用 .usd）。
+_EMPTY_ROOT_USD = """#usda 1.0
+(
+    defaultPrim = "World"
+    doc = "{doc}"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "World"
+{{
+}}
+"""
 
 
 class FactoryProjectService:
@@ -183,6 +199,39 @@ class FactoryProjectService:
             logger.error(f"[Error in create_factory_project]: {e}")
             raise BusinessException(ErrorCode.DB_ERROR, extra_msg=f"创建工厂项目失败: {e}")
 
+    async def _create_root_usd(
+        self,
+        root_node: FactoryAssetNode,
+        project_id,
+        factory_name: str,
+        db: AsyncSession,
+    ) -> None:
+        """为工厂项目根节点创建空 root USD 文件 + FactoryAsset3dModel 记录。
+
+        - 写文件用【相对路径】rel_path：落到 STORAGE_ROOT/FactoryProjects/<project_id>/<project_id>.usd。
+        - 存库用【绝对路径】abs_path = USD_HOST_ROOT + rel_path：Kit 的 _build_full_url 对绝对 Windows
+          路径原样打开，绕开 Kit 的 USD_ROOT，从而后端文件即便落在与 Kit USD_ROOT 不同的盘也能打开。
+        新建即落一个最小空舞台，使项目在 Creator 中可直接打开；保存（save_as_stage_async）覆盖写回同一文件。
+        """
+        rel_path = f"FactoryProjects/{project_id}/{project_id}.usd"
+        abs_path = f"{minioConfig.usd_host_root}/{rel_path}"  # 绝对路径（宿主可达），存入 DB
+        usd_bytes = _EMPTY_ROOT_USD.format(
+            doc=f"{factory_name} - 空场景（项目 {project_id}）"
+        ).encode("utf-8")
+        minio = MinioManagerService()
+        # 写本地存储（线程池，避免阻塞事件循环）；upload_bytes_to_path 内部会建父目录
+        await asyncio.to_thread(minio.upload_bytes_to_path, usd_bytes, rel_path)
+        db.add(FactoryAsset3dModel(
+            factory_asset_id=root_node.id,
+            usd_name=f"{project_id}.usd",
+            root_usd_path=abs_path,
+            bucket_name=minio.bucket_name,
+            prim_path="/World",
+            location_path="/World",
+        ))
+        await db.flush()
+        logger.info(f"[CreateProject] 根节点 root USD 已创建: file={rel_path}, root_usd_path={abs_path}")
+
     async def _init_factory_asset_tree(
         self,
         factory_id,
@@ -210,6 +259,10 @@ class FactoryProjectService:
         )
         db.add(root_node)
         await db.flush()
+
+        # 新建项目即为根节点创建一个空 root USD（写入本地存储）+ 3D 模型记录，
+        # 使项目在 Creator 中可打开/保存（root_usd_path 由流程统一登记，不手改 DB）。
+        await self._create_root_usd(root_node, project_id, factory_name, db)
 
         default_node = FactoryAssetNode(
             factory_projects_id=project_id,
