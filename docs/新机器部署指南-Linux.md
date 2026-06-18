@@ -17,8 +17,8 @@
  ├─ http://<HOST>:8000  sim 后端（仿真引擎，拥有 DB） │  (compose 5 服务)
  ├─ http://<HOST>:8129  aifactory 后端（资产/工厂）   │
  ├─       :5432         PostgreSQL（共享库）          ┘
- └─ (直连) Kit  :8011 /ov+/kit/playback ┐  原生跑在宿主机
-            WebRTC :12333 / :12334     ┘  (NVIDIA GPU，不在 Docker)
+ └─ (直连) Kit  sim→:8233 ｜ aifactory→:8011  /ov+/kit/playback ┐ 原生跑在宿主机
+            WebRTC :12333 / :12334                             ┘ (NVIDIA GPU，不在 Docker)
 ```
 
 `<HOST>`：单机演示 = `localhost`；远程访问 = 服务器 IP（见 §8）。
@@ -28,7 +28,9 @@
 | sim 前端 / aifactory 前端 | 8080 / 8081 | Docker（nginx） |
 | sim 后端 / aifactory 后端 | 8000 / 8129 | Docker（FastAPI） |
 | PostgreSQL | 5432 | Docker |
-| Omniverse Kit | 8011 / 12333 / 12334 | **宿主原生**（GPU） |
+| Omniverse Kit | sim 用 8233 ｜ aifactory 用 8011 ｜ WebRTC 12333 / 12334 | **宿主原生**（GPU） |
+
+> sim 与 aifactory 前端连的是**两个分开的 Kit /ov 端口**：sim → `:8233`，aifactory → `:8011`。勿混用。
 
 ---
 
@@ -97,7 +99,7 @@ export AIFACTORY_USD_ROOT=/opt/sim2real/storage
 ```bash
 ./repo.sh launch       # 选 fii.houyiming_streaming.kit
 ```
-起来后监听 `:8011`（/ov + /kit/playback）、`:12333`（media）、`:12334`（signal）。
+起来后监听 Kit 的 /ov + /kit/playback 控制端口 —— **sim 前端用 `:8233`、aifactory 前端用 `:8011`（两者分开）** —— 以及 `:12333`（media）、`:12334`（signal）。
 
 ---
 
@@ -116,11 +118,11 @@ AIFACTORY_STORAGE_HOST=/opt/sim2real/storage     # ★ 指向 §2.3 的 <STORAGE
 # ★ 跨机/远程访问唯一必改项：Kit 宿主的客户端可达 IP（局域网/公网；单机演示留 127.0.0.1）。
 #   运行期注入——容器启动时据此生成 runtime-config.js。改它后只需 up -d（无需 rebuild）。详见 §7。
 KIT_HOST_IP=127.0.0.1
-KIT_API_PORT=8011                                # Kit /ov 控制端口
+KIT_API_PORT=8233                                # sim 前端的 Kit /ov 控制端口（aifactory 前端用的 8011 固定在其 nginx.conf）
 BACKEND_PORT=8000                                # sim 后端发布端口
 
 # 以下 VITE_* 仅作构建期默认/回退，会被上面 KIT_HOST_IP 的运行期值覆盖，单机演示保持默认即可
-VITE_KIT_API_URL=http://localhost:8011
+VITE_KIT_API_URL=http://localhost:8233          # sim 前端的 Kit /ov（与 aifactory 的 8011 分开）
 VITE_KIT_STREAM_URL=enabled                      # 非空=启用直连 WebRTC（不需要 5183 串流页）
 VITE_BACKEND_DIRECT_URL=http://localhost:8000
 VITE_KIT_STREAM_MODE=direct
@@ -186,7 +188,7 @@ GPU 机器常是 headless 服务器、浏览器在别的机器，此时 `localho
    docker compose -f docker/docker-compose.demo.yml up -d sim-frontend aifactory-frontend
    ```
 3. **Kit 扩展 CORS** 放行前端源（如 `http://<SERVER_IP>:8080`、`:8081`）。
-4. **防火墙放行**给客户端：`8080 8081 8000 8129 8011 12333 12334`（如 `ufw allow`）。
+4. **防火墙放行**给客户端：`8080 8081 8000 8129 8233 8011 12333 12334`（如 `ufw allow`）。
 5. 验证：浏览器开 `http://<SERVER_IP>:8080/runtime-config.js` 应看到该 IP；或 devtools 敲 `window.__RUNTIME_CONFIG__`。
 
 > **原理**：Kit IP 是【运行期注入】的——容器启动时 nginx 脚本 `docker-runtime-config.sh` 按 `KIT_HOST_IP` 生成 `/runtime-config.js`，前端优先读 `window.__RUNTIME_CONFIG__`，回退构建期默认（均为 `localhost`/`127.0.0.1`）。**首次 build 一次即可，以后换 IP 只改 `KIT_HOST_IP` 再 `up -d`**。
@@ -196,7 +198,7 @@ GPU 机器常是 headless 服务器、浏览器在别的机器，此时 `localho
 
 ## 8. 已知限制与排障
 
-- **3D 黑屏**：① Kit 在跑且 `:8011/:12333/:12334` 在监听；② sim 前端跨域调 Kit，需 Kit 扩展 CORS 放行前端源；③ `docker/.env` 的 `KIT_HOST_IP` 指向 Kit 宿主、`KIT_API_PORT` 为实际 /ov 端口（默认 8011），改后 `up -d` 重建前端生效。
+- **3D 黑屏**：① Kit 在跑且 sim 的 `:8233`、aifactory 的 `:8011` 以及 `:12333/:12334` 在监听；② sim 前端跨域调 Kit，需 Kit 扩展 CORS 放行前端源；③ `docker/.env` 的 `KIT_HOST_IP` 指向 Kit 宿主、`KIT_API_PORT` 为 sim 的 /ov 端口（默认 8233；aifactory 的 8011 固定在其 nginx.conf），改后 `up -d` 重建前端生效。
 - **3D 只开场景不动画**：sim 后端 `:8000` 已发布（compose 已发布）、`KIT_HOST_IP`/`BACKEND_PORT` 拼出的后端地址是否可达。
 - **缩略图 404 / 资产打不开**：`AIFACTORY_STORAGE_HOST` 没指对，或 **bind-mount 权限**（§2.3）——容器 uid 1000 读不到。
 - **aifactory Creator 3D 报 `authenticate/accessToken`**：把其 `AppStream.tsx` local 配置 `authenticate` 改 `false`，重 build `aifactory-frontend`。

@@ -6,7 +6,8 @@
 //   3. state()     查询当前播放头位置 + 速度 + 状态（用于 UI 同步）
 import { kitApiUrl } from './runtimeConfig';
 
-const KIT_BASE = kitApiUrl(import.meta.env.VITE_KIT_API_URL ?? 'http://localhost:8011').replace(/\/+$/, '');
+// 默认 8233 = sim 前端用的 Kit（aifactory 前端用的是另一个 Kit :8011，分开的）。
+const KIT_BASE = kitApiUrl(import.meta.env.VITE_KIT_API_URL ?? 'http://localhost:8233').replace(/\/+$/, '');
 
 const DEFAULT_TIMEOUT_MS = 5000;
 // 大规模模拟单次回放事件可达数十万条（实测 P9 ≈ 69.5 万条 / 265 MB）：

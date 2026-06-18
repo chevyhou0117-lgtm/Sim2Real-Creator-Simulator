@@ -113,9 +113,10 @@ services:
       dockerfile: Dockerfile.prod
       args:
         # 本机演示：浏览器、Kit、后端都在同一台机器，localhost 即可。
-        # VITE_KIT_API_URL：Kit 的 /ov + /kit/playback 控制端点。kit.ts 默认回退 :8011（aifactory.service）；
-        #   若你的 Kit 把这些端点放在 :8233，改这里再 rebuild。
-        VITE_KIT_API_URL: ${VITE_KIT_API_URL:-http://localhost:8011}
+        # VITE_KIT_API_URL：sim 前端直连 Kit 的 /ov + /kit/playback 控制端点。
+        #   ★ sim 的 Kit 在 :8233 —— 与 aifactory 前端用的 Kit :8011 是【分开的两个端口/服务】，勿混用。
+        #   这里仅作构建期回退；运行期以下面的 KIT_API_PORT 注入为准（runtime-config.js）。
+        VITE_KIT_API_URL: ${VITE_KIT_API_URL:-http://localhost:8233}
         # VITE_KIT_STREAM_URL：现在只作【3D 视口开关】——非空=启用「直连 WebRTC」（前端自己连 Kit 的
         # media:12333/signal:12334，**不再需要单独起 5183 串流页**）；留空=降级 2D mock。
         # 实际连接目标(Kit 主机/端口)在 源码/sim_frontend/stream.config.json（默认 127.0.0.1:12333/12334）。
@@ -129,7 +130,7 @@ services:
     #   这些 runtime env 覆盖上面构建期烤进的 VITE_* 默认值（浏览器优先读 window.__RUNTIME_CONFIG__）。
     environment:
       KIT_HOST_IP: ${KIT_HOST_IP:-127.0.0.1}    # Kit 宿主可达 IP（远程访问填局域网 IP，本机演示留 127.0.0.1）
-      KIT_API_PORT: ${KIT_API_PORT:-8011}        # Kit /ov 控制端口
+      KIT_API_PORT: ${KIT_API_PORT:-8233}        # ★ sim 前端的 Kit /ov 控制端口 = 8233（独立于 aifactory 的 8011）
       BACKEND_PORT: ${BACKEND_PORT:-8000}        # sim 后端发布端口（Kit 回拉事件用）
     depends_on:
       - sim-backend
@@ -158,7 +159,8 @@ services:
     depends_on:
       - aifactory-backend
     extra_hosts:
-      # 让容器内 nginx 能把 /ov 反代到【宿主机】上原生运行的 Kit :8011
+      # 让容器内 nginx 能把 /ov 反代到【宿主机】上原生运行的 aifactory 用的 Kit :8011。
+      # 注意：sim 前端连的是另一个 Kit :8233，两者分开；这里的 8011 固定在 nginx.conf，要改需 rebuild。
       - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]

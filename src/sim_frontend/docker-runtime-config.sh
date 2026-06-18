@@ -7,7 +7,7 @@ set -eu
 
 HTML_DIR=/usr/share/nginx/html
 : "${KIT_HOST_IP:=127.0.0.1}"
-: "${KIT_API_PORT:=8011}"
+: "${KIT_API_PORT:=8233}"   # sim 前端的 Kit /ov 端口（aifactory 前端用的是另一个 Kit :8011）
 : "${BACKEND_PORT:=8000}"
 
 cat > "$HTML_DIR/runtime-config.js" <<EOF

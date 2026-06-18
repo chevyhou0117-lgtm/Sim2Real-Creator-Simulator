@@ -177,7 +177,7 @@ def restart_kit() -> KitRestartResponse:
 
     pids = _find_kit_pids(match)
     _kill_pids(pids)
-    # 杀完再短暂 sleep 一下，确保端口 (8011 / streaming) 释放，否则新进程 bind 失败
+    # 杀完再短暂 sleep 一下，确保端口 (sim 的 Kit /ov 8233 / streaming) 释放，否则新进程 bind 失败
     if pids:
         time.sleep(0.5)
     extra_args = shlex.split(settings.KIT_LAUNCH_ARGS or "")
