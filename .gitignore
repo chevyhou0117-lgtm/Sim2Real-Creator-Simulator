@@ -34,6 +34,7 @@ build/
 storage/
 docker/storage-data/
 *.usd.bak
+*.tar.gz
 
 # ───────────────────────────── 日志 ───────────────────────────────
 *.log

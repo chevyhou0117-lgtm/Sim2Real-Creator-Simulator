@@ -106,9 +106,9 @@ export default class AppStream extends Component<
             mediaPort: StreamConfig.local.mediaPort,
           }),
           nativeTouchEvents: true,
-          // 让流分辨率自动贴合 video 元素尺寸，消除「固定比例」（等价于原 5183 viewer 的自适应 resize）。
-          // width/height 在此仅作【初始值=可向上请求的上限】（库限制最大 4096），fit 只在其范围内向下贴合。
-          fitStreamResolution: true,
+          // 固定请求 stream.config.json 的 streamWidth/streamHeight（3840×2720），与 aifactory 前端一致。
+          // 不用 fitStreamResolution：它会把流分辨率贴合 <video> 元素的实际像素尺寸，而 sim 视口被图表
+          // 面板挤小 → Kit 按小尺寸渲染 → 画面糊/分辨率很小。固定 4K 后由 CSS（width/height:100%）缩放贴合。
           width: StreamConfig.local.streamWidth,
           height: StreamConfig.local.streamHeight,
           fps: 60,

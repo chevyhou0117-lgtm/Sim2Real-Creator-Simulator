@@ -1,105 +1,66 @@
-# 新机器部署指南 · Linux 版（从零开始 · Docker 全栈 + 宿主 Kit）
+# 新机器部署指南 · Linux 版
 
-把整套 **Sim2Real（运营模拟 + Creator + 3D 数字孪生）** 部署到**一台全新的 Linux 机器**上（Ubuntu 22.04/24.04 为例）。
-形态：**5 个服务全部跑在 Docker 里**（两个后端 + 两个前端 + PostgreSQL），**Omniverse Kit 单独在宿主机原生运行**（要 NVIDIA GPU，不进 Docker）。
-
-> Linux 是这套更顺的目标：镜像全是 Linux 原生（无 WSL2 中间层），且 Kit 看门狗代码本来就是 Linux 版。
-> Windows 版见 [新机器部署指南.md](新机器部署指南.md)。
+**6 个服务全部跑在 Docker 里**（两个后端 + 两个前端 + PostgreSQL+Omniverse Kit App）。
 
 ---
 
-## 0. 总览
+## 0. 端口总览
 
 ```
-浏览器
- ├─ http://<HOST>:8080  sim 前端（运营模拟 UI）       ┐
- ├─ http://<HOST>:8081  aifactory 前端（Creator UI）  │  都在 Docker
- ├─ http://<HOST>:8000  sim 后端（仿真引擎，拥有 DB） │  (compose 5 服务)
- ├─ http://<HOST>:8129  aifactory 后端（资产/工厂）   │
- ├─       :5432         PostgreSQL（共享库）          ┘
- └─ (直连) Kit  sim→:8233 ｜ aifactory→:8011  /ov+/kit/playback ┐ 原生跑在宿主机
-            WebRTC :12333 / :12334                             ┘ (NVIDIA GPU，不在 Docker)
+用到的端口
+ ├─ http://<HOST1>:8080  simulator 前端    
+ ├─ http://<HOST1>:8081  creator 前端
+ ├─ http://<HOST1>:8000  simulator 后端
+ ├─ http://<HOST1>:8129  creator 后端
+ ├─ http://<HOST1>:5432  PostgreSQL（两个模块共享的数据库）
+ ├─ http://<HOST2>:8011  creator 在kit上的fastapi后端
+ └─ http://<HOST2>:8233. simulator 在kit上的fastapi后端
+            WebRTC :12333 / :12334                             
 ```
 
-`<HOST>`：单机演示 = `localhost`；远程访问 = 服务器 IP（见 §8）。
+`<HOST1>`：单机演示 = `localhost`；远程访问 = Sim2Real组件所在服务器 IP。
+`<HOST2>`：单机演示 = `localhost`；远程访问 = OMV Kit App所在服务器 IP。
 
-| 组件 | 端口 | 形态 |
-|---|---|---|
-| sim 前端 / aifactory 前端 | 8080 / 8081 | Docker（nginx） |
-| sim 后端 / aifactory 后端 | 8000 / 8129 | Docker（FastAPI） |
-| PostgreSQL | 5432 | Docker |
-| Omniverse Kit | sim 用 8233 ｜ aifactory 用 8011 ｜ WebRTC 12333 / 12334 | **宿主原生**（GPU） |
 
-> sim 与 aifactory 前端连的是**两个分开的 Kit /ov 端口**：sim → `:8233`，aifactory → `:8011`。勿混用。
 
 ---
 
-## 1. 前置依赖
+## 1. 拿代码 + 资产
+SimReal组件和Kit App可以部署在同一内网的不同机器上。
 
+从夸克网盘下载：
+
+1.kit镜像：fii-houyiming_streaming.tar.gz（约2GB） 
+
+2.样例资产库（约31GB）
 ```bash
-# Docker Engine + compose 插件（不是 Docker Desktop）
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER        # 之后重新登录，免 sudo 跑 docker
-docker compose version               # 确认有 compose v2 插件
+# Sim2Real组建仓库
+git clone https://github.com/chevyhou0117-lgtm/Sim2Real-Creator-Simulation
 
-# Git
-sudo apt-get update && sudo apt-get install -y git
+# Kit App
+gunzip -c fii-houyiming_streaming.tar.gz | docker load
 
-# NVIDIA 驱动（给宿主的 Kit 用；Kit 不进容器，故【不需要】nvidia-container-toolkit）
-sudo apt-get install -y nvidia-driver-550   # 版本按你的卡选，装完重启
-nvidia-smi                                   # 能列出 GPU 即可
-
-# 构建 Kit 需要的系统构建链（仅构建 Kit 时要）
-sudo apt-get install -y build-essential
-```
-
-> **不用单独装 Node / Python / 后端依赖**——前端在 Docker 里构建、后端在 Docker 里运行。
-> headless 服务器（无显示器）也行：Kit 用 `--no-window` 离屏渲染 + WebRTC 串流，不需要 X server。
-
----
-
-## 2. 拿代码 + 资产
-
-```bash
-# 2.1 主仓库（本项目）
-git clone <本仓库地址> ~/Sim2Real-Creator-Simulation
-# 源码在 源码/ 目录下（两处历史源码 bug 已在源码内修好，可直接构建）
-
-# 2.2 Kit App（单独 clone）
-git clone -b feat/aifactory-migration \
-  https://github.com/chevyhou0117-lgtm/kit-app-template.git ~/kit-app-template
-
-# 2.3 资产库（~31GB，不在 git 里，单独拷到本机，例如 /opt/sim2real/storage）
+# 资产库 (存在某路径)
 sudo mkdir -p /opt/sim2real/storage
-# …用 rsync/scp 把资产拷进去…
 ```
 
-资产目录顶层应包含：`thumbnails/ Library/ Line_Library/ Data/ `。
-本指南用 **`<STORAGE>`** 代指它（如 `/opt/sim2real/storage`）。
+资产目录顶层应包含：`thumbnails/ Library/ Line_Library/ `。
+本指南用 **`<STORAGE>`** 代指它。
 
-```
 
----
-
-## 3. 构建并启动 Kit（GPU，Docker 之外）
-
+### 3.1 启动 Kit 容器并指向资产库
+Kit 已容器化，直接 `docker run`：`-v` 把宿主资产库挂进容器，`-e AIFACTORY_USD_ROOT` 告诉 Kit 从哪读 USD（填【容器内】路径，即 `-v` 的挂载目标）：
 ```bash
-cd ~/kit-app-template
-./repo.sh build        # 首次用 packman 联网拉 Kit SDK 109.0.3（数 GB），需外网/内网缓存 + build-essential
+docker run -d --name sim2real --gpus all --restart unless-stopped \
+  -e AIFACTORY_USD_ROOT=/storage \
+  -p 8011:8011 -p 8233:8233 \
+  -p 12334:12334/tcp -p 12333:12333/udp \
+  -v /opt/sim2real/storage:/storage \
+  fii-houyiming_streaming:latest
 ```
+> `AIFACTORY_USD_ROOT=/storage` 必须等于 `-v` 右侧的容器内目标；宿主资产库在哪由 `-v` 左侧（`/opt/sim2real/storage`）决定，换位置只改左侧，无需 rebuild。
 
-### 3.1 让 Kit 指向资产库
-设置环境变量 `AIFACTORY_USD_ROOT=<STORAGE>`（Kit 从这里读 USD）：
-```bash
-export AIFACTORY_USD_ROOT=/opt/sim2real/storage
-# 或写进 source/extensions/aifactory.service.setup/.../.env
-```
-
-### 3.2 启动 Kit
-```bash
-./repo.sh launch       # 选 fii.houyiming_streaming.kit
-```
-起来后监听 Kit 的 /ov + /kit/playback 控制端口 —— **sim 前端用 `:8233`、aifactory 前端用 `:8011`（两者分开）** —— 以及 `:12333`（media）、`:12334`（signal）。
+起来后监听 Kit 的 /ov + /kit/playback 控制端口 —— **sim 前端用 `:8233`、aifactory 前端用 `:8011`（两者分开）** —— 以及 `:12333`（media）、`:12334`（signal）。`docker logs -f sim2real` 看启动日志。
 
 ---
 
@@ -111,21 +72,9 @@ cp docker/.env.demo.example docker/.env
 ```
 
 ### 4.1 编辑 `docker/.env`
+kit如果和sim2real服务在同一台机器，则127.0.0.1，在内网的不同机器上则填kit实际在的ip
 ```bash
-POSTGRES_PASSWORD=postgres                       # 演示可默认；正式改强密码
-AIFACTORY_STORAGE_HOST=/opt/sim2real/storage     # ★ 指向 §2.3 的 <STORAGE>
-
-# ★ 跨机/远程访问唯一必改项：Kit 宿主的客户端可达 IP（局域网/公网；单机演示留 127.0.0.1）。
-#   运行期注入——容器启动时据此生成 runtime-config.js。改它后只需 up -d（无需 rebuild）。详见 §7。
-KIT_HOST_IP=127.0.0.1
-KIT_API_PORT=8233                                # sim 前端的 Kit /ov 控制端口（aifactory 前端用的 8011 固定在其 nginx.conf）
-BACKEND_PORT=8000                                # sim 后端发布端口
-
-# 以下 VITE_* 仅作构建期默认/回退，会被上面 KIT_HOST_IP 的运行期值覆盖，单机演示保持默认即可
-VITE_KIT_API_URL=http://localhost:8233          # sim 前端的 Kit /ov（与 aifactory 的 8011 分开）
-VITE_KIT_STREAM_URL=enabled                      # 非空=启用直连 WebRTC（不需要 5183 串流页）
-VITE_BACKEND_DIRECT_URL=http://localhost:8000
-VITE_KIT_STREAM_MODE=direct
+KIT_HOST_IP=127.0.0.1/192.168....
 ```
 
 ### 4.2 对齐全厂场景 USD 的绝对路径（首次灌库前）
