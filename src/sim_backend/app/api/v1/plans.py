@@ -28,6 +28,7 @@ from app.models.md import (
     Product,
     ProductionLine,
     Stage,
+    WIPBuffer,
 )
 from app.models.res import (
     LineBalanceResult,
@@ -68,6 +69,7 @@ from app.schemas.sim import (
     ReadyValidationError,
     TaskCreate,
     TaskOut,
+    WIPBufferOut,
     WIPBufferSnapshotOut,
 )
 
@@ -759,6 +761,56 @@ def list_wip_snapshots(plan_id: str, db: Session = Depends(get_db)):
         .filter(WIPBufferSnapshot.plan_id == plan_id)
         .all()
     )
+
+
+@router.get("/{plan_id}/wip-buffers", response_model=list[WIPBufferOut])
+def list_wip_buffers(plan_id: str, db: Session = Depends(get_db)):
+    """线边仓"定义"（虚拟线边仓拓扑 + 容量），供 2D 俯视图画工序间缓冲。
+
+    已克隆方案：取方案专属行（含导入的 capacity_qty）；未克隆：回退全局定义（容量默认 NULL=无限）。
+    """
+    plan = _get_plan(db, plan_id)
+    rows = (
+        db.query(WIPBuffer)
+        .filter(WIPBuffer.plan_id == plan_id, WIPBuffer.status == "ACTIVE")
+        .all()
+    )
+    if not rows:
+        rows = (
+            db.query(WIPBuffer)
+            .join(ProductionLine, ProductionLine.line_id == WIPBuffer.line_id)
+            .join(Stage, Stage.stage_id == ProductionLine.stage_id)
+            .filter(
+                Stage.factory_id == plan.factory_id,
+                WIPBuffer.plan_id.is_(None),
+                WIPBuffer.status == "ACTIVE",
+            )
+            .all()
+        )
+    return rows
+
+
+@router.get("/{plan_id}/equipment-map", response_model=dict[str, str])
+def equipment_map(plan_id: str, db: Session = Depends(get_db)):
+    """{equipment_id: operation_id} 映射，供 2D 回放把 equipment_states 聚合到工序盒着色。
+
+    与快照里 equipment_states 的设备 ID 同 scope：已克隆方案取方案专属设备，否则取全局。
+    """
+    plan = _get_plan(db, plan_id)
+    rows = (
+        db.query(Equipment.equipment_id, Equipment.operation_id)
+        .filter(Equipment.plan_id == plan_id)
+        .all()
+    )
+    if not rows:
+        rows = (
+            db.query(Equipment.equipment_id, Equipment.operation_id)
+            .join(ProductionLine, ProductionLine.line_id == Equipment.line_id)
+            .join(Stage, Stage.stage_id == ProductionLine.stage_id)
+            .filter(Stage.factory_id == plan.factory_id, Equipment.plan_id.is_(None))
+            .all()
+        )
+    return {eq_id: op_id for eq_id, op_id in rows}
 
 
 # ---------------------------------------------------------------------------

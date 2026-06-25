@@ -15,7 +15,12 @@
 `simpy.Resource(capacity=1)`。事件流可直接驱动 Kit 端产品逐台流动动画。
 
 产出毫秒级事件：PROCESSING_START/END、PRODUCT_COMPLETE、STAGE_HANDOFF、CHANGEOVER_START/END、
-NG_DETECTED、FAILURE_START/END、ISOLATED_MODE_SYNTHETIC_FEED。
+NG_DETECTED、FAILURE_START/END、ISOLATED_MODE_SYNTHETIC_FEED、BLOCKED_START/END（线边仓背压）、
+STARVED_START/END（线边仓饥饿）。
+
+线边仓（WIP_CAPACITY 软约束）：同 line 上 md_wip_buffer 定义的 (pre_op, post_op) 有界缓冲。
+前置工序完工后向缓冲 put（满则攥着上游资源阻塞=背压），后置工序开工时从缓冲 get（空则占着
+下游资源等料=饥饿）。容量按件数 capacity_qty 判定。缓冲水位 60s 采样写入快照 wip_states。
 """
 
 from __future__ import annotations
@@ -116,6 +121,7 @@ from app.engine.common import (
     SimEvent,
     get_enabled_constraints,
     load_resolved_processes,
+    semi_finished_code,
 )
 from app.models.biz import ProductionTask
 from app.models.md import (
@@ -123,6 +129,7 @@ from app.models.md import (
     BOPProcess,
     Equipment,
     EquipmentFailureParam,
+    Operation,
     OperationTransition,
     Product,
     ProductionLine,
@@ -155,6 +162,15 @@ class DESMetrics:
     material_shortage_count: int = 0
     equipment_failure_count: int = 0
     equipment_downtime_seconds: float = 0.0
+    # 线边仓（WIP_CAPACITY 软约束）量化指标
+    blocked_count: int = 0          # 背压：上游因缓冲满被卡的次数
+    blocked_seconds: float = 0.0    # 背压累计时长（秒）
+    starved_count: int = 0          # 饥饿：下游因缓冲空等料的次数
+    starved_seconds: float = 0.0    # 饥饿累计时长（秒）
+    wip_peak_level: dict[str, int] = field(default_factory=dict)  # wip_id -> 峰值水位
+    # 线边仓水位采样（旁路：(ts_ms, wip_id, level, capacity)；仅供 _finalize replay 重建
+    # wip_states 时序，不写入 res_simulation_event 主表，避免放大事件量/索引重建成本）
+    wip_level_samples: list = field(default_factory=list)
     hourly_output: list[dict] = field(default_factory=list)
     actual_completion_sec: float = 0.0  # 最后一件 PRODUCT_COMPLETE 事件的时间戳
     # Per-line LBR 时序：[{line_id, line_code, line_name, points: [{t_min, lbr}, ...]}, ...]
@@ -205,11 +221,19 @@ class LineResources:
                 self.resources[proc.operation_id] = simpy.Resource(env, capacity=1)
                 self._op_proc_ref[proc.operation_id] = proc
 
-        # WIP containers
+        # 线边仓：有界缓冲(cap≥1)建 simpy.Container 做背压；所有缓冲（含无限 cap=None）都记
+        # 逻辑水位 self.wip_level（供"每道工序间半成品数量"水位时序观测）。wip_meta 存全部缓冲。
         self.wip_containers: dict[str, simpy.Container] = {}
+        self.wip_meta: dict[str, dict] = {}
+        self.wip_level: dict[str, int] = {}
+        self._claimed_wip: set[str] = set()  # 被某 task BoP 成功插桩的 wip_id（检出跨 stage 失配）
         if "WIP_CAPACITY" in constraints:
-            for key, cap in wip_buffers.items():
-                self.wip_containers[key] = simpy.Container(env, capacity=cap, init=0)
+            for wip_id, meta in wip_buffers.items():
+                self.wip_meta[wip_id] = meta
+                self.wip_level[wip_id] = 0
+                cap = meta.get("cap")
+                if cap and cap >= 1:
+                    self.wip_containers[wip_id] = simpy.Container(env, capacity=cap, init=0)
 
         # 失效进程（每台设备只注册一次）
         if "EQUIPMENT_FAILURE" in constraints:
@@ -253,6 +277,15 @@ class LineResources:
             product_id=product_id,
             metadata=metadata,
         ))
+
+    def record_wip_level(self, wip_id: str, level: int, capacity, material_code=None):
+        """记录线边仓水位采样（旁路 list，仅供 _finalize replay 重建 wip_states 时序）。
+        capacity 为 int（有界）或 None（无限）。"""
+        self.metrics.wip_level_samples.append(
+            (int(self.env.now * 1000), wip_id, int(level), capacity, material_code)
+        )
+        if level > self.metrics.wip_peak_level.get(wip_id, 0):
+            self.metrics.wip_peak_level[wip_id] = int(level)
 
     def all_equipment_ids(self) -> set[str]:
         return {eq for proc in self._op_proc_ref.values() for eq in proc.equipment_ids}
@@ -340,6 +373,25 @@ class TaskExecutor:
         self._output_buffer: list[str] = []  # E2S 暂存
         self._in_flight: list[simpy.Process] = []
 
+        # 线边仓插桩：把本线的缓冲按 pre/post 工序在本 task BoP(processes) 中的位置登记。
+        # _out_buf[i]=wip_id：procs[i] 完工后向该缓冲放料（背压）；
+        # _in_buf[i]=wip_id：procs[i] 开工前从该缓冲取料（饥饿）。
+        # 按位置插桩（而非假定相邻）：pre/post 即便不相邻也能正确插桩；pre/post 不在本
+        # task BoP 内（跨 stage 等）则自然不登记 → 该缓冲对本 task no-op。
+        self._out_buf: dict[int, str] = {}
+        self._in_buf: dict[int, str] = {}
+        if self.line.wip_meta:
+            op_to_idx: dict[str, int] = {}
+            for idx, p in enumerate(self.processes):
+                op_to_idx.setdefault(p.operation_id, idx)
+            for wip_id, meta in self.line.wip_meta.items():
+                a = op_to_idx.get(meta["pre_op"])
+                b = op_to_idx.get(meta["post_op"])
+                if a is not None and b is not None and a < b:
+                    self._out_buf[a] = wip_id
+                    self._in_buf[b] = wip_id
+                    self.line._claimed_wip.add(wip_id)
+
     # ------------------------------------------------------------------
     def run(self):
         """Task 执行入口：生成器。同 line 的下一 task 只在本 run 返回后才启动。"""
@@ -414,6 +466,11 @@ class TaskExecutor:
 
             with resource.request() as req:
                 yield req
+                # 取料（饥饿）：本工序是某缓冲的后置工序 → 持下游资源后、开工前取 1 件；
+                # 缓冲空则占着资源等料 = 饥饿（STARVED）。
+                in_wid = self._in_buf.get(i)
+                if in_wid is not None:
+                    yield from self._wip_get(in_wid, eq_list[0], product_id)
                 # 簇内逐台 START → timeout(ct/N) → END，整段持有同一 Resource
                 for eq_id, prim_path in eq_list:
                     self.line.record_event(
@@ -426,6 +483,11 @@ class TaskExecutor:
                         self.line.metrics.equipment_busy_time.get(eq_id, 0) + per_eq_ct
                     )
                     self.line.record_event(eq_id, prim_path, "PROCESSING_END", product_id)
+                # 放料（背压）：本工序是某缓冲的前置工序 → 完工后、释放资源前放 1 件；
+                # 缓冲满则攥着资源阻塞 = 背压（BLOCKED），上游随之逆向堵塞。
+                out_wid = self._out_buf.get(i)
+                if out_wid is not None:
+                    yield from self._wip_put(out_wid, eq_list[-1], product_id)
 
             # Yield rate（纯统计：NG 不杀件，仅累计 ng_count + 事件记录；产品继续过下游工序）
             # 串联簇的 NG 归到簇末端（视为整道工序判定）
@@ -472,6 +534,53 @@ class TaskExecutor:
         if self.connection_time > 0:
             yield self.env.timeout(self.connection_time)
         yield self.downstream_inbox.put((product_id, self.task.product_code))
+
+    # ------------------------------------------------------------------
+    def _buf_material(self, meta: dict) -> str | None:
+        """该缓冲当前持有的半成品码（按本 task 的产品 + 缓冲前置工序）。"""
+        return (semi_finished_code(self.task.product_code, meta["pre_op_code"])
+                if meta.get("pre_op_code") else None)
+
+    def _wip_get(self, wip_id: str, eq_tuple: tuple[str, str | None], product_id: str):
+        """后置工序开工前从缓冲取 1 件。有界且空仓 → 阻塞=饥饿(STARVED)；无限 → 仅记水位。"""
+        meta = self.line.wip_meta.get(wip_id, {})
+        cap = meta.get("cap")
+        c = self.line.wip_containers.get(wip_id)  # None=无限
+        eq_id, prim = eq_tuple
+        mat = self._buf_material(meta)
+        md = {"wip_id": wip_id, "wip_code": meta.get("wip_code"), "capacity": cap, "material_code": mat}
+        if c is not None and c.level == 0:
+            self.line.record_event(eq_id, prim, "STARVED_START", product_id, md)
+            t0 = self.env.now
+            yield c.get(1)
+            self.line.metrics.starved_seconds += self.env.now - t0
+            self.line.metrics.starved_count += 1
+            self.line.record_event(eq_id, prim, "STARVED_END", product_id, md)
+        elif c is not None:
+            yield c.get(1)
+        # 逻辑水位 -1（与 Container.level 同步；无限缓冲也据此给出水位时序）
+        self.line.wip_level[wip_id] = self.line.wip_level.get(wip_id, 0) - 1
+        self.line.record_wip_level(wip_id, self.line.wip_level[wip_id], cap, mat)
+
+    def _wip_put(self, wip_id: str, eq_tuple: tuple[str, str | None], product_id: str):
+        """前置工序完工后向缓冲放 1 件。有界且满仓 → 阻塞=背压(BLOCKED)；无限 → 仅记水位。"""
+        meta = self.line.wip_meta.get(wip_id, {})
+        cap = meta.get("cap")
+        c = self.line.wip_containers.get(wip_id)
+        eq_id, prim = eq_tuple
+        mat = self._buf_material(meta)
+        md = {"wip_id": wip_id, "wip_code": meta.get("wip_code"), "capacity": cap, "material_code": mat}
+        if c is not None and c.level >= c.capacity:
+            self.line.record_event(eq_id, prim, "BLOCKED_START", product_id, md)
+            t0 = self.env.now
+            yield c.put(1)
+            self.line.metrics.blocked_seconds += self.env.now - t0
+            self.line.metrics.blocked_count += 1
+            self.line.record_event(eq_id, prim, "BLOCKED_END", product_id, md)
+        elif c is not None:
+            yield c.put(1)
+        self.line.wip_level[wip_id] = self.line.wip_level.get(wip_id, 0) + 1
+        self.line.record_wip_level(wip_id, self.line.wip_level[wip_id], cap, mat)
 
 
 # ===========================================================================
@@ -604,14 +713,41 @@ def _load_failure_params(
     return out
 
 
-def _load_wip_buffers(db: Session, line_id: str, constraints: set[str]) -> dict[str, int]:
-    out: dict[str, int] = {}
+def _load_wip_buffers(db: Session, plan_id: str, line_id: str, constraints: set[str]) -> dict[str, dict]:
+    """读线边仓定义（仅 WIP_CAPACITY 启用时）。返回 wip_id -> meta{cap, pre_op, post_op, wip_code}。
+
+    容量口径：本期以**件数 capacity_qty** 为引擎约束依据（产品按抽象 unit 流动，put/get 量=1 件）。
+    无 capacity_qty 的缓冲本期不按体积建模 → 跳过（视为无约束）并告警。
+    scope：line_id 已是方案专属（克隆后重映射），再叠加 (plan 命中 OR 全局 NULL) 防御性过滤。
+    """
+    out: dict[str, dict] = {}
     if "WIP_CAPACITY" not in constraints:
         return out
-    for w in db.query(WIPBuffer).filter(WIPBuffer.line_id == line_id).all():
-        if w.pre_operation_id and w.post_operation_id:
-            key = f"{w.pre_operation_id}_{w.post_operation_id}"
-            out[key] = w.capacity_qty or 999
+    rows = (
+        db.query(WIPBuffer)
+        .filter(
+            WIPBuffer.line_id == line_id,
+            WIPBuffer.status == "ACTIVE",
+            (WIPBuffer.plan_id == plan_id) | (WIPBuffer.plan_id.is_(None)),
+        )
+        .all()
+    )
+    rows = [w for w in rows if w.pre_operation_id and w.post_operation_id]  # 双边齐才是有效缓冲
+    pre_ids = {w.pre_operation_id for w in rows}
+    op_code = dict(
+        db.query(Operation.operation_id, Operation.operation_code)
+        .filter(Operation.operation_id.in_(pre_ids)).all()
+    ) if pre_ids else {}
+    for w in rows:
+        # cap=件数(≥1)→有界(背压生效)；NULL/<1→None=无限(不背压，但仍记水位)
+        cap = int(w.capacity_qty) if (w.capacity_qty and int(w.capacity_qty) >= 1) else None
+        out[w.wip_id] = {
+            "cap": cap,
+            "pre_op": w.pre_operation_id,
+            "post_op": w.post_operation_id,
+            "wip_code": w.wip_code,
+            "pre_op_code": op_code.get(w.pre_operation_id),
+        }
     return out
 
 
@@ -768,7 +904,7 @@ def _run_wo_linked(
 
         equipment_ids = {eq for proc in all_line_procs for eq in proc.equipment_ids}
         failure_params = _load_failure_params(db, plan.plan_id, equipment_ids, constraints)
-        wip_buffers = _load_wip_buffers(db, line_id, constraints)
+        wip_buffers = _load_wip_buffers(db, plan.plan_id, line_id, constraints)
 
         line_res = LineResources(
             env=env, line_id=line_id, all_processes=all_line_procs,
@@ -793,6 +929,13 @@ def _run_wo_linked(
                 connection_type=conn_type, connection_time=conn_time,
                 is_isolated_mode_downstream=False,
             ))
+        # 检出「建了仓却没被任一 task BoP 插桩」的线边仓（前/后置工序跨 stage 或配置错），告警不静默
+        for _wid in set(line_res.wip_containers) - line_res._claimed_wip:
+            _m = line_res.wip_meta.get(_wid, {})
+            _log.warning(
+                "[DES][WIP] 线边仓 %s 的前/后置工序不在线 %s 任一 task 的 BoP 内（跨 stage 或配置错），本轮忽略",
+                _m.get("wip_code", _wid), line_id,
+            )
         env.process(_line_runner(env, executors, line_res))
 
     return line_resources_list
@@ -834,7 +977,7 @@ def _run_isolated(
 
         equipment_ids = {eq for proc in all_line_procs for eq in proc.equipment_ids}
         failure_params = _load_failure_params(db, plan.plan_id, equipment_ids, constraints)
-        wip_buffers = _load_wip_buffers(db, line_id, constraints)
+        wip_buffers = _load_wip_buffers(db, plan.plan_id, line_id, constraints)
 
         line_res = LineResources(
             env=env, line_id=line_id, all_processes=all_line_procs,
@@ -853,6 +996,13 @@ def _run_isolated(
                 connection_type="E2S", connection_time=0.0,
                 is_isolated_mode_downstream=is_downstream,
             ))
+        # 检出「建了仓却没被任一 task BoP 插桩」的线边仓（前/后置工序跨 stage 或配置错），告警不静默
+        for _wid in set(line_res.wip_containers) - line_res._claimed_wip:
+            _m = line_res.wip_meta.get(_wid, {})
+            _log.warning(
+                "[DES][WIP] 线边仓 %s 的前/后置工序不在线 %s 任一 task 的 BoP 内（跨 stage 或配置错），本轮忽略",
+                _m.get("wip_code", _wid), line_id,
+            )
         env.process(_line_runner(env, executors, line_res))
 
     return line_resources_list
@@ -979,6 +1129,41 @@ def _finalize_and_write(
     # 事件排序
     all_metrics.events.sort(key=lambda e: e.timestamp_ms)
 
+    # 截断收尾：env.run(until=T) 丢弃仍卡在 put/get 的单元，其 *_END 永不触发 → 阻塞/饥饿
+    # 秒数漏计 + *_START 失配。扫描未闭合的 BLOCKED/STARVED_START，按 T 补 END 并补 [t0,T] 时长，
+    # 维持「每个 *_START 都有 *_END」不变量（快照状态机/轨迹端点依赖）。capacity=1 资源下同一
+    # 设备同时至多 1 个未闭合 → FIFO 配对精确。
+    _dur_ms = int(duration_seconds * 1000)
+    _open_blk: dict[str, list[int]] = {}
+    _open_stv: dict[str, list[int]] = {}
+    for ev in all_metrics.events:
+        if ev.event_type == "BLOCKED_START":
+            _open_blk.setdefault(ev.equipment_id, []).append(ev.timestamp_ms)
+        elif ev.event_type == "BLOCKED_END":
+            _l = _open_blk.get(ev.equipment_id)
+            if _l:
+                _l.pop(0)
+        elif ev.event_type == "STARVED_START":
+            _open_stv.setdefault(ev.equipment_id, []).append(ev.timestamp_ms)
+        elif ev.event_type == "STARVED_END":
+            _l = _open_stv.get(ev.equipment_id)
+            if _l:
+                _l.pop(0)
+    _synth: list[SimEvent] = []
+    for _eq, _starts in _open_blk.items():
+        for _t0 in _starts:
+            all_metrics.blocked_count += 1
+            all_metrics.blocked_seconds += max(0.0, duration_seconds - _t0 / 1000.0)
+            _synth.append(SimEvent(_dur_ms, _eq, None, "BLOCKED_END", None, {"truncated": True}))
+    for _eq, _starts in _open_stv.items():
+        for _t0 in _starts:
+            all_metrics.starved_count += 1
+            all_metrics.starved_seconds += max(0.0, duration_seconds - _t0 / 1000.0)
+            _synth.append(SimEvent(_dur_ms, _eq, None, "STARVED_END", None, {"truncated": True}))
+    if _synth:
+        all_metrics.events.extend(_synth)
+        all_metrics.events.sort(key=lambda e: e.timestamp_ms)
+
     # 实际完工耗时
     last_complete_ms = max(
         (ev.timestamp_ms for ev in all_metrics.events if ev.event_type == "PRODUCT_COMPLETE"),
@@ -1039,12 +1224,17 @@ def _finalize_and_write(
     db.commit()
     _persist_t0 = time.perf_counter()
 
-    # 快照：每 60s 记一次设备状态
+    # 快照：每 60s 记一次设备状态 + 线边仓水位
     snapshot_interval = 60
     current_equipment_states: dict[str, str] = {}
     for lr in line_resources_list:
         for eq_id in lr.all_equipment_ids():
             current_equipment_states[eq_id] = "IDLE"
+
+    # 线边仓水位时序（旁路采样，按时间消费重建 current_wip_levels）
+    wip_samples = sorted(all_metrics.wip_level_samples, key=lambda x: x[0])
+    current_wip_levels: dict[str, tuple] = {}  # wip_id -> (level, capacity, material_code)
+    wip_idx = 0
 
     snapshot_rows: list[dict] = []
     event_idx = 0
@@ -1060,13 +1250,31 @@ def _finalize_and_write(
                 current_equipment_states[ev.equipment_id] = "FAILURE"
             elif ev.event_type == "FAILURE_END":
                 current_equipment_states[ev.equipment_id] = "IDLE"
+            elif ev.event_type == "BLOCKED_START":
+                current_equipment_states[ev.equipment_id] = "BLOCKED"
+            elif ev.event_type == "STARVED_START":
+                current_equipment_states[ev.equipment_id] = "STARVED"
+            elif ev.event_type in ("BLOCKED_END", "STARVED_END"):
+                current_equipment_states[ev.equipment_id] = "IDLE"
             event_idx += 1
 
+        # 消费本窗口前的线边仓水位采样
+        while wip_idx < len(wip_samples) and wip_samples[wip_idx][0] <= t_ms:
+            _, _wid, _lvl, _cap, _mat = wip_samples[wip_idx]
+            current_wip_levels[_wid] = (_lvl, _cap, _mat)
+            wip_idx += 1
+
+        _wip_states = {
+            wid: {"quantity": lvl, "capacity": cap, "material_code": mat,
+                  "fill_rate": (round(lvl / cap, 3) if cap else None)}
+            for wid, (lvl, cap, mat) in current_wip_levels.items()
+        }
         snapshot_rows.append({
             "snapshot_id": str(uuid.uuid4()),
             "result_id": result.result_id,
             "sim_timestamp_sec": round(t_sec, 3),
             "equipment_states": {eq: {"status": st} for eq, st in current_equipment_states.items()},
+            "wip_states": _wip_states or None,
             "snapshot_interval_sec": snapshot_interval,
         })
 
@@ -1074,9 +1282,9 @@ def _finalize_and_write(
         _bulk_insert_pg(
             db,
             "res_simulation_state_snapshot",
-            ("snapshot_id", "result_id", "sim_timestamp_sec", "equipment_states", "snapshot_interval_sec"),
+            ("snapshot_id", "result_id", "sim_timestamp_sec", "equipment_states", "wip_states", "snapshot_interval_sec"),
             snapshot_rows,
-            jsonb_cols=("equipment_states",),
+            jsonb_cols=("equipment_states", "wip_states"),
         )
 
     # ── 全量毫秒事件入库（供 Omniverse Kit 3D 回放消费）────────────────────────

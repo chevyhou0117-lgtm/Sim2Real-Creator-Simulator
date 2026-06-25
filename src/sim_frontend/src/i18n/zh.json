@@ -886,5 +886,12 @@
   "Σ(LBR × station count) / Σ(station count), single-station lines excluded": "Σ(LBR × 工站数) / Σ(工站数)，已排除单工站产线",
   "★ Best": "★ 最优",
   "⚠ KIT STREAM NOT CONFIGURED · 2D MOCK · Set VITE_KIT_STREAM_URL to enable": "⚠ KIT STREAM NOT CONFIGURED · 2D MOCK · 设置 VITE_KIT_STREAM_URL 启用",
-  "🚶 Walk Mode · WASD to move · Q/E to ascend/descend · Mouse to look (click to lock) · Shift to sprint · ESC to exit": "🚶 漫游模式 · WASD 移动 · Q/E 升降 · 鼠标看（点击锁定） · Shift 加速 · ESC 退出"
+  "🚶 Walk Mode · WASD to move · Q/E to ascend/descend · Mouse to look (click to lock) · Shift to sprint · ESC to exit": "🚶 漫游模式 · WASD 移动 · Q/E 升降 · 鼠标看（点击锁定） · Shift 加速 · ESC 退出",
+  "BoP 2D Overhead": "BoP 2D 俯视",
+  "BoP 2D Overhead View": "BoP 2D 俯视图",
+  "Process chain per line with line-side buffers (∞ = unbounded, number = capacity).": "每条产线的工序链 + 线边仓（∞=无限，数字=容量）。",
+  "No BoP configured.": "未配置 BoP。",
+  "2D Overhead": "2D 俯视",
+  "3D Scene": "3D 场景",
+  "No visualization data": "无可视化数据"
 }

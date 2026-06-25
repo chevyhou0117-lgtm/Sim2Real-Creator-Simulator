@@ -296,6 +296,17 @@ export interface WIPBufferSnapshotOut {
   data_source: string;
 }
 
+/** 线边仓"定义"（虚拟线边仓拓扑 + 容量）：供 2D 俯视图画工序间缓冲。 */
+export interface WIPBufferOut {
+  wip_id: string;
+  wip_code: string;
+  wip_name: string;
+  line_id: string;
+  pre_operation_id: string | null;
+  post_operation_id: string | null;
+  capacity_qty: number | null; // null=无限（默认）
+}
+
 // --- Simulation Results ---
 
 export interface RunStatus {

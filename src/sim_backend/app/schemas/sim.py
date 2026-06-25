@@ -370,6 +370,19 @@ class WIPBufferSnapshotOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class WIPBufferOut(BaseModel):
+    """线边仓"定义"（虚拟线边仓拓扑）：供 2D 俯视图画工序间缓冲 + 容量。"""
+    wip_id: str
+    wip_code: str
+    wip_name: str
+    line_id: str
+    pre_operation_id: str | None = None
+    post_operation_id: str | None = None
+    capacity_qty: int | None = None  # None=无限（默认）；有数=勾选 WIP_CAPACITY 后导入的件数上限
+
+    model_config = {"from_attributes": True}
+
+
 # ---------------------------------------------------------------------------
 # Batch operations
 # ---------------------------------------------------------------------------

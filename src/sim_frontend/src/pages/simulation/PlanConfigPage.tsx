@@ -17,6 +17,7 @@ import type { PlanOut, BopOut, BopProcessOut, ProductOut, StageOut, LineOut, Tas
 
 // ── PlanConfig 重做：5 级资产树 + 参数继承表 + Creator 项目下拉 + readiness chip ──
 import { KitViewport } from '@/components/KitViewport';
+import BopSchematicView from '@/components/BopSchematicView';
 import { AssetSidebar } from './plan-config/AssetSidebar';
 import { ImportDataModal, type ImportSectionDef } from './plan-config/ImportDataModal';
 import { ReadyValidationModal } from './plan-config/ReadyValidationModal';
@@ -26,7 +27,7 @@ import type { TreeNode as TreeNodeV2 } from './plan-config/types';
 // ── Types ──────────────────────────────────────────────────────────────────────
 type NodeType = 'group' | 'line' | 'operation' | 'equipment' | 'agv' | 'material' | 'factory';
 type NodeStatus = 'normal' | 'bottleneck' | 'idle' | 'warning';
-type RibbonTab = 'input' | 'params' | 'constraints';
+type RibbonTab = 'input' | 'params' | 'constraints' | 'bop-2d';
 
 interface TreeNode {
   id: string;
@@ -1714,6 +1715,7 @@ function Ribbon({
     { id: 'input',       label: 'Input Data' },
     { id: 'params',      label: 'Parameter Configuration' },
     { id: 'constraints', label: 'Constraint Settings' },
+    { id: 'bop-2d',      label: 'BoP 2D Overhead' },
   ];
 
   return (
@@ -2295,6 +2297,12 @@ export function PlanConfigPage() {
         {ribbonTab === 'constraints' && (
           <div className="flex-1 overflow-hidden flex flex-col min-w-0">
             <ConstraintsPanel plan={plan} planId={planId} onOpenVersionManager={handleOpenVersionManager} />
+          </div>
+        )}
+
+        {ribbonTab === 'bop-2d' && (
+          <div className="flex-1 overflow-hidden flex flex-col min-w-0">
+            <BopSchematicView planId={planId} factoryId={plan?.factory_id} />
           </div>
         )}
       </div>

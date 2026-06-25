@@ -33,6 +33,7 @@ import { WalkMode } from '@/components/WalkMode';
 import { DeviceStatusOverlay } from '@/components/DeviceStatusOverlay';
 import { LineProgressPanel } from '@/components/LineProgressPanel';
 import { KitViewport } from '@/components/KitViewport';
+import Playback2DView from '@/components/Playback2DView';
 import { backendDirectUrl } from '@/lib/runtimeConfig';
 
 const KIT_STREAM_URL = (import.meta.env.VITE_KIT_STREAM_URL ?? '').trim();
@@ -95,6 +96,7 @@ export function SimulationRunningPage() {
 
   // 漫游模式 + 当前点选 prim（来自 Kit selection SSE 推送，空串=取消选中）
   const [walkActive, setWalkActive] = useState(false);
+  const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');  // 回放视图：3D Kit 串流 / 2D 俯视示意
   const [selectedPrim, setSelectedPrim] = useState<string>('');
 
   // lookup maps：让 DeviceStatusOverlay / LineProgressPanel 把 UUID 换成中文名
@@ -915,7 +917,11 @@ export function SimulationRunningPage() {
           <>
             {/* Kit WebRTC iframe */}
             <div className="flex-1 relative overflow-hidden bg-black">
-              {KIT_STREAM_URL ? (
+              {viewMode === '2d' ? (
+                <div className="absolute top-0 left-0 right-[2%] bottom-[2%]">
+                  <Playback2DView planId={planId} tMs={playbackState?.t_ms ?? 0} />
+                </div>
+              ) : KIT_STREAM_URL ? (
                 <div className="absolute top-0 left-0 right-[2%] bottom-[2%]">
                   {/* 直连 Kit WebRTC（替代原 5183 iframe 页）。回放控制仍走 HTTP /kit/playback。 */}
                   <KitViewport className="w-full h-full" />
@@ -930,7 +936,22 @@ export function SimulationRunningPage() {
                 </div>
               )}
               <div className="absolute top-2.5 left-3 text-[9px] font-mono text-slate-400 select-none pointer-events-none tracking-widest z-10 bg-black/40 px-1.5 py-0.5 rounded">
-                {KIT_STREAM_URL ? '🟢 OMNIVERSE KIT · REPLAY' : '⚠ KIT STREAM NOT CONFIGURED'}
+                {viewMode === '2d' ? '🗺 2D OVERHEAD · REPLAY' : KIT_STREAM_URL ? '🟢 OMNIVERSE KIT · REPLAY' : '⚠ KIT STREAM NOT CONFIGURED'}
+              </div>
+              {/* 3D / 2D 视图切换 */}
+              <div className="absolute top-8 left-3 z-20 flex items-center gap-0.5 bg-black/50 rounded p-0.5 text-[10px] font-medium">
+                <button
+                  onClick={() => setViewMode('3d')}
+                  className={`px-2 py-0.5 rounded transition-colors ${viewMode === '3d' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  {t('3D Scene')}
+                </button>
+                <button
+                  onClick={() => setViewMode('2d')}
+                  className={`px-2 py-0.5 rounded transition-colors ${viewMode === '2d' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  {t('2D Overhead')}
+                </button>
               </div>
 
               {/* Kit 进程重启进度蒙层（pkill+spawn 总耗 20~40s，期间盖住 iframe） */}

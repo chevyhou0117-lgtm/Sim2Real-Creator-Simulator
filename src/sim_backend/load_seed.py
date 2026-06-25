@@ -221,6 +221,9 @@ def load_master_data(db) -> dict:
                     "standard_worker_count": int(float(bp["standard_worker_count"])),
                 })
 
+    # 线边仓（线边仓定义=虚拟线边仓 + 半成品物料）不再手工 seed，改由 load BoP 后
+    # services.wip_topology.regenerate_wip_topology 按 BoP 自动生成（见 main()）。
+
     # ── WorkCalendar + Shift ──
     cal_by_date = {}
     for crow in _rows("work_calendar.csv"):
@@ -394,6 +397,11 @@ def main():
         ctx = load_master_data(db)
         db.commit()
         print("master data loaded (全局 md, plan_id=NULL)")
+        # L1：按 BoP 自动生成半成品物料 + 虚拟线边仓（默认无限容量）
+        from app.services.wip_topology import regenerate_wip_topology
+        wt = regenerate_wip_topology(db)
+        db.commit()
+        print(f"wip topology generated: {wt}")
         if args.with_demo:
             pid = make_demo_plan(db, ctx["factory"], "Packing01")
             print(f"demo plan created: {pid}")

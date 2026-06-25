@@ -501,6 +501,53 @@ def _commit_wip(
     return inserted, skipped
 
 
+# ── wip-capacity（线边仓容量：勾选 WIP_CAPACITY 约束后导入各缓冲的件数上限）─────────
+# 虚拟线边仓默认无限；此处按 wip_code 给方案专属缓冲置 capacity_qty，未导入的仍无限。
+WIP_CAP_COLS = ["线边仓编码", "容量件数"]
+
+
+def _validate_wip_capacity(
+    db: Session, plan: SimulationPlan, header: list[str], rows: list[list[str]]
+) -> tuple[list[ImportIssue], list[ImportIssue]]:
+    errors: list[ImportIssue] = list(_require_columns(header, WIP_CAP_COLS))
+    warnings: list[ImportIssue] = []
+    if errors:
+        return errors, warnings
+    if not _plan_snapshotted(db, plan):
+        errors.append(ImportIssue(
+            row=1, field="线边仓编码",
+            message="方案尚未生成基础数据快照（请先将方案置为 Ready 后再导入线边仓容量）"))
+        return errors, warnings
+    wip_lookup = _wip_lookup_for_plan(db, plan)
+    dicts = _to_dicts(header, rows)
+    for i, d in enumerate(dicts, start=2):
+        code = d["线边仓编码"].strip()
+        if not wip_lookup.get(code):
+            errors.append(ImportIssue(row=i, field="线边仓编码", message=f"找不到线边仓：{code!r}"))
+        qty = _parse_decimal(d["容量件数"])
+        if qty is None or qty < 1:
+            errors.append(ImportIssue(
+                row=i, field="容量件数", message=f"无效（需 ≥1 的整数）：{d['容量件数']!r}"))
+    return errors, warnings
+
+
+def _commit_wip_capacity(
+    db: Session, plan: SimulationPlan, header: list[str], rows: list[list[str]]
+) -> tuple[int, int]:
+    wip_lookup = _wip_lookup_for_plan(db, plan)
+    dicts = _to_dicts(header, rows)
+    updated = skipped = 0
+    for d in dicts:
+        wip = wip_lookup.get(d["线边仓编码"].strip())
+        qty = _parse_decimal(d["容量件数"])
+        if not wip or qty is None or qty < 1:
+            skipped += 1
+            continue
+        wip.capacity_qty = int(qty)  # 方案专属 md 行，可在 DRAFT/READY 改
+        updated += 1
+    return updated, skipped
+
+
 # ---------------------------------------------------------------------------
 # Section registry
 # ---------------------------------------------------------------------------
@@ -514,6 +561,7 @@ _PLAN_SCOPED_SECTIONS: dict[str, tuple[ValidatorFn, CommitterFn, list[str]]] = {
     "material-supply": (_validate_material_supply, _commit_material_supply, MS_COLS),
     "inventory": (_validate_inventory, _commit_inventory, INV_COLS),
     "wip": (_validate_wip, _commit_wip, WIP_COLS),
+    "wip-capacity": (_validate_wip_capacity, _commit_wip_capacity, WIP_CAP_COLS),
 }
 
 # 主数据型 section：手工导入暂不支持，前端给提示

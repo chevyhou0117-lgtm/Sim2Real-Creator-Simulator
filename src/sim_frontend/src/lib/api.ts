@@ -29,6 +29,7 @@ import type {
   SimResultOut,
   StageOut,
   TaskOut,
+  WIPBufferOut,
   WIPBufferSnapshotOut,
   WorkCalendarOut,
 } from '@/types/api';
@@ -116,7 +117,11 @@ export const planApi = {
     api<LineBalanceOut[]>(`/plans/${id}/result/line-balance`),
 
   snapshots: (id: string, offset = 0, limit = 500) =>
-    api<Array<{ sim_timestamp_sec: number; equipment_states: Record<string, { status: string }> }>>(
+    api<Array<{
+      sim_timestamp_sec: number;
+      equipment_states: Record<string, { status: string }>;
+      wip_states: Record<string, { quantity: number; capacity: number | null; fill_rate: number | null; material_code?: string | null }> | null;
+    }>>(
       `/plans/${id}/result/snapshots?offset=${offset}&limit=${limit}`,
     ),
 
@@ -134,6 +139,8 @@ export const planApi = {
   materialSupplies: (id: string) => api<MaterialSupplyOut[]>(`/plans/${id}/material-supplies`),
   inventorySnapshots: (id: string) => api<InventorySnapshotOut[]>(`/plans/${id}/inventory-snapshots`),
   wipSnapshots: (id: string) => api<WIPBufferSnapshotOut[]>(`/plans/${id}/wip-snapshots`),
+  wipBuffers: (id: string) => api<WIPBufferOut[]>(`/plans/${id}/wip-buffers`),
+  equipmentMap: (id: string) => api<Record<string, string>>(`/plans/${id}/equipment-map`),
 
   // Sub-resources
   tasks: (id: string) => api<TaskOut[]>(`/plans/${id}/tasks`),

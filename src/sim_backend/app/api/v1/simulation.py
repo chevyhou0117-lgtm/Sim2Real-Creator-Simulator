@@ -83,6 +83,14 @@ def _execute_simulation(plan_id: str):
                 "line_lbr_timeseries": des_metrics.line_lbr_timeseries,
                 # 各阶段实际耗时（秒）：des / linebalance / persist，供前端分步显示
                 "phase_timings": des_metrics.phase_timings,
+                # 线边仓（WIP_CAPACITY）背压/饥饿汇总（未启用约束时全为 0）
+                "wip_capacity": {
+                    "blocked_count": des_metrics.blocked_count,
+                    "blocked_seconds": round(des_metrics.blocked_seconds, 1),
+                    "starved_count": des_metrics.starved_count,
+                    "starved_seconds": round(des_metrics.starved_seconds, 1),
+                    "peak_levels": des_metrics.wip_peak_level,
+                },
             }
 
         result.computation_status = "SUCCESS"

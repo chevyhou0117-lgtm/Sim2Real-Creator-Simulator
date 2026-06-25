@@ -36,9 +36,20 @@ class SimEvent:
     timestamp_ms: int
     equipment_id: str
     prim_path: str | None
-    event_type: str  # PROCESSING_START / PROCESSING_END / IDLE / FAILURE_START / FAILURE_END / BLOCKED
+    event_type: str  # PROCESSING_START/END, IDLE, FAILURE_START/END, BLOCKED_START/END(背压), STARVED_START/END(饥饿)
+    # 注：线边仓水位采样 WIP_LEVEL 不进主事件流，走 DESMetrics.wip_level_samples 旁路（见 des_engine）。
     product_id: str | None = None
     metadata: dict | None = None
+
+
+def semi_finished_code(product_code: str, op_code: str) -> str:
+    """半成品物料编码的唯一来源：产品在某工序完工后的产出 = 一种 SEMI_FINISHED 物料。
+
+    线边仓拓扑生成（services/wip_topology）与 DES 引擎（给缓冲水位打半成品标）都用它，
+    确保编码格式一处定义、两处一致。op_code 在工厂内唯一（seed 用 operation_code 作键），
+    故 product+op_code 足以唯一标识"某产品某工序后的半成品"。
+    """
+    return f"SF-{product_code}-{op_code}"
 
 
 def get_enabled_constraints(db: Session, plan_id: str) -> set[str]:
