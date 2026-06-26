@@ -762,6 +762,24 @@ export function SimulationRunningPage() {
 
         <div className="flex-1" />
 
+        {/* 3D / 2D 回放视图切换（回放就绪时显示，放 header 始终可见） */}
+        {isReady && (
+          <div className="flex items-center gap-0.5 bg-[#0b1d30] border border-[#1e3a55] rounded p-0.5 text-[11px] font-medium mr-1">
+            <button
+              onClick={() => setViewMode('3d')}
+              className={`px-2.5 py-1 rounded transition-colors ${viewMode === '3d' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              {t('3D Scene')}
+            </button>
+            <button
+              onClick={() => setViewMode('2d')}
+              className={`px-2.5 py-1 rounded transition-colors ${viewMode === '2d' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              {t('2D Overhead')}
+            </button>
+          </div>
+        )}
+
         {isRunning && (
           <span className="text-[11px] font-mono text-slate-400">
             {elapsedSec != null
@@ -935,23 +953,8 @@ export function SimulationRunningPage() {
                   </div>
                 </div>
               )}
-              <div className="absolute top-2.5 left-3 text-[9px] font-mono text-slate-400 select-none pointer-events-none tracking-widest z-10 bg-black/40 px-1.5 py-0.5 rounded">
+              <div className="absolute bottom-2 left-3 text-[9px] font-mono text-slate-400 select-none pointer-events-none tracking-widest z-10 bg-black/40 px-1.5 py-0.5 rounded">
                 {viewMode === '2d' ? '🗺 2D OVERHEAD · REPLAY' : KIT_STREAM_URL ? '🟢 OMNIVERSE KIT · REPLAY' : '⚠ KIT STREAM NOT CONFIGURED'}
-              </div>
-              {/* 3D / 2D 视图切换 */}
-              <div className="absolute top-8 left-3 z-20 flex items-center gap-0.5 bg-black/50 rounded p-0.5 text-[10px] font-medium">
-                <button
-                  onClick={() => setViewMode('3d')}
-                  className={`px-2 py-0.5 rounded transition-colors ${viewMode === '3d' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
-                >
-                  {t('3D Scene')}
-                </button>
-                <button
-                  onClick={() => setViewMode('2d')}
-                  className={`px-2 py-0.5 rounded transition-colors ${viewMode === '2d' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
-                >
-                  {t('2D Overhead')}
-                </button>
               </div>
 
               {/* Kit 进程重启进度蒙层（pkill+spawn 总耗 20~40s，期间盖住 iframe） */}

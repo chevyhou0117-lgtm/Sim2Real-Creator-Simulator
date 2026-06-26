@@ -80,6 +80,7 @@ export interface BopProcessOut {
   yield_rate: number;
   standard_worker_count: number;
   min_worker_count: number | null;
+  material_usage: Record<string, number> | null;  // 投料 {物料编码: 件用量}，含原料+上游半成品(SF-*)
   plan_id: string | null;
 }
 
@@ -305,6 +306,14 @@ export interface WIPBufferOut {
   pre_operation_id: string | null;
   post_operation_id: string | null;
   capacity_qty: number | null; // null=无限（默认）
+}
+
+/** 制程（线）间接续：供 2D 俯视图画跨线连接（S2S/E2S + 接续时长）。 */
+export interface StageTransitionOut {
+  from_stage_id: string;
+  to_stage_id: string;
+  connection_type: string; // S2S / E2S
+  connection_time: number; // 秒
 }
 
 // --- Simulation Results ---

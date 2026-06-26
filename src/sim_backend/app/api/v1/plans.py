@@ -28,6 +28,7 @@ from app.models.md import (
     Product,
     ProductionLine,
     Stage,
+    StageTransition,
     WIPBuffer,
 )
 from app.models.res import (
@@ -67,6 +68,7 @@ from app.schemas.sim import (
     ReadinessSection,
     ReadyRuleReport,
     ReadyValidationError,
+    StageTransitionOut,
     TaskCreate,
     TaskOut,
     WIPBufferOut,
@@ -792,25 +794,42 @@ def list_wip_buffers(plan_id: str, db: Session = Depends(get_db)):
 
 @router.get("/{plan_id}/equipment-map", response_model=dict[str, str])
 def equipment_map(plan_id: str, db: Session = Depends(get_db)):
-    """{equipment_id: operation_id} 映射，供 2D 回放把 equipment_states 聚合到工序盒着色。
+    """{equipment_id: "line_id::operation_id"} 映射，供 2D 回放把 equipment_states 聚合到工序盒着色。
 
-    与快照里 equipment_states 的设备 ID 同 scope：已克隆方案取方案专属设备，否则取全局。
+    用【line::operation 复合键】而非纯 operation_id —— 同 stage 多条线共享同一批 operation，
+    但设备是每线一份，必须按 (线, 工序) 区分着色（否则 SMT01/SMT02 会相互串色）。
+    与快照 equipment_states 的设备 ID 同 scope：已克隆方案取方案专属设备，否则取全局。
     """
     plan = _get_plan(db, plan_id)
     rows = (
-        db.query(Equipment.equipment_id, Equipment.operation_id)
+        db.query(Equipment.equipment_id, Equipment.line_id, Equipment.operation_id)
         .filter(Equipment.plan_id == plan_id)
         .all()
     )
     if not rows:
         rows = (
-            db.query(Equipment.equipment_id, Equipment.operation_id)
+            db.query(Equipment.equipment_id, Equipment.line_id, Equipment.operation_id)
             .join(ProductionLine, ProductionLine.line_id == Equipment.line_id)
             .join(Stage, Stage.stage_id == ProductionLine.stage_id)
             .filter(Stage.factory_id == plan.factory_id, Equipment.plan_id.is_(None))
             .all()
         )
-    return {eq_id: op_id for eq_id, op_id in rows}
+    return {eq_id: f"{line_id}::{op_id}" for eq_id, line_id, op_id in rows}
+
+
+@router.get("/{plan_id}/stage-transitions", response_model=list[StageTransitionOut])
+def list_stage_transitions(plan_id: str, db: Session = Depends(get_db)):
+    """制程（线）间接续，供 2D 俯视图画跨线连接。已克隆方案取方案专属，否则取全局。"""
+    plan = _get_plan(db, plan_id)
+    rows = db.query(StageTransition).filter(StageTransition.plan_id == plan_id).all()
+    if not rows:
+        rows = (
+            db.query(StageTransition)
+            .join(Stage, Stage.stage_id == StageTransition.from_stage_id)
+            .filter(Stage.factory_id == plan.factory_id, StageTransition.plan_id.is_(None))
+            .all()
+        )
+    return rows
 
 
 # ---------------------------------------------------------------------------

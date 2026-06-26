@@ -97,6 +97,7 @@ class BOPProcessOut(BaseModel):
     standard_worker_count: int
     min_worker_count: int | None = None
     primary_material_type: str | None = None
+    material_usage: dict | None = None  # {物料编码: 件用量}，可含原料 + 上游半成品(SF-*)
 
     plan_id: str | None = None
     model_config = {"from_attributes": True}

@@ -28,6 +28,7 @@ import type {
   SimEventsOut,
   SimResultOut,
   StageOut,
+  StageTransitionOut,
   TaskOut,
   WIPBufferOut,
   WIPBufferSnapshotOut,
@@ -121,6 +122,7 @@ export const planApi = {
       sim_timestamp_sec: number;
       equipment_states: Record<string, { status: string }>;
       wip_states: Record<string, { quantity: number; capacity: number | null; fill_rate: number | null; material_code?: string | null }> | null;
+      warehouse_states: Record<string, { quantity: number; material_type?: string | null }> | null;
     }>>(
       `/plans/${id}/result/snapshots?offset=${offset}&limit=${limit}`,
     ),
@@ -141,6 +143,13 @@ export const planApi = {
   wipSnapshots: (id: string) => api<WIPBufferSnapshotOut[]>(`/plans/${id}/wip-snapshots`),
   wipBuffers: (id: string) => api<WIPBufferOut[]>(`/plans/${id}/wip-buffers`),
   equipmentMap: (id: string) => api<Record<string, string>>(`/plans/${id}/equipment-map`),
+  // 某时刻各工序实时状态 + 在制 CT + 各线边仓当前 WIP（毫秒级，供 2D 回放）
+  stateAt: (id: string, tMs: number) =>
+    api<{
+      ops: Record<string, { status: string; product_code?: string | null; ct?: number | null; ct_base?: number | null; start_ms?: number | null; done?: number; plan?: number }>;
+      buffers: Record<string, number>;
+    }>(`/plans/${id}/result/state-at?t_ms=${Math.round(tMs)}`),
+  stageTransitions: (id: string) => api<StageTransitionOut[]>(`/plans/${id}/stage-transitions`),
 
   // Sub-resources
   tasks: (id: string) => api<TaskOut[]>(`/plans/${id}/tasks`),

@@ -18,6 +18,7 @@ class SimulationResultOut(BaseModel):
     bottleneck_equipment_id: str | None = None
     bottleneck_utilization: Decimal | None = None
     material_shortage_count: int | None = None
+    material_shortage_minutes: Decimal | None = None
     equipment_failure_count: int | None = None
     result_summary: dict | None = None
 

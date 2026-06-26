@@ -27,6 +27,7 @@ class ResolvedProcess:
     yield_rate: float
     worker_count: int
     design_ct: float  # BOP standard_ct before overrides
+    material_usage: dict | None = None  # {material_code: qty/件}（MATERIAL_SUPPLY 用）
 
 
 @dataclass
@@ -37,6 +38,7 @@ class SimEvent:
     equipment_id: str
     prim_path: str | None
     event_type: str  # PROCESSING_START/END, IDLE, FAILURE_START/END, BLOCKED_START/END(背压), STARVED_START/END(饥饿)
+    # 还有 MATERIAL_SHORTAGE_START/END（缺料停工，MATERIAL_SUPPLY）。
     # 注：线边仓水位采样 WIP_LEVEL 不进主事件流，走 DESMetrics.wip_level_samples 旁路（见 des_engine）。
     product_id: str | None = None
     metadata: dict | None = None
@@ -256,6 +258,7 @@ def load_resolved_processes(
                 yield_rate=effective_yield,
                 worker_count=worker_count_int,
                 design_ct=float(proc.standard_ct),
+                material_usage=proc.material_usage,
             )
         )
 

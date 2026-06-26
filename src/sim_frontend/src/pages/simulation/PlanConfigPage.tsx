@@ -703,6 +703,20 @@ const DATA_SECTIONS: DataSection[] = [
     ],
   },
   {
+    id: 'stage-transition',
+    title: 'Stage Continuity (Inter-line)',
+    desc: 'Continuity between stages/lines (S2S streaming / E2S batch) and the connection time from an upstream line to the downstream line',
+    sourceSystem: 'Master Data Platform',
+    sourceNote: 'Master Data Platform · md_stage_transition',
+    required: false,
+    status: 'ok',
+    summary: '',
+    canSync: true,
+    canImport: false,
+    cols: ['Upstream Stage', 'Downstream Stage', 'Connection Type', 'Connection Time'],
+    rows: [],
+  },
+  {
     id: 'calendar',
     title: 'Work Calendar & Shifts',
     desc: 'The basis for advancing the simulation clock; determines working / non-working periods and Takt Time calculation',
@@ -797,6 +811,23 @@ const DATA_SECTIONS: DataSection[] = [
     warning: 'No line-side warehouse snapshot configured; the simulation will start with all line-side warehouses empty',
     canSync: true,
     canImport: true,
+  },
+  {
+    id: 'wip-capacity',
+    title: 'Line-side Buffer Capacity',
+    desc: 'Per-buffer capacity (pcs) for the Line-side Buffer Constraint; un-imported buffers stay unbounded. Requires the plan to be Ready.',
+    sourceSystem: 'MES',
+    sourceNote: 'MES · Not synced',
+    required: false,
+    status: 'missing',
+    warning: 'No buffer capacity imported; all line-side buffers are unbounded (no backpressure even if the constraint is enabled)',
+    canSync: false,
+    canImport: true,
+    cols: ['Buffer Code', 'Capacity (pcs)'],
+    rows: [
+      ['WIP-PTH01-006-007', '3'],
+      ['WIP-PTH01-007-008', '3'],
+    ],
   },
 ];
 
@@ -976,6 +1007,28 @@ function DataTablePanel({ planId, factoryId, reloadKey, onImportClick }: {
       }));
     }).catch(() => {});
 
+    // 制程间接续（StageTransition / md_stage_transition）：跨线 S2S/E2S + 接续时长
+    Promise.all([planApi.stageTransitions(planId), masterApi.stages(factoryId, planId)])
+      .then(([sts, stageList]) => {
+        const nameById = new Map(stageList.map(s => [s.stage_id, s.stage_name]));
+        const rows = sts.map(st => [
+          nameById.get(st.from_stage_id) ?? st.from_stage_id.slice(0, 8),
+          nameById.get(st.to_stage_id) ?? st.to_stage_id.slice(0, 8),
+          st.connection_type,
+          `${Number(st.connection_time)}s`,
+        ]);
+        setOverrides(prev => ({
+          ...prev,
+          'stage-transition': {
+            rows,
+            summary: rows.length
+              ? t('{{count}} stage continuity configs', { count: rows.length })
+              : t('No stage continuity configuration'),
+            status: rows.length ? 'ok' : 'missing',
+          },
+        }));
+      }).catch(() => {});
+
     // 工作日历 + 班次（来自 md_work_calendar / md_shift 聚合）
     masterApi.workCalendar(factoryId, planId).then(cal => {
       const rows = cal.shifts.map(s => [
@@ -1072,8 +1125,8 @@ function DataTablePanel({ planId, factoryId, reloadKey, onImportClick }: {
   }, [planId, reloadKey, t]);
 
   const groups = [
-    { label: 'Master Data', note: 'From the Master Data Platform (read-only, version locked)', ids: ['bop', 'equipment-config', 'staffing', 'changeover', 'op-transition', 'calendar', 'equipment-params'] },
-    { label: 'Business Data', note: 'From ERP / WMS / MES (snapshot synced on demand)', ids: ['production-tasks', 'material-supply', 'inventory', 'wip'] },
+    { label: 'Master Data', note: 'From the Master Data Platform (read-only, version locked)', ids: ['bop', 'equipment-config', 'staffing', 'changeover', 'op-transition', 'stage-transition', 'calendar', 'equipment-params'] },
+    { label: 'Business Data', note: 'From ERP / WMS / MES (snapshot synced on demand)', ids: ['production-tasks', 'material-supply', 'inventory', 'wip', 'wip-capacity'] },
   ];
 
   return (

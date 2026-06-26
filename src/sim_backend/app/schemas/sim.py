@@ -383,6 +383,16 @@ class WIPBufferOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class StageTransitionOut(BaseModel):
+    """制程（线）间接续：供 2D 俯视图画跨线连接（S2S 流式 / E2S 批量）+ 接续时长。"""
+    from_stage_id: str
+    to_stage_id: str
+    connection_type: str  # S2S / E2S
+    connection_time: Decimal  # 秒
+
+    model_config = {"from_attributes": True}
+
+
 # ---------------------------------------------------------------------------
 # Batch operations
 # ---------------------------------------------------------------------------

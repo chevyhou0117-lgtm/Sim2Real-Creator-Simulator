@@ -27,12 +27,14 @@ from app.models.md import (
     Equipment,
     EquipmentProcessParameters,
     Factory,
+    Material,
     Operation,
     Product,
     ProductionLine,
     Shift,
     Stage,
     StageTransition,
+    Warehouse,
     WorkCalendar,
 )
 from app.models.sim import SimulationPlan
@@ -223,6 +225,40 @@ def load_master_data(db) -> dict:
 
     # 线边仓（线边仓定义=虚拟线边仓 + 半成品物料）不再手工 seed，改由 load BoP 后
     # services.wip_topology.regenerate_wip_topology 按 BoP 自动生成（见 main()）。
+
+    # ── MATERIAL_SUPPLY 最小演示：1 原料仓 + 几个原料 + 给几道 PTH 工序填 material_usage ──
+    # 初始库存/到货由用户在方案内导入 inventory / material-supply。material_usage 里可含上游半成品
+    # （仅作配方记录；引擎只对【原料】扣库存，半成品走线边仓）。
+    _upsert(db, Warehouse, {"warehouse_code": "RAW-WH"}, {
+        "factory_id": fac.factory_id, "warehouse_name": "原料仓",
+        "warehouse_type": "RAW_MATERIAL", "status": "ACTIVE",
+    })
+    for mc, mn, mt in [
+        ("MAT-PCB", "PCB 裸板", "RAW_MATERIAL"),
+        ("MAT-SCREW", "螺丝", "RAW_MATERIAL"),
+        ("MAT-GLUE", "点胶胶水", "CONSUMABLE"),
+    ]:
+        _upsert(db, Material, {"material_code": mc}, {
+            "material_name": mn, "material_type": mt, "unit": "PCS", "status": "ACTIVE",
+        })
+    pth_bop = bop_by_key.get(("v1.0", "PTH01"))
+    if pth_bop:
+        for op_code, usage in {
+            "PTH_OP02": {"MAT-PCB": 1},
+            "PTH_OP03": {"MAT-GLUE": 1, "SF-PG548-PTH_OP02": 1},
+            "PTH_OP09": {"MAT-SCREW": 12, "SF-PG548-PTH_OP08": 1},
+        }.items():
+            op = op_by_code.get(op_code)
+            if not op:
+                continue
+            bp = (db.query(BOPProcess)
+                  .filter(BOPProcess.bop_id == pth_bop.bop_id,
+                          BOPProcess.operation_id == op.operation_id,
+                          BOPProcess.plan_id.is_(None))
+                  .first())
+            if bp:
+                bp.material_usage = usage
+        db.flush()
 
     # ── WorkCalendar + Shift ──
     cal_by_date = {}

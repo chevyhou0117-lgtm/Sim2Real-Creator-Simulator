@@ -14,7 +14,9 @@ from app.database import SessionLocal
 from app.engine.common import SimEvent
 from app.engine.des_engine import run_des
 from app.engine.line_balance import run_line_balance
-from app.models.md import Equipment
+from sqlalchemy import func
+
+from app.models.md import Equipment, ProductionLine, Stage, WIPBuffer
 from app.models.res import LineBalanceResult, SimulationEvent, SimulationResult, SimulationStateSnapshot
 from app.models.sim import SimulationPlan
 from app.schemas.res import (
@@ -270,6 +272,7 @@ def get_snapshots(
             "sim_timestamp_sec": float(s.sim_timestamp_sec),
             "equipment_states": s.equipment_states,
             "wip_states": s.wip_states,
+            "warehouse_states": s.warehouse_states,
         }
         for s in snapshots
     ]
@@ -399,6 +402,174 @@ def get_equipment_timeline(plan_id: str, equipment_id: str, db: Session = Depend
             cur_start = r.timestamp_ms
     intervals.append({"from_ms": cur_start, "to_ms": duration_ms, "status": cur_status})
     return {"equipment_id": equipment_id, "duration_ms": duration_ms, "intervals": intervals}
+
+
+# ---------------------------------------------------------------------------
+# 某时刻各工序实时状态 + 在制产品 CT —— 供 2D 回放毫秒级着色（替代 60s 快照）
+# ---------------------------------------------------------------------------
+_STATE_OF = {
+    "PROCESSING_START": "BUSY",
+    "PROCESSING_END": "IDLE",
+    "PRODUCT_COMPLETE": "IDLE",
+    "BLOCKED_START": "BLOCKED",
+    "BLOCKED_END": "IDLE",
+    "STARVED_START": "STARVED",
+    "STARVED_END": "IDLE",
+    "MATERIAL_SHORTAGE_START": "SHORTAGE",
+    "MATERIAL_SHORTAGE_END": "IDLE",
+    "FAILURE_START": "FAILURE",
+    "FAILURE_END": "IDLE",
+}
+# 严重度（工序级跨设备聚合取最严重）：停工类逐级升 STARVED<SHORTAGE<BLOCKED<FAILURE
+_SEV = {"IDLE": 0, "BUSY": 1, "STARVED": 2, "SHORTAGE": 3, "BLOCKED": 4, "FAILURE": 5}
+
+
+@router.get("/{plan_id}/result/state-at", response_model=dict)
+def state_at(plan_id: str, t_ms: int, db: Session = Depends(get_db)):
+    """t_ms 时刻各工序(line::op)实时状态 + 各线边仓当前 WIP 数量。事件驱动、毫秒级。
+
+    ops：每台设备 <= t_ms 的最后一条事件定状态（DISTINCT ON，走 (result, equipment, ts) 索引），
+    聚合到 (line::op) 取最严重；BUSY 带在制 product_code / ct / start_ms（前端按 (t_ms-start_ms) 插值 CT）。
+    buffers：线边仓(pre→post)当前在制件数 = 通过 pre 末端设备件数 − 进入 post 首端设备件数（按事件计数，
+    与引擎 put/get 口径一致），**不依赖 WIP_CAPACITY 是否开启**——所以即便容量无限也显示真实当前数量。
+    返回 {"ops": {...}, "buffers": {wip_id: 数量}}。
+    """
+    result = db.query(SimulationResult).filter(SimulationResult.plan_id == plan_id).first()
+    if not result:
+        raise HTTPException(404, "No simulation result found")
+    plan = db.query(SimulationPlan).get(plan_id)
+
+    # equipment：eq_id -> "line::op"，并按 (line, op) 收集设备（按 sort_order 排，定 pre 末端 / post 首端）
+    eq_rows = (
+        db.query(Equipment.equipment_id, Equipment.line_id, Equipment.operation_id, Equipment.sort_order)
+        .filter(Equipment.plan_id == plan_id)
+        .all()
+    )
+    if not eq_rows:
+        eq_rows = (
+            db.query(Equipment.equipment_id, Equipment.line_id, Equipment.operation_id, Equipment.sort_order)
+            .join(ProductionLine, ProductionLine.line_id == Equipment.line_id)
+            .join(Stage, Stage.stage_id == ProductionLine.stage_id)
+            .filter(Stage.factory_id == plan.factory_id, Equipment.plan_id.is_(None))
+            .all()
+        )
+    eq_map: dict = {}
+    lineop_eqs: dict = {}
+    for eq, ln, op, so in eq_rows:
+        eq_map[eq] = f"{ln}::{op}"
+        lineop_eqs.setdefault((ln, op), []).append((so if so is not None else 0, eq))
+    for v in lineop_eqs.values():
+        v.sort()
+    # 各工序末端设备（用于统计完工件数 → 任务进度）
+    op_last_eq = {f"{ln}::{op}": (eqs[-1][1] if eqs else op) for (ln, op), eqs in lineop_eqs.items()}
+    # 各工序簇内设备顺序（按 sort_order）—— 把单台 CT 汇总成工序级 CT 用
+    cluster_by_key = {f"{ln}::{op}": [eq for _so, eq in eqs] for (ln, op), eqs in lineop_eqs.items()}
+
+    # ── ops 状态 ──
+    rows = (
+        db.query(SimulationEvent)
+        .filter(SimulationEvent.result_id == result.result_id, SimulationEvent.timestamp_ms <= t_ms)
+        .order_by(SimulationEvent.equipment_id, SimulationEvent.timestamp_ms.desc(), SimulationEvent.event_id.desc())
+        .distinct(SimulationEvent.equipment_id)
+        .all()
+    )
+    ops: dict = {}
+    for r in rows:
+        key = eq_map.get(r.equipment_id)
+        if not key:
+            continue
+        st = _STATE_OF.get(r.event_type, "IDLE")
+        prev = ops.get(key)
+        if prev is not None and _SEV.get(prev["status"], 0) >= _SEV.get(st, 0):
+            continue
+        entry: dict = {"status": st}
+        if st == "BUSY":
+            md = r.event_metadata or {}
+            per_eq = md.get("ct")  # 单台设备 CT（引擎把工序 CT 均分到簇内 N 台）
+            cluster = cluster_by_key.get(key, [])
+            n = len(cluster) or 1
+            idx = cluster.index(r.equipment_id) if r.equipment_id in cluster else 0
+            entry["product_code"] = md.get("product_code")
+            entry["start_ms"] = r.timestamp_ms
+            if per_eq is not None:
+                entry["ct"] = round(per_eq * n, 3)         # 工序总 CT = 簇内 N 台合计
+                entry["ct_base"] = round(idx * per_eq, 3)   # 已在前序设备上跑完的秒数
+            else:
+                entry["ct"] = per_eq
+                entry["ct_base"] = 0
+        ops[key] = entry
+
+    # ── 线边仓当前 WIP ──
+    def _rep(ln, op, last):
+        eqs = lineop_eqs.get((ln, op))
+        if eqs:
+            return eqs[-1][1] if last else eqs[0][1]
+        return op  # 无设备工序：事件以 operation_id 作 equipment_id
+
+    bufs = (
+        db.query(WIPBuffer)
+        .filter(WIPBuffer.status == "ACTIVE", WIPBuffer.plan_id == plan_id)
+        .all()
+    )
+    if not bufs:
+        bufs = (
+            db.query(WIPBuffer)
+            .join(ProductionLine, ProductionLine.line_id == WIPBuffer.line_id)
+            .join(Stage, Stage.stage_id == ProductionLine.stage_id)
+            .filter(Stage.factory_id == plan.factory_id, WIPBuffer.plan_id.is_(None), WIPBuffer.status == "ACTIVE")
+            .all()
+        )
+    specs = []  # (wip_id, pre_last_eq, post_first_eq)
+    needed: set = set()
+    for w in bufs:
+        if not (w.pre_operation_id and w.post_operation_id):
+            continue
+        pre_eq = _rep(w.line_id, w.pre_operation_id, True)
+        post_eq = _rep(w.line_id, w.post_operation_id, False)
+        specs.append((w.wip_id, pre_eq, post_eq))
+        needed.add(pre_eq)
+        needed.add(post_eq)
+    needed.update(op_last_eq.values())  # 同一计数查询里一并统计各工序完工件数（任务进度）
+    counts: dict = {}
+    if needed:
+        cnt_rows = (
+            db.query(SimulationEvent.equipment_id, SimulationEvent.event_type, func.count())
+            .filter(
+                SimulationEvent.result_id == result.result_id,
+                SimulationEvent.timestamp_ms <= t_ms,
+                SimulationEvent.equipment_id.in_(needed),
+                SimulationEvent.event_type.in_(["PROCESSING_START", "PROCESSING_END"]),
+            )
+            .group_by(SimulationEvent.equipment_id, SimulationEvent.event_type)
+            .all()
+        )
+        counts = {(eq, et): c for eq, et, c in cnt_rows}
+    buffers: dict = {}
+    for wip_id, pre_eq, post_eq in specs:
+        produced = counts.get((pre_eq, "PROCESSING_END"), 0)
+        consumed = counts.get((post_eq, "PROCESSING_START"), 0)
+        buffers[wip_id] = max(0, produced - consumed)
+
+    # ── 任务完成进度：done=通过该工序末端设备的件数；plan=该线计划总量 ──
+    from app.models.biz import ProductionTask
+
+    plan_by_line = dict(
+        db.query(ProductionTask.line_id, func.coalesce(func.sum(ProductionTask.plan_quantity), 0))
+        .filter(ProductionTask.plan_id == plan_id)
+        .group_by(ProductionTask.line_id)
+        .all()
+    )
+    for key, last_eq in op_last_eq.items():
+        done = int(counts.get((last_eq, "PROCESSING_END"), 0))
+        plan = int(plan_by_line.get(key.split("::", 1)[0], 0) or 0)
+        e = ops.get(key)
+        if e is None:
+            e = {"status": "IDLE"}
+            ops[key] = e
+        e["done"] = done
+        e["plan"] = plan
+
+    return {"ops": ops, "buffers": buffers}
 
 
 # ---------------------------------------------------------------------------

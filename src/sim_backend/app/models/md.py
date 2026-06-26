@@ -448,6 +448,9 @@ class BOPProcess(Base):
     standard_worker_count = Column(Integer, nullable=False, default=0)
     min_worker_count = Column(Integer)
     primary_material_type = Column(String(100))
+    # 投入物料配方 {material_code: qty/件}，可含原料 + 上游半成品（如 {"MAT-PCB":1,"SF-...":1}）。
+    # MATERIAL_SUPPLY 约束按其中【原料】(非 SEMI_FINISHED) 从库存扣；半成品走线边仓缓冲。
+    material_usage = Column(JSONB)
     sop_ref = Column(String(500))
     sop_content = Column(Text)
     created_at = Column(DateTime, nullable=False, server_default=func.now())

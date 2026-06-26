@@ -23,7 +23,7 @@ from app.models.biz import (
     ProductionTask,
     WIPBufferSnapshot,
 )
-from app.models.md import Product
+from app.models.md import Product, WIPBuffer
 from app.models.sim import SimulationPlan, SoftConstraintConfig
 from app.schemas.sim import ImportIssue
 
@@ -190,18 +190,21 @@ def validate_plan(db: Session, plan: SimulationPlan) -> list[RuleResult]:
         ))
 
     if "WIP_CAPACITY" in enabled:
-        wips = db.query(WIPBufferSnapshot).filter(WIPBufferSnapshot.plan_id == plan_id).all()
+        # 新模型：线边仓容量约束要的是【容量】(导入"线边仓容量"后 md_wip_buffer.capacity_qty 有值)，
+        # 不是初始 WIP 快照内容(那是 init=0 本期不用)。一个容量都没设 → 所有缓冲无限 → 约束不产生
+        # 背压，视为未配置。缓冲是方案专属(建方案即克隆)，按 plan_id 统计有容量的条数。
+        capped = (
+            db.query(WIPBuffer)
+            .filter(WIPBuffer.plan_id == plan_id, WIPBuffer.capacity_qty.isnot(None))
+            .count()
+        )
         w_iss: list[ImportIssue] = []
-        if not wips:
-            w_iss.append(ImportIssue(row=0, field="wip",
-                                     message="已启用 WIP_CAPACITY 约束但未配置任何线边仓快照数据"))
-        w_iss += [
-            ImportIssue(row=0, field="current_volume",
-                        message=f"线边仓占用体积为负：{w.material_code}")
-            for w in wips if w.current_volume is not None and w.current_volume < 0
-        ]
+        if capped == 0:
+            w_iss.append(ImportIssue(
+                row=0, field="wip-capacity",
+                message="已启用 WIP_CAPACITY 约束但未导入任何线边仓容量（所有缓冲无限，不会产生背压）"))
         results.append(RuleResult(
-            rule_id="input.wip_sane", dimension="input", label="线边仓快照数据（约束已启用）",
+            rule_id="input.wip_sane", dimension="input", label="线边仓容量数据（约束已启用）",
             passed=not w_iss, blocking=True, issues=w_iss,
         ))
 

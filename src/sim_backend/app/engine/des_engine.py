@@ -123,12 +123,13 @@ from app.engine.common import (
     load_resolved_processes,
     semi_finished_code,
 )
-from app.models.biz import ProductionTask
+from app.models.biz import InventorySnapshot, MaterialSupply, ProductionTask
 from app.models.md import (
     BOP,
     BOPProcess,
     Equipment,
     EquipmentFailureParam,
+    Material,
     Operation,
     OperationTransition,
     Product,
@@ -167,10 +168,15 @@ class DESMetrics:
     blocked_seconds: float = 0.0    # 背压累计时长（秒）
     starved_count: int = 0          # 饥饿：下游因缓冲空等料的次数
     starved_seconds: float = 0.0    # 饥饿累计时长（秒）
+    material_shortage_seconds: float = 0.0  # 缺料停工累计时长（秒）；material_shortage_count 见上
+    # 注：material_shortage_count 已在上方声明，本轮（MATERIAL_SUPPLY）首次真正写入
     wip_peak_level: dict[str, int] = field(default_factory=dict)  # wip_id -> 峰值水位
     # 线边仓水位采样（旁路：(ts_ms, wip_id, level, capacity)；仅供 _finalize replay 重建
     # wip_states 时序，不写入 res_simulation_event 主表，避免放大事件量/索引重建成本）
     wip_level_samples: list = field(default_factory=list)
+    # 物料库存水位采样（MATERIAL_SUPPLY）：(ts_ms, material_code, level, material_type)；
+    # 仅供 _finalize replay 重建 warehouse_states 时序，不入主事件表。
+    material_level_samples: list = field(default_factory=list)
     hourly_output: list[dict] = field(default_factory=list)
     actual_completion_sec: float = 0.0  # 最后一件 PRODUCT_COMPLETE 事件的时间戳
     # Per-line LBR 时序：[{line_id, line_code, line_name, points: [{t_min, lbr}, ...]}, ...]
@@ -207,11 +213,13 @@ class LineResources:
         anomalies: list[AnomalyInjection],
         wip_buffers: dict[str, int],
         metrics: DESMetrics,
+        material_pool: "MaterialPool | None" = None,
     ):
         self.env = env
         self.line_id = line_id
         self.constraints = constraints
         self.metrics = metrics
+        self.material_pool = material_pool
 
         # Resources 按 operation_id 去重；串联簇 capacity 恒为 1（同时只能跑一件）
         self.resources: dict[str, simpy.Resource] = {}
@@ -338,6 +346,98 @@ class LineResources:
             self.record_event(anomaly.target_id, prim_path, "FAILURE_START", metadata={"anomaly": True})
             yield self.env.timeout(duration_sec)
             self.record_event(anomaly.target_id, prim_path, "FAILURE_END", metadata={"anomaly": True})
+
+
+# ===========================================================================
+# MaterialPool —— 工厂级物料库存池（MATERIAL_SUPPLY 软约束），跨 line 共享
+# ===========================================================================
+class MaterialPool:
+    """按 material_code 聚合的库存池（不分仓库路由）。
+
+    - 初值：导入的初始库存 InventorySnapshot.available_quantity 按物料聚合。
+    - 到货：导入的供应计划 MaterialSupply，在 arrival_sim_hour 时刻 put 进对应容器。
+    - 消耗：工序按 material_usage 扣【原料】(非 SEMI_FINISHED)；半成品由线边仓缓冲管，跳过。
+    - 某料无库存且无到货 → 不建容器 → 视为无限（不卡）。约束关 → enabled=False，consume 直接返回。
+    """
+
+    def __init__(self, env: simpy.Environment, db: Session, plan_id: str,
+                 constraints: set[str], metrics: DESMetrics):
+        self.env = env
+        self.metrics = metrics
+        self.enabled = "MATERIAL_SUPPLY" in constraints
+        self.containers: dict[str, simpy.Container] = {}
+        self.type_of: dict[str, str] = {}
+        if not self.enabled:
+            return
+        # 物料类型（plan-scoped + 全局）：区分原料 vs 半成品
+        for code, mtype in (
+            db.query(Material.material_code, Material.material_type)
+            .filter((Material.plan_id == plan_id) | (Material.plan_id.is_(None)))
+            .all()
+        ):
+            self.type_of.setdefault(code, mtype)
+        # 初始库存（按物料聚合 available_quantity）
+        init: dict[str, float] = {}
+        for row in db.query(InventorySnapshot).filter(InventorySnapshot.plan_id == plan_id).all():
+            init[row.material_code] = init.get(row.material_code, 0.0) + float(row.available_quantity)
+        supplies = db.query(MaterialSupply).filter(MaterialSupply.plan_id == plan_id).all()
+        for code in set(init) | {s.material_code for s in supplies}:
+            # simpy.Container 默认 capacity=inf；init=初始可用量
+            self.containers[code] = simpy.Container(env, init=init.get(code, 0.0))
+            self._sample(code)  # t=0 初值采样（库存水位曲线起点）
+        for s in supplies:
+            env.process(self._arrival(
+                s.material_code, float(s.supply_quantity), float(s.arrival_sim_hour) * 3600))
+
+    def _sample(self, code: str):
+        """记录某物料当前库存水位（旁路采样，供 _finalize 重建 warehouse_states 时序）。"""
+        c = self.containers.get(code)
+        if c is None:
+            return
+        self.metrics.material_level_samples.append(
+            (int(self.env.now * 1000), code, round(c.level, 3), self.type_of.get(code)))
+
+    def _arrival(self, code: str, qty: float, at_sec: float):
+        if at_sec > 0:
+            yield self.env.timeout(at_sec)
+        c = self.containers.get(code)
+        if c is not None and qty > 0:
+            yield c.put(qty)
+            self._sample(code)  # 到货后采样（库存回升）
+
+    def _ev(self, eq_id, prim, etype, product_id, md):
+        self.metrics.events.append(SimEvent(
+            timestamp_ms=int(self.env.now * 1000), equipment_id=eq_id, prim_path=prim,
+            event_type=etype, product_id=product_id, metadata=md))
+
+    def consume(self, usage: dict, eq_tuple: tuple[str, str | None], product_id: str):
+        """生成器：按 usage 消耗原料。半成品/无容器项跳过。缺料则阻塞=停工(MATERIAL_SHORTAGE)。"""
+        if not self.enabled or not usage:
+            return
+        eq_id, prim = eq_tuple
+        for code, qty in usage.items():
+            if self.type_of.get(code) == "SEMI_FINISHED":
+                continue  # 半成品走线边仓
+            c = self.containers.get(code)
+            if c is None:
+                continue  # 无库存/到货数据 → 该料无限
+            try:
+                q = float(qty)
+            except (TypeError, ValueError):
+                continue
+            if q <= 0:
+                continue
+            if c.level < q:
+                self._ev(eq_id, prim, "MATERIAL_SHORTAGE_START", product_id,
+                         {"material_code": code, "need": q, "have": round(c.level, 3)})
+                t0 = self.env.now
+                yield c.get(q)
+                self.metrics.material_shortage_seconds += self.env.now - t0
+                self.metrics.material_shortage_count += 1
+                self._ev(eq_id, prim, "MATERIAL_SHORTAGE_END", product_id, {"material_code": code})
+            else:
+                yield c.get(q)
+            self._sample(code)  # 消耗后采样（库存下降）
 
 
 # ===========================================================================
@@ -471,6 +571,11 @@ class TaskExecutor:
                 in_wid = self._in_buf.get(i)
                 if in_wid is not None:
                     yield from self._wip_get(in_wid, eq_list[0], product_id)
+                # 投料（缺料停工）：本工序 material_usage 里的【原料】从库存扣；不足则占着资源
+                # 等到货 = MATERIAL_SHORTAGE（半成品已由上面线边仓 get 处理，consume 内部跳过）。
+                pool = self.line.material_pool
+                if pool is not None and pool.enabled and proc.material_usage:
+                    yield from pool.consume(proc.material_usage, eq_list[0], product_id)
                 # 簇内逐台 START → timeout(ct/N) → END，整段持有同一 Resource
                 for eq_id, prim_path in eq_list:
                     self.line.record_event(
@@ -815,11 +920,13 @@ def run_des(db: Session, plan_id: str) -> DESMetrics:
     env = simpy.Environment()
     anomalies = db.query(AnomalyInjection).filter(AnomalyInjection.plan_id == plan_id).all()
     all_metrics = DESMetrics()
+    # 工厂级物料库存池（MATERIAL_SUPPLY 约束）：跨 line 共享，约束关时为空壳
+    material_pool = MaterialPool(env, db, plan_id, constraints, all_metrics)
 
     # 模式判别：plan.ignore_wo 显式控制
     if plan.ignore_wo:
         line_resources_list = _run_isolated(
-            env, db, plan, tasks, anomalies, constraints, all_metrics,
+            env, db, plan, tasks, anomalies, constraints, all_metrics, material_pool,
         )
     else:
         # WO 模式：要求所有 task 都挂 wo_id（数据完整性约束）
@@ -831,7 +938,7 @@ def run_des(db: Session, plan_id: str) -> DESMetrics:
                 f"Either fix data or set plan.ignore_wo=True."
             )
         line_resources_list = _run_wo_linked(
-            env, db, plan, tasks, anomalies, constraints, all_metrics,
+            env, db, plan, tasks, anomalies, constraints, all_metrics, material_pool,
         )
 
     _log.info("[DES] SimPy env.run() 开始，仿真时长 %.1f h (%d 秒)，任务数 %d",
@@ -863,6 +970,7 @@ def _run_wo_linked(
     anomalies: list[AnomalyInjection],
     constraints: set[str],
     metrics: DESMetrics,
+    material_pool: "MaterialPool | None" = None,
 ) -> list[LineResources]:
     # 1. 按 wo_id 分组，按 stage.sequence 排序形成 WO chain
     stage_seq_by_id: dict[str, int] = {
@@ -910,6 +1018,7 @@ def _run_wo_linked(
             env=env, line_id=line_id, all_processes=all_line_procs,
             constraints=constraints, failure_params=failure_params,
             anomalies=anomalies, wip_buffers=wip_buffers, metrics=metrics,
+            material_pool=material_pool,
         )
         line_resources_list.append(line_res)
 
@@ -952,6 +1061,7 @@ def _run_isolated(
     anomalies: list[AnomalyInjection],
     constraints: set[str],
     metrics: DESMetrics,
+    material_pool: "MaterialPool | None" = None,
 ) -> list[LineResources]:
     # 按 stage.sequence 判断某 line 的 task 是否属于"下游 stage"（为 SYNTHETIC_FEED 事件判定）
     stage_seq_by_id: dict[str, int] = {
@@ -983,6 +1093,7 @@ def _run_isolated(
             env=env, line_id=line_id, all_processes=all_line_procs,
             constraints=constraints, failure_params=failure_params,
             anomalies=anomalies, wip_buffers=wip_buffers, metrics=metrics,
+            material_pool=material_pool,
         )
         line_resources_list.append(line_res)
 
@@ -1136,6 +1247,7 @@ def _finalize_and_write(
     _dur_ms = int(duration_seconds * 1000)
     _open_blk: dict[str, list[int]] = {}
     _open_stv: dict[str, list[int]] = {}
+    _open_sho: dict[str, list[int]] = {}
     for ev in all_metrics.events:
         if ev.event_type == "BLOCKED_START":
             _open_blk.setdefault(ev.equipment_id, []).append(ev.timestamp_ms)
@@ -1149,6 +1261,12 @@ def _finalize_and_write(
             _l = _open_stv.get(ev.equipment_id)
             if _l:
                 _l.pop(0)
+        elif ev.event_type == "MATERIAL_SHORTAGE_START":
+            _open_sho.setdefault(ev.equipment_id, []).append(ev.timestamp_ms)
+        elif ev.event_type == "MATERIAL_SHORTAGE_END":
+            _l = _open_sho.get(ev.equipment_id)
+            if _l:
+                _l.pop(0)
     _synth: list[SimEvent] = []
     for _eq, _starts in _open_blk.items():
         for _t0 in _starts:
@@ -1160,6 +1278,11 @@ def _finalize_and_write(
             all_metrics.starved_count += 1
             all_metrics.starved_seconds += max(0.0, duration_seconds - _t0 / 1000.0)
             _synth.append(SimEvent(_dur_ms, _eq, None, "STARVED_END", None, {"truncated": True}))
+    for _eq, _starts in _open_sho.items():
+        for _t0 in _starts:
+            all_metrics.material_shortage_count += 1
+            all_metrics.material_shortage_seconds += max(0.0, duration_seconds - _t0 / 1000.0)
+            _synth.append(SimEvent(_dur_ms, _eq, None, "MATERIAL_SHORTAGE_END", None, {"truncated": True}))
     if _synth:
         all_metrics.events.extend(_synth)
         all_metrics.events.sort(key=lambda e: e.timestamp_ms)
@@ -1180,6 +1303,9 @@ def _finalize_and_write(
     )
     result.equipment_failure_count = all_metrics.equipment_failure_count
     result.equipment_downtime_minutes = round(all_metrics.equipment_downtime_seconds / 60, 2)
+    # 缺料停工（MATERIAL_SUPPLY）：这两列一直存在却从未写，本轮首次落库（WIP 指标走 result_summary.wip_capacity，不冲突）
+    result.material_shortage_count = all_metrics.material_shortage_count
+    result.material_shortage_minutes = round(all_metrics.material_shortage_seconds / 60, 2)
 
     # 瓶颈设备
     if all_metrics.equipment_busy_time:
@@ -1236,6 +1362,11 @@ def _finalize_and_write(
     current_wip_levels: dict[str, tuple] = {}  # wip_id -> (level, capacity, material_code)
     wip_idx = 0
 
+    # 物料库存水位时序（MATERIAL_SUPPLY 旁路采样）
+    mat_samples = sorted(all_metrics.material_level_samples, key=lambda x: x[0])
+    current_material_levels: dict[str, tuple] = {}  # material_code -> (level, material_type)
+    mat_idx = 0
+
     snapshot_rows: list[dict] = []
     event_idx = 0
     for t_sec in range(0, int(duration_seconds), snapshot_interval):
@@ -1254,7 +1385,9 @@ def _finalize_and_write(
                 current_equipment_states[ev.equipment_id] = "BLOCKED"
             elif ev.event_type == "STARVED_START":
                 current_equipment_states[ev.equipment_id] = "STARVED"
-            elif ev.event_type in ("BLOCKED_END", "STARVED_END"):
+            elif ev.event_type == "MATERIAL_SHORTAGE_START":
+                current_equipment_states[ev.equipment_id] = "SHORTAGE"
+            elif ev.event_type in ("BLOCKED_END", "STARVED_END", "MATERIAL_SHORTAGE_END"):
                 current_equipment_states[ev.equipment_id] = "IDLE"
             event_idx += 1
 
@@ -1264,10 +1397,21 @@ def _finalize_and_write(
             current_wip_levels[_wid] = (_lvl, _cap, _mat)
             wip_idx += 1
 
+        # 消费本窗口前的物料库存采样
+        while mat_idx < len(mat_samples) and mat_samples[mat_idx][0] <= t_ms:
+            _, _mc, _lvl, _mt = mat_samples[mat_idx]
+            current_material_levels[_mc] = (_lvl, _mt)
+            mat_idx += 1
+
         _wip_states = {
             wid: {"quantity": lvl, "capacity": cap, "material_code": mat,
                   "fill_rate": (round(lvl / cap, 3) if cap else None)}
             for wid, (lvl, cap, mat) in current_wip_levels.items()
+        }
+        # warehouse_states 按物料聚合（不分仓库路由）：{material_code: {quantity, material_type}}
+        _wh_states = {
+            mc: {"quantity": lvl, "material_type": mt}
+            for mc, (lvl, mt) in current_material_levels.items()
         }
         snapshot_rows.append({
             "snapshot_id": str(uuid.uuid4()),
@@ -1275,6 +1419,7 @@ def _finalize_and_write(
             "sim_timestamp_sec": round(t_sec, 3),
             "equipment_states": {eq: {"status": st} for eq, st in current_equipment_states.items()},
             "wip_states": _wip_states or None,
+            "warehouse_states": _wh_states or None,
             "snapshot_interval_sec": snapshot_interval,
         })
 
@@ -1282,9 +1427,10 @@ def _finalize_and_write(
         _bulk_insert_pg(
             db,
             "res_simulation_state_snapshot",
-            ("snapshot_id", "result_id", "sim_timestamp_sec", "equipment_states", "wip_states", "snapshot_interval_sec"),
+            ("snapshot_id", "result_id", "sim_timestamp_sec", "equipment_states", "wip_states",
+             "warehouse_states", "snapshot_interval_sec"),
             snapshot_rows,
-            jsonb_cols=("equipment_states", "wip_states"),
+            jsonb_cols=("equipment_states", "wip_states", "warehouse_states"),
         )
 
     # ── 全量毫秒事件入库（供 Omniverse Kit 3D 回放消费）────────────────────────
