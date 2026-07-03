@@ -41,7 +41,7 @@ function AssetLibraryNode({
         className={`w-full flex items-center gap-1 py-0.5 rounded-sm mx-1 transition-colors text-[10px] ${
           isLeaf
             ? "cursor-grab text-slate-400 hover:text-blue-300 hover:bg-blue-600/10 active:cursor-grabbing"
-            : " text-slate-400 hover:text-slate-200 hover:bg-[#0f2035]"
+            : " text-slate-400 hover:text-slate-200 hover:bg-[var(--c-0f2035)]"
         }`}
         style={{ paddingLeft: `${6 + depth * 10}px` }}
       >
@@ -132,16 +132,16 @@ export function AssetLibraryPanel({
 
   return (
     <div
-      className="border-b border-[#142235] flex-shrink-0 flex flex-col"
+      className="border-b border-[var(--c-142235)] flex-shrink-0 flex flex-col"
       style={{ maxHeight: "45%", overflow: "hidden" }}
     >
-      <div className="flex items-center justify-between px-2 py-1.5 border-b border-[#142235]">
+      <div className="flex items-center justify-between px-2 py-1.5 border-b border-[var(--c-142235)]">
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
           <Layers3 size={10} className="text-blue-400" /> {t("assetLibrary.title")}
         </span>
       </div>
 
-      <div className="px-2 py-1.5 border-b border-[#142235]">
+      <div className="px-2 py-1.5 border-b border-[var(--c-142235)]">
         <div className="relative">
           <Search
             size={9}
@@ -151,7 +151,7 @@ export function AssetLibraryPanel({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("assetLibrary.searchPlaceholder")}
-            className="w-full pl-6 pr-2 py-1 bg-[#040d18] border border-[#1e3a55] rounded text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full pl-6 pr-2 py-1 bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
       </div>
@@ -161,7 +161,7 @@ export function AssetLibraryPanel({
           <div key={cat.id}>
             <button
               onClick={() => toggleCat(cat.id)}
-              className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold hover:bg-[#0f2035] transition-colors"
+              className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold hover:bg-[var(--c-0f2035)] transition-colors"
             >
               {openCats.has(cat.id) ? (
                 <ChevronDown size={9} className="text-slate-600" />
@@ -193,7 +193,7 @@ export function AssetLibraryPanel({
         )}
       </div>
 
-      <div className="px-2 py-1.5 border-t border-[#142235]">
+      <div className="px-2 py-1.5 border-t border-[var(--c-142235)]">
         <div className="text-[9px] text-slate-700 text-center">
           {draggingNode ? (
             <span className="text-blue-400">

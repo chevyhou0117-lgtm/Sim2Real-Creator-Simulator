@@ -123,7 +123,7 @@ function PlaybackTimelineInner({
 
   // ── render ───────────────────────────────────────────────────────────────
   return (
-    <div className={cn('bg-[#020a12] border-t border-[#1e3a55]/60 select-none flex-shrink-0', className)}>
+    <div className={cn('bg-[var(--c-020a12)] border-t border-[var(--c-1e3a55)]/60 select-none flex-shrink-0', className)}>
       {/* Ruler — 整条可点击 / 拖动 */}
       <div
         ref={railRef}
@@ -133,7 +133,7 @@ function PlaybackTimelineInner({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <div className="absolute inset-y-0 left-0 right-0 rounded-sm bg-[#07111e] border border-[#142235]" />
+        <div className="absolute inset-y-0 left-0 right-0 rounded-sm bg-[var(--c-07111e)] border border-[var(--c-142235)]" />
 
         {/* Elapsed fill */}
         <div className="absolute inset-y-0 left-0 bg-blue-600/20 rounded-l-sm pointer-events-none"
@@ -146,7 +146,7 @@ function PlaybackTimelineInner({
           const isMajor = (t / tickIntervalMs) % 2 === 0 || ticks.length <= 12;
           return (
             <div key={t} className="absolute top-0 bottom-0 flex flex-col items-start pointer-events-none" style={{ left: `${pct}%` }}>
-              <div className={cn('w-px', isMajor ? 'h-2 bg-[#2a4a6a]' : 'h-1.5 bg-[#1a2e42]')} />
+              <div className={cn('w-px', isMajor ? 'h-2 bg-[var(--c-2a4a6a)]' : 'h-1.5 bg-[var(--c-1a2e42)]')} />
               {isMajor && (
                 <span className="text-[8px] font-mono text-slate-400 whitespace-nowrap" style={{ marginLeft: 2 }}>
                   {formatHMS(t)}
@@ -168,7 +168,7 @@ function PlaybackTimelineInner({
             >
               <div className="w-2 h-2 rotate-45 border flex-shrink-0 -translate-x-1/2"
                 style={{ background: ev.color + '66', borderColor: ev.color }} />
-              <div className="hidden group-hover:flex absolute bottom-full mb-1.5 -translate-x-1/2 bg-[#0b1d30] border border-[#1e3a55] rounded px-2 py-1 flex-col items-center z-20 pointer-events-none whitespace-nowrap" style={{ minWidth: 64 }}>
+              <div className="hidden group-hover:flex absolute bottom-full mb-1.5 -translate-x-1/2 bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded px-2 py-1 flex-col items-center z-20 pointer-events-none whitespace-nowrap" style={{ minWidth: 64 }}>
                 <span className="text-[9px] font-medium" style={{ color: ev.color }}>{ev.label}</span>
                 <span className="text-[8px] font-mono text-slate-400">{formatHMS(ev.tMs)}</span>
               </div>
@@ -197,7 +197,7 @@ function PlaybackTimelineInner({
         </button>
 
         {/* Time display */}
-        <div className="flex items-center gap-1.5 bg-[#040d16] border border-[#142235] rounded px-2.5 py-1 flex-shrink-0">
+        <div className="flex items-center gap-1.5 bg-[var(--c-040d16)] border border-[var(--c-142235)] rounded px-2.5 py-1 flex-shrink-0">
           <span className="text-[11px] font-mono text-slate-300 tracking-widest">{formatHMS(displayMs)}</span>
           <span className="text-[9px] text-slate-500 mx-1">/</span>
           <span className="text-[9px] font-mono text-slate-400">{formatHMS(durationMs)}</span>
@@ -219,7 +219,7 @@ function PlaybackTimelineInner({
                 'px-1.5 py-0.5 rounded text-[9px] font-mono transition-colors',
                 state?.speed === s
                   ? 'bg-blue-600/25 text-blue-300 border border-blue-500/40'
-                  : 'text-slate-400 hover:text-slate-200 border border-transparent hover:border-[#1e3a55]',
+                  : 'text-slate-400 hover:text-slate-200 border border-transparent hover:border-[var(--c-1e3a55)]',
               )}
             >
               {s}x

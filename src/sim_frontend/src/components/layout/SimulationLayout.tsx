@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'Plan Management', path: '/simulation' },
@@ -28,14 +29,14 @@ export function SimulationLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-[#07111e] overflow-hidden">
+    <div className="flex h-screen bg-[var(--c-07111e)] overflow-hidden">
       {/* Sidebar */}
       <aside className={cn(
-        'flex flex-col bg-[#07111e] border-r border-[#142235] transition-all duration-200 flex-shrink-0',
+        'flex flex-col bg-[var(--c-07111e)] border-r border-[var(--c-142235)] transition-all duration-200 flex-shrink-0',
         collapsed ? 'w-12' : 'w-52',
       )}>
         {/* Logo */}
-        <div className={cn('h-12 flex items-center border-b border-[#142235] px-3 gap-2.5 flex-shrink-0')}>
+        <div className={cn('h-12 flex items-center border-b border-[var(--c-142235)] px-3 gap-2.5 flex-shrink-0')}>
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
             <FlaskConical size={14} className="text-white" />
           </div>
@@ -52,7 +53,7 @@ export function SimulationLayout() {
           <button
             onClick={() => navigate('/')}
             className={cn(
-              'w-full flex items-center gap-2 px-2 py-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-[#0b1d30] transition-all text-xs',
+              'w-full flex items-center gap-2 px-2 py-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-[var(--c-0b1d30)] transition-all text-xs',
               collapsed && 'justify-center',
             )}
           >
@@ -72,7 +73,7 @@ export function SimulationLayout() {
                 collapsed && 'justify-center',
                 isActive(path)
                   ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                  : 'text-slate-500 hover:text-slate-200 hover:bg-[#0b1d30] border border-transparent',
+                  : 'text-slate-500 hover:text-slate-200 hover:bg-[var(--c-0b1d30)] border border-transparent',
               )}
             >
               <Icon size={15} className="flex-shrink-0" />
@@ -82,11 +83,11 @@ export function SimulationLayout() {
         </nav>
 
         {/* Bottom */}
-        <div className="px-2 pb-3 space-y-0.5 border-t border-[#142235] pt-2">
+        <div className="px-2 pb-3 space-y-0.5 border-t border-[var(--c-142235)] pt-2">
           <button
             onClick={() => navigate('/simulation/settings')}
             className={cn(
-              'w-full flex items-center gap-2.5 px-2 py-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-[#0b1d30] transition-all text-xs',
+              'w-full flex items-center gap-2.5 px-2 py-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-[var(--c-0b1d30)] transition-all text-xs',
               collapsed && 'justify-center',
             )}
           >
@@ -96,7 +97,7 @@ export function SimulationLayout() {
           <button
             onClick={() => setCollapsed(!collapsed)}
             className={cn(
-              'w-full flex items-center gap-2.5 px-2 py-2.5 rounded-lg text-slate-600 hover:text-slate-400 hover:bg-[#0b1d30] transition-all text-xs',
+              'w-full flex items-center gap-2.5 px-2 py-2.5 rounded-lg text-slate-600 hover:text-slate-400 hover:bg-[var(--c-0b1d30)] transition-all text-xs',
               collapsed && 'justify-center',
             )}
           >
@@ -109,7 +110,7 @@ export function SimulationLayout() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="h-12 bg-[#07111e] border-b border-[#142235] flex items-center px-6 flex-shrink-0 gap-4">
+        <header className="h-12 bg-[var(--c-07111e)] border-b border-[var(--c-142235)] flex items-center px-6 flex-shrink-0 gap-4">
           <div className="flex items-center gap-2 text-[11px] text-slate-500">
             <Factory size={13} />
             <span>{t('Yantai Plant')}</span>
@@ -121,8 +122,9 @@ export function SimulationLayout() {
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>{t('Master data synced · 2026-04-10 08:30')}</span>
           </div>
+          <ThemeToggle variant="bare" />
           <LanguageToggle variant="bare" />
-          <div className="w-7 h-7 rounded-full bg-[#0b1d30] border border-[#1e3a55] flex items-center justify-center text-xs text-slate-400 font-medium cursor-pointer hover:border-blue-500/40 transition-colors">
+          <div className="w-7 h-7 rounded-full bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] flex items-center justify-center text-xs text-slate-400 font-medium cursor-pointer hover:border-blue-500/40 transition-colors">
             L
           </div>
         </header>

@@ -105,6 +105,9 @@ export default class AppStream extends Component<
           ...(StreamConfig.local.mediaPort != null && {
             mediaPort: StreamConfig.local.mediaPort,
           }),
+          // cursor:"free" 让串流库完整接管指针（含鼠标右键拖动=Kit 内建转视角/fly 导航）；
+          // 不设时直连模式可能只转发部分鼠标事件，右键导航失效。
+          cursor: "free",
           nativeTouchEvents: true,
           // 固定请求 stream.config.json 的 streamWidth/streamHeight（3840×2720），与 aifactory 前端一致。
           // 不用 fitStreamResolution：它会把流分辨率贴合 <video> 元素的实际像素尺寸，而 sim 视口被图表
@@ -254,7 +257,7 @@ export default class AppStream extends Component<
         <div
           id="view"
           style={{
-            backgroundColor: this.state.streamReady ? "white" : "#dddddd",
+            backgroundColor: this.state.streamReady ? "white" : "var(--c-dddddd)",
             display: "flex",
             justifyContent: "space-between",
             height: "100%",

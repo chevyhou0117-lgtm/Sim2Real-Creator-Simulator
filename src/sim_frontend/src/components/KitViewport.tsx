@@ -76,7 +76,7 @@ function KitDirectViewport({
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
       />
       {!started && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#07111e]/85 pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--c-07111e)]/85 pointer-events-none">
           <div className="flex flex-col items-center gap-3">
             <div className="w-9 h-9 rounded-full border-[3px] border-blue-500/30 border-t-blue-500 animate-spin" />
             <div className="text-[12px] text-slate-300">连接 Kit 串流中…</div>

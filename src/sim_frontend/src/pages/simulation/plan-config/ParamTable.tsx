@@ -82,7 +82,7 @@ function NodeSummaryBar({ node, items }: { node: TreeNode; items: EffectiveParam
   const stats = useMemo(() => computeStats(items, scope), [items, scope]);
   if (items.length === 0) {
     return (
-      <div className="px-3 py-2 border-b border-[#142235] flex-shrink-0">
+      <div className="px-3 py-2 border-b border-[var(--c-142235)] flex-shrink-0">
         <span className="text-[10px] text-slate-500">{t('No equipment parameters under this node')}</span>
       </div>
     );
@@ -126,7 +126,7 @@ function NodeSummaryBar({ node, items }: { node: TreeNode; items: EffectiveParam
     void cb;
   }
   return (
-    <div className="px-3 py-2 border-b border-[#142235] flex-shrink-0 bg-[#040d16]/60">
+    <div className="px-3 py-2 border-b border-[var(--c-142235)] flex-shrink-0 bg-[var(--c-040d16)]/60">
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {chips.map((c) => (
           <div key={c.label} className="flex items-center gap-1">
@@ -313,8 +313,8 @@ export function ParamTable({ planId, productCode, tree, selectedNode, onParamsCh
           <div className="flex items-center justify-center py-6 text-[11px] text-slate-500">{t('No equipment in this scope')}</div>
         ) : (
           <table className="w-full text-[11px]">
-            <thead className="sticky top-0 bg-[#07111e] z-10">
-              <tr className="border-b border-[#1e3a55]">
+            <thead className="sticky top-0 bg-[var(--c-07111e)] z-10">
+              <tr className="border-b border-[var(--c-1e3a55)]">
                 <th className="px-2 py-2 text-left w-6">
                   <input
                     type="checkbox"
@@ -343,8 +343,8 @@ export function ParamTable({ planId, productCode, tree, selectedNode, onParamsCh
                   <tr
                     key={r.equipment_id}
                     className={cn(
-                      'border-b border-[#0f1e30] transition-colors',
-                      sel ? 'bg-blue-600/10 border-l-2 border-l-blue-500' : 'hover:bg-[#0d2035]/40',
+                      'border-b border-[var(--c-0f1e30)] transition-colors',
+                      sel ? 'bg-blue-600/10 border-l-2 border-l-blue-500' : 'hover:bg-[var(--c-0d2035)]/40',
                     )}
                   >
                     <td className="px-2 py-1.5 w-6" onClick={(e) => e.stopPropagation()}>
@@ -376,13 +376,13 @@ export function ParamTable({ planId, productCode, tree, selectedNode, onParamsCh
                                 if (e.key === 'Escape') setEditingCell(null);
                                 if (e.key === 'Delete' && editValue === '') commitEdit(true);
                               }}
-                              className="w-20 bg-[#07111e] border border-blue-500/60 rounded px-1.5 py-0.5 text-[11px] font-mono text-slate-200 outline-none text-right"
+                              className="w-20 bg-[var(--c-07111e)] border border-blue-500/60 rounded px-1.5 py-0.5 text-[11px] font-mono text-slate-200 outline-none text-right"
                             />
                           ) : (
                             <div
                               onClick={() => startEdit(r.equipment_id, c.key)}
                               className={cn(
-                                'cursor-pointer hover:bg-[#0d2035]/40 rounded px-1.5 py-1 transition-colors group inline-flex items-center justify-end gap-1',
+                                'cursor-pointer hover:bg-[var(--c-0d2035)]/40 rounded px-1.5 py-1 transition-colors group inline-flex items-center justify-end gap-1',
                                 inh === 'inherited' ? 'text-slate-400' : 'text-blue-400',
                               )}
                               title={p ? t(sourceLabel(p.source)) : ''}
@@ -453,7 +453,7 @@ function BatchActionBar({
   };
 
   return (
-    <div className="flex items-center gap-1.5 px-2 py-2 border-t border-[#142235] bg-[#040d16] flex-shrink-0 flex-wrap">
+    <div className="flex items-center gap-1.5 px-2 py-2 border-t border-[var(--c-142235)] bg-[var(--c-040d16)] flex-shrink-0 flex-wrap">
       <span className="text-[10px] text-slate-500 mr-1">{t('{{count}} selected', { count: selectedCount })}</span>
       <button
         disabled={selectedCount === 0 || saving}
@@ -461,19 +461,19 @@ function BatchActionBar({
         className={cn(
           'text-[10px] px-2 py-1 rounded border transition-colors relative',
           selectedCount > 0 && !saving
-            ? 'border-[#1e3a55] text-slate-300 hover:border-blue-500/40 hover:text-blue-300'
-            : 'border-[#0f1e30] text-slate-600 cursor-not-allowed',
+            ? 'border-[var(--c-1e3a55)] text-slate-300 hover:border-blue-500/40 hover:text-blue-300'
+            : 'border-[var(--c-0f1e30)] text-slate-600 cursor-not-allowed',
         )}
       >
         {t('Batch Apply')} ▼
       </button>
       {menuOpen && selectedCount > 0 && (
-        <div className="absolute bottom-12 left-2 z-30 bg-[#07111e] border border-[#1e3a55] rounded-lg shadow-xl overflow-hidden min-w-[160px]">
+        <div className="absolute bottom-12 left-2 z-30 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg shadow-xl overflow-hidden min-w-[160px]">
           {PARAM_COLUMNS.map((c) => (
             <button
               key={c.key}
               onClick={() => { setPicker({ key: c.key }); setVal(''); }}
-              className="block w-full text-left text-[10px] px-3 py-1.5 text-slate-400 hover:bg-[#0d2035] hover:text-slate-200 transition-colors whitespace-nowrap"
+              className="block w-full text-left text-[10px] px-3 py-1.5 text-slate-400 hover:bg-[var(--c-0d2035)] hover:text-slate-200 transition-colors whitespace-nowrap"
             >
               {t('Apply {{label}} ({{unit}})', { label: t(c.label), unit: t(c.unit) })}
             </button>
@@ -481,7 +481,7 @@ function BatchActionBar({
         </div>
       )}
       {picker && (
-        <div className="flex flex-col gap-1 ml-2 bg-[#0a1929] border border-[#1e3a55] rounded px-2 py-1.5">
+        <div className="flex flex-col gap-1 ml-2 bg-[var(--c-0a1929)] border border-[var(--c-1e3a55)] rounded px-2 py-1.5">
           <div className="flex items-center gap-1">
             <span className="text-[10px] text-slate-400">{t(PARAM_KEY_TO_COL[picker.key].label)}</span>
             <input
@@ -490,7 +490,7 @@ function BatchActionBar({
               value={val}
               onChange={(e) => setVal(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') setPicker(null); }}
-              className="w-16 bg-[#07111e] border border-[#1e3a55] rounded px-1.5 py-0.5 text-[10px] font-mono text-slate-200 outline-none text-right"
+              className="w-16 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-1.5 py-0.5 text-[10px] font-mono text-slate-200 outline-none text-right"
               placeholder={t(PARAM_KEY_TO_COL[picker.key].unit)}
             />
             <button onClick={submit} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-600/30 text-blue-300 hover:bg-blue-600/50">{t('Apply')}</button>
@@ -513,7 +513,7 @@ function BatchActionBar({
                 value={trStart}
                 onChange={(e) => setTrStart(e.target.value)}
                 placeholder={t('From')}
-                className="w-12 bg-[#07111e] border border-[#1e3a55] rounded px-1 py-0.5 text-[10px] font-mono text-slate-200 outline-none text-right"
+                className="w-12 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-1 py-0.5 text-[10px] font-mono text-slate-200 outline-none text-right"
               />
               <span>h →</span>
               <span>T+</span>
@@ -522,7 +522,7 @@ function BatchActionBar({
                 value={trEnd}
                 onChange={(e) => setTrEnd(e.target.value)}
                 placeholder={t('To')}
-                className="w-12 bg-[#07111e] border border-[#1e3a55] rounded px-1 py-0.5 text-[10px] font-mono text-slate-200 outline-none text-right"
+                className="w-12 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-1 py-0.5 text-[10px] font-mono text-slate-200 outline-none text-right"
               />
               <span>h</span>
             </div>
@@ -565,10 +565,10 @@ export function FloatingParamTablePanel({
 
   return (
     <div
-      className="absolute top-3 right-3 z-20 flex flex-col rounded-xl border border-[#1e3a55] bg-[#07111e]/95 backdrop-blur shadow-2xl transition-all overflow-hidden"
+      className="absolute top-3 right-3 z-20 flex flex-col rounded-xl border border-[var(--c-1e3a55)] bg-[var(--c-07111e)]/95 backdrop-blur shadow-2xl transition-all overflow-hidden"
       style={{ width: collapsed ? 36 : 720, maxHeight: 'calc(100% - 24px)', height: 'calc(100% - 24px)' }}
     >
-      <div className="flex items-center gap-2 px-2.5 py-2 border-b border-[#142235] flex-shrink-0">
+      <div className="flex items-center gap-2 px-2.5 py-2 border-b border-[var(--c-142235)] flex-shrink-0">
         <button
           onClick={() => setCollapsed((v) => !v)}
           className="text-slate-500 hover:text-slate-200 transition-colors flex-shrink-0"

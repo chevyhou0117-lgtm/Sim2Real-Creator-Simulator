@@ -22,7 +22,7 @@ const STATUS_COLORS = {
 
 export function MetricCard({ label, value, sub, icon, iconBg, iconColor, trendVal, status = 'neutral' }: MetricCardProps) {
   return (
-    <div className="bg-[#0b1d30] border border-[#142235] rounded-xl p-4 flex items-start gap-3">
+    <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl p-4 flex items-start gap-3">
       {icon && (
         <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0', iconBg, iconColor)}>
           {icon}

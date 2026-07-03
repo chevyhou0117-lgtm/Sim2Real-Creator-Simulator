@@ -364,9 +364,9 @@ export function FactoryEditorPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#07111e] text-slate-100 overflow-hidden">
+    <div className="flex flex-col h-screen bg-[var(--c-07111e)] text-slate-100 overflow-hidden">
       {/* ── Top Header Bar ── */}
-      <header className="h-11 bg-[#050f1a] border-b border-[#142235] flex items-center px-4 flex-shrink-0 z-20">
+      <header className="h-11 bg-[var(--c-050f1a)] border-b border-[var(--c-142235)] flex items-center px-4 flex-shrink-0 z-20">
         {/* Logo */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center">
@@ -408,13 +408,13 @@ export function FactoryEditorPage() {
           )}
           <button
             onClick={() => setShowUSDUpload(true)}
-            className="flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-slate-200 border border-[#1e3a55] hover:border-blue-500/60 rounded px-2.5 py-1 transition-colors"
+            className="flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-slate-200 border border-[var(--c-1e3a55)] hover:border-blue-500/60 rounded px-2.5 py-1 transition-colors"
           >
             <Upload size={11} /> {t("editor.uploadUSD")}
           </button>
           <button
             onClick={() => setShowValidation(true)}
-            className="flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-slate-200 border border-[#1e3a55] rounded px-2.5 py-1 transition-colors"
+            className="flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-slate-200 border border-[var(--c-1e3a55)] rounded px-2.5 py-1 transition-colors"
           >
             <ShieldCheck size={11} /> {t("editor.validate")}
           </button>
@@ -452,7 +452,7 @@ export function FactoryEditorPage() {
 
       {/* ── Project Sub Navigation ── */}
       {!isNew && (
-        <div className="h-8 bg-[#050f1a] border-b border-[#142235] flex items-end px-4 flex-shrink-0">
+        <div className="h-8 bg-[var(--c-050f1a)] border-b border-[var(--c-142235)] flex items-end px-4 flex-shrink-0">
           {(
             [
               {
@@ -501,12 +501,12 @@ export function FactoryEditorPage() {
 
         {/* ── Left Panel ── */}
         <div
-          className={`flex flex-col bg-[#071526] border-r border-[#142235] transition-all duration-200 flex-shrink-0 ${
+          className={`flex flex-col bg-[var(--c-071526)] border-r border-[var(--c-142235)] transition-all duration-200 flex-shrink-0 ${
             leftCollapsed ? "w-8" : "w-60"
           }`}
         >
           {/* Collapse Toggle */}
-          <div className="flex items-center justify-between px-2 py-1.5 border-b border-[#142235] flex-shrink-0 min-h-[30px]">
+          <div className="flex items-center justify-between px-2 py-1.5 border-b border-[var(--c-142235)] flex-shrink-0 min-h-[30px]">
             {!leftCollapsed && (
               <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Building2 size={11} className="text-blue-400" /> {t("editor.factoryModeling")}
@@ -530,7 +530,7 @@ export function FactoryEditorPage() {
               <AssetLibraryPanel assetList={assetList} />
 
               {/* 左侧 Factory Tree */}
-              <div className="flex items-center justify-between px-2 py-1.5 border-b border-[#142235] flex-shrink-0">
+              <div className="flex items-center justify-between px-2 py-1.5 border-b border-[var(--c-142235)] flex-shrink-0">
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                   {projectName}
                 </span>
@@ -565,7 +565,7 @@ export function FactoryEditorPage() {
         {/* ── Center Viewport ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Viewport Area */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-[#07111e]">
+          <div className="flex-1 flex flex-col overflow-hidden bg-[var(--c-07111e)]">
             <Viewport3D
               selectedNode={selectedNode}
               viewMode={viewMode}

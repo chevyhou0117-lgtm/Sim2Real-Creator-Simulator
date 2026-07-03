@@ -333,7 +333,7 @@ export function AssetEditorPage() {
           className={`w-full flex items-center gap-1.5 pr-3 py-1.5 text-left text-[11px] transition-colors ${
             selected
               ? "bg-blue-600/15 text-blue-300"
-              : "text-slate-400 hover:text-slate-200 hover:bg-[#0e243a]"
+              : "text-slate-400 hover:text-slate-200 hover:bg-[var(--c-0e243a)]"
           }`}
         >
           {hasChildren ? (
@@ -486,23 +486,23 @@ export function AssetEditorPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#07111e] text-slate-100 overflow-hidden">
+    <div className="flex flex-col h-screen bg-[var(--c-07111e)] text-slate-100 overflow-hidden">
       {/* ── Header ── */}
-      <header className="h-11 bg-[#050f1a] border-b border-[#142235] flex items-center px-4 gap-3 flex-shrink-0 z-20">
+      <header className="h-11 bg-[var(--c-050f1a)] border-b border-[var(--c-142235)] flex items-center px-4 gap-3 flex-shrink-0 z-20">
         <button
           onClick={() => navigate("/asset-library")}
           className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 text-[11px] transition-colors flex-shrink-0"
         >
           <ChevronLeft size={13} /> {t("asset.title")}
         </button>
-        <div className="w-px h-4 bg-[#1e3a55]" />
+        <div className="w-px h-4 bg-[var(--c-1e3a55)]" />
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Package size={12} className="text-blue-400 flex-shrink-0" />
           {isNew ? (
             <input
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="bg-[#071526] border border-[#1e3a55] rounded px-2 py-0.5 text-[11px] text-slate-100 w-48 focus:outline-none focus:border-blue-500"
+              className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-2 py-0.5 text-[11px] text-slate-100 w-48 focus:outline-none focus:border-blue-500"
               placeholder={t("editor.newAssetName")}
               autoFocus
             />
@@ -516,7 +516,7 @@ export function AssetEditorPage() {
                   onKeyDown={(e) =>
                     e.key === "Enter" && setIsEditingName(false)
                   }
-                  className="bg-[#071526] border border-[#1e3a55] rounded px-2 py-0.5 text-[11px] text-slate-100 w-48 focus:outline-none focus:border-blue-500"
+                  className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-2 py-0.5 text-[11px] text-slate-100 w-48 focus:outline-none focus:border-blue-500"
                   autoFocus
                 />
               ) : (
@@ -549,7 +549,7 @@ export function AssetEditorPage() {
           <LanguageToggle />
           {/* <button
             onClick={handleUpload}
-            className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-200 border border-[#1e3a55] rounded px-2 py-1 transition-colors"
+            className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-200 border border-[var(--c-1e3a55)] rounded px-2 py-1 transition-colors"
             title="Upload new version"
           >
             <Upload size={11} /> Upload
@@ -562,12 +562,12 @@ export function AssetEditorPage() {
           </button>
           <button
             onClick={handleDownload}
-            className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-200 border border-[#1e3a55] rounded px-2 py-1 transition-colors"
+            className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-200 border border-[var(--c-1e3a55)] rounded px-2 py-1 transition-colors"
             title={t("common.download")}
           >
             <Download size={11} />
           </button>
-          <div className="w-px h-4 bg-[#1e3a55]" />
+          <div className="w-px h-4 bg-[var(--c-1e3a55)]" />
           {currentStatus === "draft" && (
             <button
               onClick={handleActivate}
@@ -587,7 +587,7 @@ export function AssetEditorPage() {
           {currentStatus === "active" && (
             <button
               onClick={handleDeactivate}
-              className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-white border border-[#1e3a55] hover:bg-amber-600/40 rounded px-2 py-1 transition-colors"
+              className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-white border border-[var(--c-1e3a55)] hover:bg-amber-600/40 rounded px-2 py-1 transition-colors"
             >
               <X size={11} /> {t("common.deactivate")}
             </button>
@@ -597,7 +597,7 @@ export function AssetEditorPage() {
             currentStatus === "inactive") && (
             <button
               onClick={handleArchive}
-              className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-orange-400 border border-[#1e3a55] hover:border-orange-500/40 rounded px-2 py-1 transition-colors"
+              className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-orange-400 border border-[var(--c-1e3a55)] hover:border-orange-500/40 rounded px-2 py-1 transition-colors"
             >
               <Archive size={11} /> {t("common.archive")}
             </button>
@@ -624,8 +624,8 @@ export function AssetEditorPage() {
       {/* ── Body ── */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left: Asset Structure Tree */}
-        <aside className="w-52 bg-[#050f1a] border-r border-[#142235] flex flex-col flex-shrink-0 overflow-hidden">
-          <div className="px-3 py-2.5 border-b border-[#142235]">
+        <aside className="w-52 bg-[var(--c-050f1a)] border-r border-[var(--c-142235)] flex flex-col flex-shrink-0 overflow-hidden">
+          <div className="px-3 py-2.5 border-b border-[var(--c-142235)]">
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
               {t("editor.assetStructure")}
             </span>
@@ -642,7 +642,7 @@ export function AssetEditorPage() {
         </aside>
 
         {/* Center: 3D Viewport */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-[#07111e]">
+        <div className="flex-1 flex flex-col overflow-hidden bg-[var(--c-07111e)]">
           {/* Canvas */}
           <div
             className="flex-1 relative overflow-hidden"
@@ -656,11 +656,11 @@ export function AssetEditorPage() {
           >
             {/* Floating vertical toolbar (FactoryEditorPage style) */}
             {hint && (
-              <div className="fixed left-[4.5rem] top-1/2 -translate-y-1/2 ml-2 bg-[#0f2638] border border-blue-500/30 rounded-md px-3 py-1.5 text-xs text-blue-300 whitespace-nowrap shadow-lg z-[9999] pointer-events-none">
+              <div className="fixed left-[4.5rem] top-1/2 -translate-y-1/2 ml-2 bg-[var(--c-0f2638)] border border-blue-500/30 rounded-md px-3 py-1.5 text-xs text-blue-300 whitespace-nowrap shadow-lg z-[9999] pointer-events-none">
                 {hint}
               </div>
             )}
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 bg-[#071526]/90 border border-[#142235] rounded-lg p-1.5 backdrop-blur-sm z-10">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 bg-[var(--c-071526)]/90 border border-[var(--c-142235)] rounded-lg p-1.5 backdrop-blur-sm z-10">
               {viewTools.map((t) => (
                 <button
                   key={t.id}
@@ -673,22 +673,22 @@ export function AssetEditorPage() {
                   className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${
                     viewTool === t.id
                       ? "bg-blue-600/30 text-blue-400"
-                      : "text-slate-500 hover:text-slate-200 hover:bg-[#142235]"
+                      : "text-slate-500 hover:text-slate-200 hover:bg-[var(--c-142235)]"
                   }`}
                 >
                   {t.icon}
                 </button>
               ))}
-              <div className="my-0.5 border-t border-[#142235]" />
+              <div className="my-0.5 border-t border-[var(--c-142235)]" />
               <button
                 title={t("editor.view.fitView")}
-                className="w-7 h-7 flex items-center justify-center rounded text-slate-500 hover:text-slate-200 hover:bg-[#142235] transition-colors"
+                className="w-7 h-7 flex items-center justify-center rounded text-slate-500 hover:text-slate-200 hover:bg-[var(--c-142235)] transition-colors"
               >
                 <Maximize2 size={13} />
               </button>
               <button
                 title={t("editor.view.toggleGrid")}
-                className="w-7 h-7 flex items-center justify-center rounded text-slate-500 hover:text-slate-200 hover:bg-[#142235] transition-colors"
+                className="w-7 h-7 flex items-center justify-center rounded text-slate-500 hover:text-slate-200 hover:bg-[var(--c-142235)] transition-colors"
               >
                 <Grid3X3 size={13} />
               </button>
@@ -709,11 +709,11 @@ export function AssetEditorPage() {
 
             {/* Zoom controls */}
             <div className="absolute bottom-3 right-3 flex items-center gap-2">
-              <button className="w-6 h-6 rounded bg-[#0b1d30] border border-[#142235] flex items-center justify-center text-slate-500 hover:text-slate-200 transition-colors text-xs">
+              <button className="w-6 h-6 rounded bg-[var(--c-0b1d30)] border border-[var(--c-142235)] flex items-center justify-center text-slate-500 hover:text-slate-200 transition-colors text-xs">
                 <Minus size={10} />
               </button>
               <span className="text-[10px] text-slate-600">100%</span>
-              <button className="w-6 h-6 rounded bg-[#0b1d30] border border-[#142235] flex items-center justify-center text-slate-500 hover:text-slate-200 transition-colors text-xs">
+              <button className="w-6 h-6 rounded bg-[var(--c-0b1d30)] border border-[var(--c-142235)] flex items-center justify-center text-slate-500 hover:text-slate-200 transition-colors text-xs">
                 <Plus size={10} />
               </button>
             </div>
@@ -721,8 +721,8 @@ export function AssetEditorPage() {
         </div>
 
         {/* Right: Properties Panel */}
-        <aside className="w-64 bg-[#050f1a] border-l border-[#142235] flex flex-col flex-shrink-0 overflow-hidden">
-          <div className="px-3 py-2 border-b border-[#142235] flex-shrink-0 flex items-center justify-between">
+        <aside className="w-64 bg-[var(--c-050f1a)] border-l border-[var(--c-142235)] flex flex-col flex-shrink-0 overflow-hidden">
+          <div className="px-3 py-2 border-b border-[var(--c-142235)] flex-shrink-0 flex items-center justify-between">
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
               {t("common.properties")}
             </span>
@@ -741,7 +741,7 @@ export function AssetEditorPage() {
                     onClick={cancelBiz}
                     disabled={savingBiz}
                     title={t("common.cancel")}
-                    className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:bg-[#142235] transition-colors disabled:opacity-50"
+                    className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:bg-[var(--c-142235)] transition-colors disabled:opacity-50"
                   >
                     <X size={12} />
                   </button>
@@ -750,7 +750,7 @@ export function AssetEditorPage() {
                 <button
                   onClick={startEditBiz}
                   title={t("common.edit")}
-                  className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 hover:bg-[#142235] transition-colors"
+                  className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 hover:bg-[var(--c-142235)] transition-colors"
                 >
                   <Edit2 size={12} />
                 </button>
@@ -968,10 +968,10 @@ function AccordionSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-b border-[#142235]">
+    <div className="border-b border-[var(--c-142235)]">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-[#0a1c2e] transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-[var(--c-0a1c2e)] transition-colors"
       >
         <span className="text-[11px] font-semibold text-slate-300">
           {title}
@@ -1041,7 +1041,7 @@ function BizInputRow({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder ?? "Not configured"}
-        className="flex-1 bg-[#071526] border border-[#1e3a55] rounded px-2 py-1 text-[10px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/60 transition-colors min-w-0"
+        className="flex-1 bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-2 py-1 text-[10px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/60 transition-colors min-w-0"
       />
     </div>
   );

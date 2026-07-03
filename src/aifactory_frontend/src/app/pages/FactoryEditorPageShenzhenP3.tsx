@@ -516,9 +516,9 @@ export function FactoryEditorPageShenzhenP3() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#07111e] text-slate-100 overflow-hidden">
+    <div className="flex flex-col h-screen bg-[var(--c-07111e)] text-slate-100 overflow-hidden">
       {/* ── Top Header Bar ── */}
-      <header className="h-11 bg-[#050f1a] border-b border-[#142235] flex items-center px-4 flex-shrink-0 z-20">
+      <header className="h-11 bg-[var(--c-050f1a)] border-b border-[var(--c-142235)] flex items-center px-4 flex-shrink-0 z-20">
         {/* Logo */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center">
@@ -559,13 +559,13 @@ export function FactoryEditorPageShenzhenP3() {
           )}
           <button
             onClick={() => setShowUSDUpload(true)}
-            className="flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-slate-200 border border-[#1e3a55] hover:border-blue-500/60 rounded px-2.5 py-1 transition-colors"
+            className="flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-slate-200 border border-[var(--c-1e3a55)] hover:border-blue-500/60 rounded px-2.5 py-1 transition-colors"
           >
             <Upload size={11} /> Upload USD
           </button>
           <button
             onClick={() => setShowValidation(true)}
-            className="flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-slate-200 border border-[#1e3a55] rounded px-2.5 py-1 transition-colors"
+            className="flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-slate-200 border border-[var(--c-1e3a55)] rounded px-2.5 py-1 transition-colors"
           >
             <ShieldCheck size={11} /> Validate
           </button>
@@ -593,7 +593,7 @@ export function FactoryEditorPageShenzhenP3() {
 
       {/* ── Project Sub Navigation ── */}
       {!isNew && (
-        <div className="h-8 bg-[#050f1a] border-b border-[#142235] flex items-end px-4 flex-shrink-0">
+        <div className="h-8 bg-[var(--c-050f1a)] border-b border-[var(--c-142235)] flex items-end px-4 flex-shrink-0">
           {(
             [
               {
@@ -641,12 +641,12 @@ export function FactoryEditorPageShenzhenP3() {
       <div className="flex flex-1 overflow-hidden">
         {/* ── Left Panel ── */}
         <div
-          className={`flex flex-col bg-[#071526] border-r border-[#142235] transition-all duration-200 flex-shrink-0 ${
+          className={`flex flex-col bg-[var(--c-071526)] border-r border-[var(--c-142235)] transition-all duration-200 flex-shrink-0 ${
             leftCollapsed ? "w-8" : "w-60"
           }`}
         >
           {/* Collapse Toggle */}
-          <div className="flex items-center justify-between px-2 py-1.5 border-b border-[#142235] flex-shrink-0 min-h-[30px]">
+          <div className="flex items-center justify-between px-2 py-1.5 border-b border-[var(--c-142235)] flex-shrink-0 min-h-[30px]">
             {!leftCollapsed && (
               <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Building2 size={11} className="text-blue-400" /> Factory
@@ -671,7 +671,7 @@ export function FactoryEditorPageShenzhenP3() {
               <AssetLibraryPanel />
 
               {/* Factory Tree */}
-              <div className="flex items-center justify-between px-2 py-1.5 border-b border-[#142235] flex-shrink-0">
+              <div className="flex items-center justify-between px-2 py-1.5 border-b border-[var(--c-142235)] flex-shrink-0">
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                   {projectName}
                 </span>
@@ -702,7 +702,7 @@ export function FactoryEditorPageShenzhenP3() {
         {/* ── Center Viewport ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Viewport Area */}
-          <div className="flex-1 relative overflow-hidden bg-[#07111e]">
+          <div className="flex-1 relative overflow-hidden bg-[var(--c-07111e)]">
             <Viewport3D selectedNode={selectedNode} />
 
             {/* Viewport Toolbar (left side) */}
@@ -782,7 +782,7 @@ function ViewportToolbar() {
   const [playing, setPlaying] = useState(false);
 
   return (
-    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 bg-[#071526]/90 border border-[#142235] rounded-lg p-1.5 backdrop-blur-sm">
+    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 bg-[var(--c-071526)]/90 border border-[var(--c-142235)] rounded-lg p-1.5 backdrop-blur-sm">
       {VIEWPORT_TOOLS.map(({ id, icon: Icon, label }) => (
         <button
           key={id}
@@ -791,7 +791,7 @@ function ViewportToolbar() {
           className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${
             activeTool === id
               ? "bg-blue-600/30 text-blue-400"
-              : "text-slate-500 hover:text-slate-200 hover:bg-[#142235]"
+              : "text-slate-500 hover:text-slate-200 hover:bg-[var(--c-142235)]"
           }`}
         >
           <Icon size={13} />
@@ -799,7 +799,7 @@ function ViewportToolbar() {
       ))}
 
       {/* Divider */}
-      <div className="my-0.5 border-t border-[#142235]" />
+      <div className="my-0.5 border-t border-[var(--c-142235)]" />
 
       {/* Play / Pause toggle */}
       <button
@@ -808,7 +808,7 @@ function ViewportToolbar() {
         className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${
           playing
             ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
-            : "text-slate-500 hover:text-slate-200 hover:bg-[#142235]"
+            : "text-slate-500 hover:text-slate-200 hover:bg-[var(--c-142235)]"
         }`}
       >
         {playing ? <Pause size={13} /> : <Play size={13} />}
@@ -846,13 +846,13 @@ function FloorNavPanel() {
   const overlayDisabled = viewMode === "3d";
 
   return (
-    <div className="absolute top-3 right-3 bg-[#071526]/95 border border-[#142235] rounded-lg w-44 backdrop-blur-sm text-[10px] overflow-hidden shadow-xl">
+    <div className="absolute top-3 right-3 bg-[var(--c-071526)]/95 border border-[var(--c-142235)] rounded-lg w-44 backdrop-blur-sm text-[10px] overflow-hidden shadow-xl">
       {/* ── View mode toggle ── */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[#142235]">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--c-142235)]">
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
           View
         </span>
-        <div className="flex bg-[#0b1d30] border border-[#1e3a55] rounded overflow-hidden">
+        <div className="flex bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded overflow-hidden">
           {(["2d", "3d"] as const).map((m) => (
             <button
               key={m}
@@ -870,7 +870,7 @@ function FloorNavPanel() {
       </div>
 
       {/* ── Floors ── */}
-      <div className="border-b border-[#142235]">
+      <div className="border-b border-[var(--c-142235)]">
         <button
           onClick={() => setFloorsOpen((v) => !v)}
           className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-200 transition-colors"
@@ -890,7 +890,7 @@ function FloorNavPanel() {
                 className={`w-full flex items-center justify-between px-2 py-1 rounded transition-colors text-[10px] ${
                   activeFloor === f.id
                     ? "bg-blue-600/20 text-blue-300"
-                    : "text-slate-500 hover:text-slate-200 hover:bg-[#0f2035]"
+                    : "text-slate-500 hover:text-slate-200 hover:bg-[var(--c-0f2035)]"
                 }`}
               >
                 <span>{f.label}</span>
@@ -938,7 +938,7 @@ function FloorNavPanel() {
                     on
                       ? "text-slate-200"
                       : "text-slate-500 hover:text-slate-300"
-                  } hover:bg-[#0f2035]`}
+                  } hover:bg-[var(--c-0f2035)]`}
                 >
                   <span className="flex items-center gap-1.5">
                     <Icon
@@ -949,7 +949,7 @@ function FloorNavPanel() {
                   </span>
                   {/* Toggle pill */}
                   <div
-                    className={`w-7 h-3.5 rounded-full relative transition-colors flex-shrink-0 ${on ? "bg-blue-600" : "bg-[#1e3a55]"}`}
+                    className={`w-7 h-3.5 rounded-full relative transition-colors flex-shrink-0 ${on ? "bg-blue-600" : "bg-[var(--c-1e3a55)]"}`}
                   >
                     <div
                       className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all ${on ? "left-[14px]" : "left-0.5"}`}
@@ -970,7 +970,7 @@ function Viewport3D({ selectedNode }: { selectedNode: FactoryNode | null }) {
   const isFactory = selectedNode?.type === "factory";
 
   return (
-    <div className="w-full h-full relative flex items-center justify-center overflow-hidden bg-[#07111e]">
+    <div className="w-full h-full relative flex items-center justify-center overflow-hidden bg-[var(--c-07111e)]">
       {/* Grid floor */}
       <div
         className="absolute inset-0"
@@ -1061,14 +1061,14 @@ function Viewport3D({ selectedNode }: { selectedNode: FactoryNode | null }) {
       <FloorNavPanel />
 
       {/* Status bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-6 bg-[#050f1a]/90 border-t border-[#142235] flex items-center px-3 gap-4 text-[10px] text-slate-600">
+      <div className="absolute bottom-0 left-0 right-0 h-6 bg-[var(--c-050f1a)]/90 border-t border-[var(--c-142235)] flex items-center px-3 gap-4 text-[10px] text-slate-600">
         {selectedNode && (
           <>
             <span className="flex items-center gap-1">
               <span className="text-slate-500">Selected:</span>
               <span className="text-slate-300">{selectedNode.name}</span>
             </span>
-            <span className="text-[#142235]">|</span>
+            <span className="text-[var(--c-142235)]">|</span>
             <span className="flex items-center gap-1">
               <span className="text-slate-500">Type:</span>
               <span className="text-blue-400 capitalize">
@@ -1211,9 +1211,9 @@ function RightPanel({
 
   return (
     <>
-      <div className="w-72 bg-[#071526] border-l border-[#142235] flex flex-col overflow-hidden flex-shrink-0">
+      <div className="w-72 bg-[var(--c-071526)] border-l border-[var(--c-142235)] flex flex-col overflow-hidden flex-shrink-0">
         {/* Panel Header */}
-        <div className="flex items-center justify-between px-3 py-2 border-b border-[#142235] flex-shrink-0">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--c-142235)] flex-shrink-0">
           <div className="flex items-center gap-2">
             <Cog size={12} className="text-blue-400" />
             <span className="text-[11px] font-semibold text-slate-200">
@@ -1234,7 +1234,7 @@ function RightPanel({
                   <button
                     onClick={cancelEdit}
                     title="Cancel"
-                    className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:bg-[#142235] transition-colors"
+                    className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:bg-[var(--c-142235)] transition-colors"
                   >
                     <X size={12} />
                   </button>
@@ -1243,7 +1243,7 @@ function RightPanel({
                 <button
                   onClick={startEdit}
                   title="Edit"
-                  className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 hover:bg-[#142235] transition-colors"
+                  className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 hover:bg-[var(--c-142235)] transition-colors"
                 >
                   <Edit2 size={12} />
                 </button>
@@ -1254,7 +1254,7 @@ function RightPanel({
 
         {/* Equipment tabs */}
         {isEquipment && (
-          <div className="flex border-b border-[#142235] flex-shrink-0 overflow-x-auto">
+          <div className="flex border-b border-[var(--c-142235)] flex-shrink-0 overflow-x-auto">
             {(
               [
                 { id: "base", icon: <FileText size={9} />, label: "Ledger" },
@@ -1278,7 +1278,7 @@ function RightPanel({
                 className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 text-[9px] transition-colors border-b-2 ${
                   rightTab === tab.id
                     ? "border-blue-500 text-blue-400 bg-blue-500/10"
-                    : "border-transparent text-slate-500 hover:text-slate-300 hover:bg-[#0f2035]"
+                    : "border-transparent text-slate-500 hover:text-slate-300 hover:bg-[var(--c-0f2035)]"
                 }`}
               >
                 {tab.icon}
@@ -1446,7 +1446,7 @@ function FactoryConfigPanel({
       </ConfigSection>
 
       <ConfigSection title="Other Information">
-        <div className="rounded overflow-hidden border border-[#1e3a55] mt-1">
+        <div className="rounded overflow-hidden border border-[var(--c-1e3a55)] mt-1">
           <img
             src={thumbnailSrc}
             alt="Factory Thumbnail"
@@ -1559,7 +1559,7 @@ function LineConfigPanel({
         <ConfigRow label="Line Name" value={node.name} />
 
         {/* ── Code field: binding trigger ── */}
-        <div className="flex items-center justify-between py-1.5 border-b border-[#142235]/60">
+        <div className="flex items-center justify-between py-1.5 border-b border-[var(--c-142235)]/60">
           <span className="text-[10px] text-slate-500">Line Code</span>
           {phase === "unbound" ? (
             <button
@@ -1693,7 +1693,7 @@ function LedgerPanel({
     <div className="p-3 space-y-3">
       <ConfigSection title="Basic Information">
         {/* ── Code field: binding trigger ── */}
-        <div className="flex items-center justify-between py-1.5 border-b border-[#142235]/60">
+        <div className="flex items-center justify-between py-1.5 border-b border-[var(--c-142235)]/60">
           <span className="text-[10px] text-slate-500">Equipment Code</span>
           {phase === "unbound" ? (
             <button
@@ -1806,7 +1806,7 @@ function IoTPanel({ node, editing }: { node: FactoryNode; editing: boolean }) {
         <ConfigRow label="Equipment ID" value="UHP9SMT#01RSF#01" />
         <div className="flex items-center justify-between py-1">
           <span className="text-[10px] text-slate-500">Sub Device</span>
-          <select className="bg-[#071526] border border-[#1e3a55] rounded text-[10px] text-slate-300 px-2 py-1 focus:outline-none focus:border-blue-500">
+          <select className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-300 px-2 py-1 focus:outline-none focus:border-blue-500">
             <option>Furnace Cavity</option>
             <option>Transport System</option>
             <option>Control Unit</option>
@@ -1815,10 +1815,10 @@ function IoTPanel({ node, editing }: { node: FactoryNode; editing: boolean }) {
       </ConfigSection>
 
       <ConfigSection title="IoT Configuration">
-        <div className="flex items-center justify-between py-1 border-b border-[#142235]/60">
+        <div className="flex items-center justify-between py-1 border-b border-[var(--c-142235)]/60">
           <span className="text-[10px] text-slate-500">Protocol/Driver</span>
           {editing ? (
-            <select className="bg-[#071526] border border-[#1e3a55] rounded text-[10px] text-slate-300 px-2 py-1 focus:outline-none focus:border-blue-500">
+            <select className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-300 px-2 py-1 focus:outline-none focus:border-blue-500">
               <option>Modbus/TCP</option>
               <option>OPC-UA</option>
               <option>MQTT</option>
@@ -1883,10 +1883,10 @@ function IoTPanel({ node, editing }: { node: FactoryNode; editing: boolean }) {
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto rounded border border-[#1e3a55]">
+        <div className="overflow-x-auto rounded border border-[var(--c-1e3a55)]">
           <table className="w-full text-[9px]">
             <thead>
-              <tr className="bg-[#071526] border-b border-[#1e3a55]">
+              <tr className="bg-[var(--c-071526)] border-b border-[var(--c-1e3a55)]">
                 {[
                   "Name",
                   "Variable Address",
@@ -1907,7 +1907,7 @@ function IoTPanel({ node, editing }: { node: FactoryNode; editing: boolean }) {
               {mockDataPoints.map((dp, i) => (
                 <tr
                   key={dp.id}
-                  className={`border-b border-[#142235] hover:bg-[#0f2035] cursor-pointer ${i % 2 === 0 ? "" : "bg-[#071526]/50"}`}
+                  className={`border-b border-[var(--c-142235)] hover:bg-[var(--c-0f2035)] cursor-pointer ${i % 2 === 0 ? "" : "bg-[var(--c-071526)]/50"}`}
                 >
                   <td className="px-1.5 py-1 text-slate-300">{dp.name}</td>
                   <td className="px-1.5 py-1 text-blue-400/80 font-mono">
@@ -1956,7 +1956,7 @@ function EventsPanel({ editing }: { editing: boolean }) {
           ].map((evt) => (
             <div
               key={evt.name}
-              className="bg-[#071526] border border-[#1e3a55] rounded p-2"
+              className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded p-2"
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] text-slate-200 font-medium">
@@ -2021,7 +2021,7 @@ function MonitoringPanel({ editing }: { editing: boolean }) {
         ].map((item) => (
           <div
             key={item.label}
-            className="bg-[#071526] border border-[#1e3a55] rounded p-2 mb-2"
+            className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded p-2 mb-2"
           >
             <div className="text-[10px] text-slate-300 font-medium mb-2">
               {item.label}
@@ -2031,14 +2031,14 @@ function MonitoringPanel({ editing }: { editing: boolean }) {
                 <label className="text-[9px] text-slate-500">Min</label>
                 <input
                   defaultValue={item.min}
-                  className="w-full bg-[#07111e] border border-[#1e3a55] rounded px-2 py-1 text-[10px] text-slate-300 focus:outline-none focus:border-blue-500 mt-0.5"
+                  className="w-full bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-2 py-1 text-[10px] text-slate-300 focus:outline-none focus:border-blue-500 mt-0.5"
                 />
               </div>
               <div className="flex-1">
                 <label className="text-[9px] text-slate-500">Max</label>
                 <input
                   defaultValue={item.max}
-                  className="w-full bg-[#07111e] border border-[#1e3a55] rounded px-2 py-1 text-[10px] text-slate-300 focus:outline-none focus:border-blue-500 mt-0.5"
+                  className="w-full bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-2 py-1 text-[10px] text-slate-300 focus:outline-none focus:border-blue-500 mt-0.5"
                 />
               </div>
               <div className="text-[10px] text-slate-500 mt-4">{item.unit}</div>
@@ -2083,7 +2083,7 @@ function MetricsPanel({ editing }: { editing: boolean }) {
         ].map((m) => (
           <div
             key={m.name}
-            className="bg-[#071526] border border-[#1e3a55] rounded p-2 mb-2"
+            className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded p-2 mb-2"
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-slate-200 font-medium">
@@ -2140,7 +2140,7 @@ function BindingPreviewPanel({
   });
 
   return (
-    <div className="mt-1 rounded-lg border border-blue-500/30 bg-[#040d18] overflow-hidden">
+    <div className="mt-1 rounded-lg border border-blue-500/30 bg-[var(--c-040d18)] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 bg-blue-600/10 border-b border-blue-500/20">
         <div className="flex items-center gap-1.5">
@@ -2165,7 +2165,7 @@ function BindingPreviewPanel({
 
       {/* Field diff table */}
       <div className="px-1 py-1">
-        <div className="grid grid-cols-[1fr_1fr_80px] gap-x-1 text-[8px] text-slate-600 px-2 py-1 border-b border-[#142235]">
+        <div className="grid grid-cols-[1fr_1fr_80px] gap-x-1 text-[8px] text-slate-600 px-2 py-1 border-b border-[var(--c-142235)]">
           <span>字段</span>
           <span>平台值</span>
           <span>状态</span>
@@ -2173,7 +2173,7 @@ function BindingPreviewPanel({
         {rows.map((row) => (
           <div
             key={row.key}
-            className={`grid grid-cols-[1fr_1fr_80px] gap-x-1 px-2 py-1.5 border-b border-[#071526] text-[10px] ${
+            className={`grid grid-cols-[1fr_1fr_80px] gap-x-1 px-2 py-1.5 border-b border-[var(--c-071526)] text-[10px] ${
               row.isDiff ? "bg-amber-500/5" : ""
             }`}
           >
@@ -2224,10 +2224,10 @@ function BindingPreviewPanel({
       )}
 
       {/* Actions */}
-      <div className="flex gap-2 px-3 py-2.5 border-t border-[#142235]">
+      <div className="flex gap-2 px-3 py-2.5 border-t border-[var(--c-142235)]">
         <button
           onClick={onCancel}
-          className="flex-1 py-1.5 text-[10px] text-slate-400 border border-[#1e3a55] hover:border-[#2a4a6a] rounded transition-colors"
+          className="flex-1 py-1.5 text-[10px] text-slate-400 border border-[var(--c-1e3a55)] hover:border-[var(--c-2a4a6a)] rounded transition-colors"
         >
           取消
         </button>
@@ -2355,7 +2355,7 @@ function DataBindingSection({
         </div>
 
         {platformRecord && (
-          <div className="bg-[#040d18] border border-[#1e3a55] rounded p-2 space-y-0.5">
+          <div className="bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded p-2 space-y-0.5">
             <div className="text-[9px] text-slate-500 mb-1">平台数据字段</div>
             {Object.entries(platformRecord.fields)
               .slice(0, 4)
@@ -2385,7 +2385,7 @@ function DataBindingSection({
               </button>
               <button
                 onClick={() => setShowUnbindConfirm(false)}
-                className="flex-1 py-1 bg-[#071526] border border-[#1e3a55] rounded text-[10px] text-slate-400 hover:bg-[#0e243a] transition-colors"
+                className="flex-1 py-1 bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-400 hover:bg-[var(--c-0e243a)] transition-colors"
               >
                 取消
               </button>
@@ -2423,8 +2423,8 @@ function BindPickerModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#07111e] border border-[#1e3a55] rounded-xl shadow-2xl w-96 max-h-[70vh] flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#142235]">
+      <div className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-xl shadow-2xl w-96 max-h-[70vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--c-142235)]">
           <div>
             <div className="text-[12px] font-semibold text-slate-200">
               选择业务数据记录
@@ -2435,14 +2435,14 @@ function BindPickerModal({
           </div>
           <button
             onClick={onClose}
-            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-200 hover:bg-[#142235] rounded transition-colors"
+            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-200 hover:bg-[var(--c-142235)] rounded transition-colors"
           >
             <X size={12} />
           </button>
         </div>
 
         <div className="px-4 pt-3 pb-2">
-          <div className="flex items-center gap-2 bg-[#040d18] border border-[#1e3a55] rounded px-2.5 py-1.5">
+          <div className="flex items-center gap-2 bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded px-2.5 py-1.5">
             <Search size={11} className="text-slate-500 flex-shrink-0" />
             <input
               value={search}
@@ -2459,7 +2459,7 @@ function BindPickerModal({
             <button
               key={rec.id}
               onClick={() => onSelect(rec)}
-              className="w-full text-left bg-[#040d18] border border-[#1e3a55] rounded-lg p-3 hover:border-blue-500/50 hover:bg-blue-500/5 transition-colors group"
+              className="w-full text-left bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded-lg p-3 hover:border-blue-500/50 hover:bg-blue-500/5 transition-colors group"
             >
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[11px] font-medium text-slate-200 group-hover:text-blue-300 transition-colors">
@@ -2509,8 +2509,8 @@ function ConflictDiffModal({
 }) {
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#07111e] border border-[#1e3a55] rounded-xl shadow-2xl w-[420px] flex flex-col overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#142235] flex items-start gap-2.5">
+      <div className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-xl shadow-2xl w-[420px] flex flex-col overflow-hidden">
+        <div className="px-4 py-3 border-b border-[var(--c-142235)] flex items-start gap-2.5">
           <AlertCircle
             size={15}
             className="text-amber-400 flex-shrink-0 mt-0.5"
@@ -2526,7 +2526,7 @@ function ConflictDiffModal({
         </div>
 
         <div className="px-4 py-3 max-h-60 overflow-y-auto">
-          <div className="grid grid-cols-3 gap-2 text-[9px] text-slate-500 pb-1.5 border-b border-[#142235] mb-1">
+          <div className="grid grid-cols-3 gap-2 text-[9px] text-slate-500 pb-1.5 border-b border-[var(--c-142235)] mb-1">
             <span>字段</span>
             <span>当前值</span>
             <span>平台数据（将覆盖）</span>
@@ -2534,7 +2534,7 @@ function ConflictDiffModal({
           {conflictState.conflicts.map((c) => (
             <div
               key={c.field}
-              className="grid grid-cols-3 gap-2 text-[10px] py-1.5 border-b border-[#142235]/40"
+              className="grid grid-cols-3 gap-2 text-[10px] py-1.5 border-b border-[var(--c-142235)]/40"
             >
               <span className="text-slate-400">{c.label}</span>
               <span className="text-slate-500 line-through">
@@ -2547,7 +2547,7 @@ function ConflictDiffModal({
           ))}
         </div>
 
-        <div className="px-4 py-3 border-t border-[#142235] flex gap-2">
+        <div className="px-4 py-3 border-t border-[var(--c-142235)] flex gap-2">
           <button
             onClick={() => onConfirm(conflictState.platformRecord)}
             className="flex-1 py-1.5 bg-blue-600/25 border border-blue-500/50 rounded text-[11px] text-blue-300 hover:bg-blue-600/40 transition-colors"
@@ -2556,7 +2556,7 @@ function ConflictDiffModal({
           </button>
           <button
             onClick={onCancel}
-            className="flex-1 py-1.5 bg-[#071526] border border-[#1e3a55] rounded text-[11px] text-slate-400 hover:bg-[#0e243a] transition-colors"
+            className="flex-1 py-1.5 bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded text-[11px] text-slate-400 hover:bg-[var(--c-0e243a)] transition-colors"
           >
             取消
           </button>
@@ -2580,7 +2580,7 @@ function LeaderInfoForm() {
         type="select"
         options={["3-Shift Rotation", "2-Shift", "Day Only"]}
       />
-      <div className="mt-4 pt-4 border-t border-[#1e3a55]">
+      <div className="mt-4 pt-4 border-t border-[var(--c-1e3a55)]">
         <label className="block text-[11px] text-slate-400 mb-2">
           Team Members
         </label>
@@ -2591,7 +2591,7 @@ function LeaderInfoForm() {
             </label>
             <input
               placeholder={`${shift} leader name`}
-              className="w-full bg-[#07111e] border border-[#1e3a55] rounded px-3 py-2 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500"
+              className="w-full bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-3 py-2 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500"
             />
           </div>
         ))}
@@ -2636,7 +2636,7 @@ function ErrorCodeForm() {
         ].map((err) => (
           <div
             key={err.code}
-            className="bg-[#07111e] border border-[#1e3a55] rounded p-3 flex items-center gap-3"
+            className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded p-3 flex items-center gap-3"
           >
             <span className="text-[10px] font-mono text-blue-400 w-12">
               {err.code}
@@ -2695,7 +2695,7 @@ function StatusMonitoringForm() {
       ].map((s) => (
         <div
           key={s.status}
-          className="bg-[#07111e] border border-[#1e3a55] rounded p-2.5 mb-2"
+          className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded p-2.5 mb-2"
         >
           <div className="flex items-center gap-2 mb-1.5">
             <span className={`w-2 h-2 rounded-full bg-${s.color}-400`} />
@@ -2737,7 +2737,7 @@ function AIModelForm() {
         ].map((ai) => (
           <div
             key={ai.name}
-            className="bg-[#07111e] border border-[#1e3a55] rounded p-3"
+            className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded p-3"
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-[11px] text-slate-200 font-medium">
@@ -2796,7 +2796,7 @@ function DataPlatformForm() {
         ].map((sys) => (
           <div
             key={sys.name}
-            className="bg-[#07111e] border border-[#1e3a55] rounded p-3"
+            className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded p-3"
           >
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-blue-400">{sys.icon}</span>
@@ -2936,7 +2936,7 @@ function AssetLibraryNode({ node, depth }: { node: AssetNode; depth: number }) {
         className={`flex items-center gap-1 py-0.5 rounded-sm mx-1 transition-colors text-[10px] ${
           isLeaf
             ? "cursor-grab text-slate-400 hover:text-blue-300 hover:bg-blue-600/10 active:cursor-grabbing"
-            : "cursor-pointer text-slate-400 hover:text-slate-200 hover:bg-[#0f2035]"
+            : "cursor-pointer text-slate-400 hover:text-slate-200 hover:bg-[var(--c-0f2035)]"
         }`}
         style={{ paddingLeft: `${6 + depth * 10}px` }}
       >
@@ -2989,18 +2989,18 @@ function AssetLibraryPanel() {
 
   return (
     <div
-      className="border-b border-[#142235] flex-shrink-0 flex flex-col"
+      className="border-b border-[var(--c-142235)] flex-shrink-0 flex flex-col"
       style={{ maxHeight: "45%" }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-2 py-1.5 border-b border-[#142235]">
+      <div className="flex items-center justify-between px-2 py-1.5 border-b border-[var(--c-142235)]">
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
           <Layers3 size={10} className="text-blue-400" /> Asset Library
         </span>
       </div>
 
       {/* Search */}
-      <div className="px-2 py-1.5 border-b border-[#142235]">
+      <div className="px-2 py-1.5 border-b border-[var(--c-142235)]">
         <div className="relative">
           <Search
             size={9}
@@ -3010,7 +3010,7 @@ function AssetLibraryPanel() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search assets..."
-            className="w-full pl-6 pr-2 py-1 bg-[#040d18] border border-[#1e3a55] rounded text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full pl-6 pr-2 py-1 bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
       </div>
@@ -3021,7 +3021,7 @@ function AssetLibraryPanel() {
           <div key={cat.id}>
             <button
               onClick={() => toggleCat(cat.id)}
-              className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold hover:bg-[#0f2035] transition-colors"
+              className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold hover:bg-[var(--c-0f2035)] transition-colors"
             >
               {openCats.has(cat.id) ? (
                 <ChevronDown size={9} className="text-slate-600" />
@@ -3048,7 +3048,7 @@ function AssetLibraryPanel() {
       </div>
 
       {/* Drag hint */}
-      <div className="px-2 py-1.5 border-t border-[#142235]">
+      <div className="px-2 py-1.5 border-t border-[var(--c-142235)]">
         <div className="text-[9px] text-slate-700 text-center">
           Drag assets into the 3D viewport
         </div>
@@ -3082,11 +3082,11 @@ function ErrorDot({ message }: { message: string }) {
       {pos &&
         createPortal(
           <div
-            className="fixed z-[9999] w-60 bg-[#0c1c2e] border border-red-600/50 rounded-lg shadow-2xl p-3 pointer-events-none"
+            className="fixed z-[9999] w-60 bg-[var(--c-0c1c2e)] border border-red-600/50 rounded-lg shadow-2xl p-3 pointer-events-none"
             style={{ left: pos.x, top: pos.y - 4 }}
           >
             {/* Arrow pointing left */}
-            <div className="absolute -left-[5px] top-3 w-2.5 h-2.5 bg-[#0c1c2e] border-l border-b border-red-600/50 rotate-45" />
+            <div className="absolute -left-[5px] top-3 w-2.5 h-2.5 bg-[var(--c-0c1c2e)] border-l border-b border-red-600/50 rotate-45" />
             <div className="flex items-center gap-1.5 mb-1.5">
               <AlertCircle size={11} className="text-red-400 flex-shrink-0" />
               <span className="text-[10px] font-semibold text-red-300 uppercase tracking-wide">
@@ -3185,10 +3185,10 @@ function TreeNode({
           node.status === "error"
             ? isSelected
               ? "bg-blue-600/20 text-red-300"
-              : "text-red-400 hover:text-red-300 hover:bg-[#0f2035]"
+              : "text-red-400 hover:text-red-300 hover:bg-[var(--c-0f2035)]"
             : isSelected
               ? "bg-blue-600/20 text-blue-300"
-              : "text-slate-400 hover:text-slate-200 hover:bg-[#0f2035]"
+              : "text-slate-400 hover:text-slate-200 hover:bg-[var(--c-0f2035)]"
         }`}
         style={{ paddingLeft: `${8 + depth * 12}px` }}
       >
@@ -3336,10 +3336,10 @@ function CollapsibleSection({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-[#1e3a55] rounded-md overflow-hidden">
+    <div className="border border-[var(--c-1e3a55)] rounded-md overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-3 py-2 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-[#0f2035] transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-[var(--c-0f2035)] transition-colors"
       >
         <span className="font-medium">{title}</span>
         <ChevronDown
@@ -3348,7 +3348,7 @@ function CollapsibleSection({
         />
       </button>
       {open && (
-        <div className="px-3 pb-3 pt-1 border-t border-[#1e3a55] space-y-1">
+        <div className="px-3 pb-3 pt-1 border-t border-[var(--c-1e3a55)] space-y-1">
           {children}
         </div>
       )}
@@ -3368,7 +3368,7 @@ function ConfigRow({
   dropdown?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between py-1 border-b border-[#142235]/60">
+    <div className="flex items-center justify-between py-1 border-b border-[var(--c-142235)]/60">
       <div className="flex items-center gap-1 flex-shrink-0 mr-2">
         {dropdown && <ChevronDown size={9} className="text-slate-600" />}
         <span className="text-[10px] text-slate-500">{label}</span>
@@ -3376,7 +3376,7 @@ function ConfigRow({
       {editing ? (
         <input
           defaultValue={value}
-          className="text-[10px] text-slate-200 bg-[#071526] text-right border border-[#1e3a55] focus:border-blue-500 focus:outline-none rounded px-1.5 py-0.5 max-w-[55%]"
+          className="text-[10px] text-slate-200 bg-[var(--c-071526)] text-right border border-[var(--c-1e3a55)] focus:border-blue-500 focus:outline-none rounded px-1.5 py-0.5 max-w-[55%]"
         />
       ) : (
         <span className="text-[10px] text-slate-200 text-right max-w-[55%] truncate">
@@ -3399,7 +3399,7 @@ function IoTField({
   editing: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between py-1 border-b border-[#142235]/60">
+    <div className="flex items-center justify-between py-1 border-b border-[var(--c-142235)]/60">
       <span className="text-[10px] text-slate-500 flex-shrink-0 mr-2">
         {label}
       </span>
@@ -3407,7 +3407,7 @@ function IoTField({
         <input
           defaultValue={value}
           placeholder={placeholder}
-          className="text-[10px] text-slate-200 bg-[#071526] border border-[#1e3a55] rounded px-2 py-0.5 text-right focus:outline-none focus:border-blue-500 w-28"
+          className="text-[10px] text-slate-200 bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-2 py-0.5 text-right focus:outline-none focus:border-blue-500 w-28"
         />
       ) : (
         <span className="text-[10px] text-slate-200">
@@ -3426,7 +3426,7 @@ function FormCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-[#07111e] border border-[#1e3a55] rounded-lg p-4">
+    <div className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg p-4">
       <h4 className="text-xs font-semibold text-slate-200 mb-4 flex items-center gap-2">
         <div className="w-[2px] h-4 bg-blue-500 rounded-full" />
         {title}
@@ -3451,7 +3451,7 @@ function FormField({
     <div>
       <label className="block text-[11px] text-slate-400 mb-1">{label}</label>
       {type === "select" && options ? (
-        <select className="w-full bg-[#0b1d30] border border-[#1e3a55] rounded px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500">
+        <select className="w-full bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500">
           {options.map((o) => (
             <option key={o}>{o}</option>
           ))}
@@ -3460,7 +3460,7 @@ function FormField({
         <input
           type={type}
           placeholder={placeholder}
-          className="w-full bg-[#0b1d30] border border-[#1e3a55] rounded px-3 py-2 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500"
+          className="w-full bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded px-3 py-2 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500"
         />
       )}
     </div>
@@ -3546,9 +3546,9 @@ function USDUploadModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#071526] border border-[#1e3a55] rounded-xl w-[680px] max-h-[85vh] flex flex-col shadow-2xl">
+      <div className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-xl w-[680px] max-h-[85vh] flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235] flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)] flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-600/30 flex items-center justify-center">
               <HardDrive size={15} className="text-blue-400" />
@@ -3594,7 +3594,7 @@ function USDUploadModal({
             className={`border-2 border-dashed rounded-lg py-6 flex flex-col items-center justify-center cursor-pointer transition-all ${
               dragging
                 ? "border-blue-500 bg-blue-600/10"
-                : "border-[#1e3a55] hover:border-blue-500/60 hover:bg-[#0b1d30]"
+                : "border-[var(--c-1e3a55)] hover:border-blue-500/60 hover:bg-[var(--c-0b1d30)]"
             }`}
           >
             <div className="w-10 h-10 rounded-full bg-blue-600/10 border border-blue-600/20 flex items-center justify-center mb-3">
@@ -3635,10 +3635,10 @@ function USDUploadModal({
             return (
               <div
                 key={f.id}
-                className={`flex items-center gap-3 bg-[#0b1d30] border rounded-lg px-3 py-2.5 transition-all ${
+                className={`flex items-center gap-3 bg-[var(--c-0b1d30)] border rounded-lg px-3 py-2.5 transition-all ${
                   isUploading
                     ? "border-blue-500/30"
-                    : "border-[#142235] hover:border-[#1e3a55]"
+                    : "border-[var(--c-142235)] hover:border-[var(--c-1e3a55)]"
                 }`}
               >
                 {/* Format badge */}
@@ -3655,7 +3655,7 @@ function USDUploadModal({
                   </div>
                   {isUploading ? (
                     <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 h-1 bg-[#142235] rounded-full overflow-hidden">
+                      <div className="flex-1 h-1 bg-[var(--c-142235)] rounded-full overflow-hidden">
                         <div
                           className="h-full bg-blue-500 rounded-full transition-all duration-300"
                           style={{ width: `${f.progress}%` }}
@@ -3718,7 +3718,7 @@ function USDUploadModal({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-[#142235] flex items-center justify-between flex-shrink-0">
+        <div className="px-5 py-3 border-t border-[var(--c-142235)] flex items-center justify-between flex-shrink-0">
           <p className="text-[10px] text-slate-600 flex items-center gap-1.5">
             <AlertCircle size={10} />
             USD files are versioned per factory project

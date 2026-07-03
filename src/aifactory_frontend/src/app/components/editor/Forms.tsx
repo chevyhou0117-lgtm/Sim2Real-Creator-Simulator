@@ -10,14 +10,14 @@ export function LeaderInfoForm() {
       <FormField label="Contact Number" placeholder="e.g. +86 138 0000 1234" />
       <FormField label="Email" placeholder="e.g. zhang.wei@company.com" />
       <FormField label="Shift Schedule" type="select" options={['3-Shift Rotation', '2-Shift', 'Day Only']} />
-      <div className="mt-4 pt-4 border-t border-[#1e3a55]">
+      <div className="mt-4 pt-4 border-t border-[var(--c-1e3a55)]">
         <label className="block text-[11px] text-slate-400 mb-2">Team Members</label>
         {['Shift A', 'Shift B', 'Shift C'].map((shift) => (
           <div key={shift} className="mb-2">
             <label className="text-[10px] text-slate-500 mb-1 block">{shift} Leader</label>
             <input
               placeholder={`${shift} leader name`}
-              className="w-full bg-[#07111e] border border-[#1e3a55] rounded px-3 py-2 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500"
+              className="w-full bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-3 py-2 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500"
             />
           </div>
         ))}
@@ -49,7 +49,7 @@ export function ErrorCodeForm() {
           { code: 'E003', name: 'Low Material Supply', level: 'Warning' },
           { code: 'E004', name: 'Production Target Miss', level: 'Info' },
         ].map((err) => (
-          <div key={err.code} className="bg-[#07111e] border border-[#1e3a55] rounded p-3 flex items-center gap-3">
+          <div key={err.code} className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded p-3 flex items-center gap-3">
             <span className="text-[10px] font-mono text-blue-400 w-12">{err.code}</span>
             <span className="text-[11px] text-slate-300 flex-1">{err.name}</span>
             <span className={`text-[9px] px-2 py-0.5 rounded ${
@@ -79,7 +79,7 @@ export function StatusMonitoringForm() {
         { status: 'Maintenance', color: 'amber', condition: 'Manual maintenance mode active' },
         { status: 'Offline', color: 'slate', condition: 'Device unreachable' },
       ].map((s) => (
-        <div key={s.status} className="bg-[#07111e] border border-[#1e3a55] rounded p-2.5 mb-2">
+        <div key={s.status} className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded p-2.5 mb-2">
           <div className="flex items-center gap-2 mb-1.5">
             <span className={`w-2 h-2 rounded-full bg-${s.color}-400`} />
             <span className="text-[11px] text-slate-200 font-medium">{s.status}</span>
@@ -101,7 +101,7 @@ export function AIModelForm() {
           { name: 'Quality Anomaly Detection', status: 'Inactive', model: 'Isolation Forest' },
           { name: 'Throughput Forecasting', status: 'Active', model: 'Prophet + XGBoost' },
         ].map((ai) => (
-          <div key={ai.name} className="bg-[#07111e] border border-[#1e3a55] rounded p-3">
+          <div key={ai.name} className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded p-3">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[11px] text-slate-200 font-medium">{ai.name}</span>
               <span className={`text-[9px] px-2 py-0.5 rounded ${
@@ -127,7 +127,7 @@ export function DataPlatformForm() {
           { name: 'Data Lake Export', icon: <Radio size={14} />, status: 'Pending', endpoint: 's3://factory-datalake/houston-p9' },
           { name: 'MOM System Sync', icon: <Link2 size={14} />, status: 'Configured', endpoint: 'https://mom.system.com/sync' },
         ].map((sys) => (
-          <div key={sys.name} className="bg-[#07111e] border border-[#1e3a55] rounded p-3">
+          <div key={sys.name} className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded p-3">
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-blue-400">{sys.icon}</span>
               <span className="text-[11px] text-slate-200 font-medium flex-1">{sys.name}</span>

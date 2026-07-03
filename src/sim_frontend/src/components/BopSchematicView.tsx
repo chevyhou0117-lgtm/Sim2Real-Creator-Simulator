@@ -149,7 +149,7 @@ export default function BopSchematicView({
             <select
               value={product}
               onChange={(e) => setProduct(e.target.value)}
-              className="bg-[#0b1d30] border border-[#1e3a55] rounded px-2 py-1 text-slate-200 text-[11px] focus:outline-none focus:border-blue-500"
+              className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded px-2 py-1 text-slate-200 text-[11px] focus:outline-none focus:border-blue-500"
             >
               {products.map((c) => (
                 <option key={c} value={c}>

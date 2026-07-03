@@ -11,12 +11,12 @@ const DIM_LABEL: Record<string, string> = {
 function RuleBlock({ r }: { r: ReadyRuleReport }) {
   const { t } = useTranslation();
   return (
-    <div className="border border-[#142235] rounded-lg overflow-hidden">
-      <div className="px-3 py-2 bg-[#0a1929] text-xs font-semibold text-slate-300">
+    <div className="border border-[var(--c-142235)] rounded-lg overflow-hidden">
+      <div className="px-3 py-2 bg-[var(--c-0a1929)] text-xs font-semibold text-slate-300">
         {r.label}
         <span className="ml-2 text-[10px] text-slate-600 font-mono">{r.rule_id}</span>
       </div>
-      <ul className="divide-y divide-[#0e1e2e]">
+      <ul className="divide-y divide-[var(--c-0e1e2e)]">
         {r.issues.length === 0 ? (
           <li className="px-3 py-2 text-[11px] text-slate-500">{t('validation failed')}</li>
         ) : (
@@ -47,8 +47,8 @@ export function ReadyValidationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-2xl w-[560px] max-h-[85vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235] flex-shrink-0">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-2xl w-[560px] max-h-[85vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)] flex-shrink-0">
           <div className="flex items-center gap-2">
             <AlertCircle size={16} className="text-amber-400" />
             <div>
@@ -83,7 +83,7 @@ export function ReadyValidationModal({
           )}
         </div>
 
-        <div className="px-5 py-3 border-t border-[#142235] flex justify-end flex-shrink-0">
+        <div className="px-5 py-3 border-t border-[var(--c-142235)] flex justify-end flex-shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-1.5 text-xs font-medium rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors"

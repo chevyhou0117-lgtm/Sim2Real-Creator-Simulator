@@ -182,7 +182,7 @@ function ProductSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-[#040d16] border border-[#142235] rounded text-[11px] text-slate-200 px-2 py-1 focus:outline-none focus:border-blue-500/40"
+      className="bg-[var(--c-040d16)] border border-[var(--c-142235)] rounded text-[11px] text-slate-200 px-2 py-1 focus:outline-none focus:border-blue-500/40"
       title={t("Select 'All' to write an OPERATION-level override (applies to all products); select a specific product to write a BOP_PROCESS-level override (that product only)")}
     >
       <option value={ALL_PRODUCTS}>{t('All (OPERATION level)')}</option>
@@ -241,7 +241,7 @@ function ParamCell({
           if (e.key === 'Enter') commit();
           if (e.key === 'Escape') cancel();
         }}
-        className="w-full bg-[#020a12] border border-blue-500/60 rounded px-1.5 py-0.5 text-[11px] font-mono text-slate-100 text-right focus:outline-none"
+        className="w-full bg-[var(--c-020a12)] border border-blue-500/60 rounded px-1.5 py-0.5 text-[11px] font-mono text-slate-100 text-right focus:outline-none"
       />
     );
   }
@@ -252,7 +252,7 @@ function ParamCell({
       title={param ? t(sourceLabel(param.source)) : '—'}
       className={cn(
         'w-full text-right font-mono text-[11px] px-1.5 py-0.5 rounded transition-colors',
-        overridden ? 'text-blue-300 hover:bg-blue-500/10' : 'text-slate-300 hover:bg-[#0d2035]/60',
+        overridden ? 'text-blue-300 hover:bg-blue-500/10' : 'text-slate-300 hover:bg-[var(--c-0d2035)]/60',
         disabled && 'cursor-not-allowed opacity-50',
       )}
     >
@@ -297,7 +297,7 @@ export function OperationParamTable({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-[#142235] flex-shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--c-142235)] flex-shrink-0">
         <span className="text-[10px] text-slate-500">{t('Product')}</span>
         <ProductSelect productCodes={productCodes} value={productCode} onChange={setProductCode} />
         {saving && <Loader2 size={11} className="text-blue-400 animate-spin" />}
@@ -316,8 +316,8 @@ export function OperationParamTable({
           </div>
         ) : (
           <table className="w-full text-[11px] table-fixed">
-            <thead className="sticky top-0 z-10 bg-[#07111e]/95 backdrop-blur">
-              <tr className="border-b border-[#142235] text-slate-500 text-[10px]">
+            <thead className="sticky top-0 z-10 bg-[var(--c-07111e)]/95 backdrop-blur">
+              <tr className="border-b border-[var(--c-142235)] text-slate-500 text-[10px]">
                 <th className="text-left px-3 py-1.5 w-[40%]">{t('Operation')}</th>
                 {OP_PARAM_COLUMNS.map((c) => (
                   <th key={c.key} className="text-right px-2 py-1.5">{t(c.label)}</th>
@@ -326,7 +326,7 @@ export function OperationParamTable({
             </thead>
             <tbody>
               {aggregates.map((agg, i) => (
-                <tr key={agg.operation_id} className={cn('border-b border-[#0e1e2e]/60', i % 2 === 1 && 'bg-[#0a1929]/30')}>
+                <tr key={agg.operation_id} className={cn('border-b border-[var(--c-0e1e2e)]/60', i % 2 === 1 && 'bg-[var(--c-0a1929)]/30')}>
                   <td className="px-3 py-1 truncate text-slate-300" title={agg.operation_label}>{agg.operation_label}</td>
                   {OP_PARAM_COLUMNS.map((col) => (
                     <td key={col.key} className="px-1 py-0.5">
@@ -369,7 +369,7 @@ export function OperationParamForm({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-[#142235] flex-shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--c-142235)] flex-shrink-0">
         <span className="text-[10px] text-slate-500">{t('Product')}</span>
         <ProductSelect productCodes={productCodes} value={productCode} onChange={setProductCode} />
         {saving && <Loader2 size={11} className="text-blue-400 animate-spin" />}

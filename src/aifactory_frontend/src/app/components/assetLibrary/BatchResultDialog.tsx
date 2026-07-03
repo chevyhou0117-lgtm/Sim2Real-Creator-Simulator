@@ -26,8 +26,8 @@ const RESULT_ACTION_KEY: Record<string, string> = {
 export function BatchResultDialog({ result, onClose }: BatchResultDialogProps) {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[400px] shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235]">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[400px] shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)]">
           <span className="text-sm font-semibold text-slate-100">{t(RESULT_TITLE_KEY[result.type])}</span>
           <button
             onClick={onClose}
@@ -59,7 +59,7 @@ export function BatchResultDialog({ result, onClose }: BatchResultDialogProps) {
             </div>
           )}
         </div>
-        <div className="flex items-center justify-end px-5 py-4 border-t border-[#142235]">
+        <div className="flex items-center justify-end px-5 py-4 border-t border-[var(--c-142235)]">
           <button
             onClick={onClose}
             className="px-5 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"

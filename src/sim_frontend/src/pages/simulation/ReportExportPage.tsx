@@ -65,7 +65,7 @@ export function ReportExportPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-4 px-6 py-4 border-b border-[#142235] flex-shrink-0">
+      <div className="flex items-center gap-4 px-6 py-4 border-b border-[var(--c-142235)] flex-shrink-0">
         <button onClick={() => navigate(`/simulation/plan/${planId}/result`)} className="text-slate-600 hover:text-slate-300 transition-colors">
           <ChevronLeft size={18} />
         </button>
@@ -78,13 +78,13 @@ export function ReportExportPage() {
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-2xl space-y-6">
           {/* Report Info */}
-          <div className="bg-[#0b1d30] border border-[#142235] rounded-xl p-5 space-y-4">
+          <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl p-5 space-y-4">
             <h3 className="text-sm font-semibold text-slate-300">{t('Report Basic Info')}</h3>
             <Input label={t('Report Title')} defaultValue="SMT Line A - New Product Introduction Capacity Assessment_Simulation Analysis Report_20260410" />
             <div className="flex flex-col gap-1">
               <label className="text-xs text-slate-400 font-medium">{t('Report Summary (optional)')}</label>
               <textarea
-                className="bg-[#07111e] border border-[#1e3a55] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60 resize-none h-16 placeholder:text-slate-600"
+                className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60 resize-none h-16 placeholder:text-slate-600"
                 placeholder={t('Add a report summary, shown on the home page (max 500 characters)')}
               />
             </div>
@@ -95,7 +95,7 @@ export function ReportExportPage() {
           </div>
 
           {/* Content Selection */}
-          <div className="bg-[#0b1d30] border border-[#142235] rounded-xl p-5">
+          <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl p-5">
             <h3 className="text-sm font-semibold text-slate-300 mb-3">{t('Content Module Selection')}</h3>
             <div className="space-y-2">
               {CONTENT_MODULES.map(m => (
@@ -104,7 +104,7 @@ export function ReportExportPage() {
                   onClick={() => toggleModule(m.id)}
                   className={cn(
                     'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all',
-                    selected.has(m.id) ? 'bg-blue-600/10 border border-blue-500/20' : 'border border-transparent hover:bg-[#0d2035]/50',
+                    selected.has(m.id) ? 'bg-blue-600/10 border border-blue-500/20' : 'border border-transparent hover:bg-[var(--c-0d2035)]/50',
                   )}
                 >
                   <div className={cn(
@@ -123,7 +123,7 @@ export function ReportExportPage() {
           </div>
 
           {/* Format Selection */}
-          <div className="bg-[#0b1d30] border border-[#142235] rounded-xl p-5">
+          <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl p-5">
             <h3 className="text-sm font-semibold text-slate-300 mb-3">{t('Export Format')}</h3>
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -135,7 +135,7 @@ export function ReportExportPage() {
                   onClick={() => setFormat(f.id)}
                   className={cn(
                     'flex items-start gap-3 p-4 rounded-xl border text-left transition-all',
-                    format === f.id ? 'bg-blue-600/10 border-blue-500/30' : 'border-[#142235] hover:border-[#1e3a55]',
+                    format === f.id ? 'bg-blue-600/10 border-blue-500/30' : 'border-[var(--c-142235)] hover:border-[var(--c-1e3a55)]',
                   )}
                 >
                   <div className={cn('mt-0.5', format === f.id ? 'text-blue-400' : 'text-slate-500')}>{f.icon}</div>

@@ -14,12 +14,12 @@ import { useNavigate, useParams, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
   XCircle, AlertCircle, CheckCircle2, Loader2, ChevronLeft,
-  FileText, X, Footprints, RotateCw, PlayCircle,
+  FileText, X, Footprints, PlayCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
-import { planApi, masterApi, resolveCreatorUrl, adminApi } from '@/lib/api';
-import { kitEnsureStage, kitCurrentStage, subscribeKitSelection, subscribeOpenedStageResult, kitSelectPrim, kitSelectMany, kitFocusPerspective, kitFocusPerspectiveMany } from '@/lib/kit';
+import { planApi, masterApi, resolveCreatorUrl } from '@/lib/api';
+import { kitEnsureStage, subscribeKitSelection, subscribeOpenedStageResult, kitSelectPrim, kitSelectMany, kitFocusPerspective, kitFocusPerspectiveMany } from '@/lib/kit';
 import { AssetSidebar } from './plan-config/AssetSidebar';
 import { buildAssetTree, collectEquipmentPrimPaths, findNode as findNodeV2 } from './plan-config/asset-tree-builder';
 import type { TreeNode as TreeNodeV2 } from './plan-config/types';
@@ -32,6 +32,7 @@ import { PlaybackTimeline, type TimelineEventMarker } from '@/components/Playbac
 import { WalkMode } from '@/components/WalkMode';
 import { DeviceStatusOverlay } from '@/components/DeviceStatusOverlay';
 import { LineProgressPanel } from '@/components/LineProgressPanel';
+import { MaterialInventoryPanel } from '@/components/MaterialInventoryPanel';
 import { KitViewport } from '@/components/KitViewport';
 import Playback2DView from '@/components/Playback2DView';
 import { backendDirectUrl } from '@/lib/runtimeConfig';
@@ -85,19 +86,17 @@ export function SimulationRunningPage() {
   const [showLog, setShowLog] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
 
-  // Kit 进程重启流程（Kit 卡死兜底）
-  // phase: null=未在重启 | 'killing'=后端 pkill+spawn 中 | 'waiting-stage'=等 Kit 起来 + USD 加载
-  //        | 're-ingesting'=重新推 playback 数据 + seek 回原 t_ms
-  const [showKitRestart, setShowKitRestart] = useState(false);
-  const [kitRestartPhase, setKitRestartPhase] = useState<
-    null | 'killing' | 'waiting-stage' | 're-ingesting' | 'failed'
-  >(null);
-  const [kitRestartError, setKitRestartError] = useState<string>('');
 
   // 漫游模式 + 当前点选 prim（来自 Kit selection SSE 推送，空串=取消选中）
   const [walkActive, setWalkActive] = useState(false);
   const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');  // 回放视图：3D Kit 串流 / 2D 俯视示意
   const [selectedPrim, setSelectedPrim] = useState<string>('');
+
+  // 漫游 = 整页全屏：视口容器切成 fixed inset-0 铺满整个网页（见下方容器 className），
+  // 覆盖层/设备信息面板/小地图都是容器子元素，随之全屏。
+  // 【不用】浏览器原生 Fullscreen API——原生全屏 + 指针锁并存时按一次 ESC 浏览器会把
+  // 两者一起退掉且不可拦截，导致"想放开鼠标点小地图"直接整个退出漫游。CSS 方案下
+  // ESC 只解指针锁（漫游继续、可点小地图），再按 ESC 才由 WalkMode 退出漫游。
 
   // lookup maps：让 DeviceStatusOverlay / LineProgressPanel 把 UUID 换成中文名
   // 一次性在 enterReady 拉好，回放期间不变（master_data 是只读快照）
@@ -111,6 +110,8 @@ export function SimulationRunningPage() {
   // 每条线 LBR 时序（点 = {t_min, lbr}）—— 来自后端 result_summary.line_lbr_timeseries
   // 模拟完成后即固定，回放时随 tMs 推进画播放头线即可（不需要重算）
   const [lbrSeriesByLine, setLbrSeriesByLine] = useState<Map<string, Array<{ t_min: number; lbr: number | null }>>>(new Map());
+  // 物料库存时序（MATERIAL_SUPPLY）：material_code → [{t_min, qty}]，来自 60s 快照 warehouse_states
+  const [invSeriesByMaterial, setInvSeriesByMaterial] = useState<Map<string, Array<{ t_min: number; qty: number }>>>(new Map());
 
   // 资产树 (移植自 PlanConfig；回放页只读，不显示参数面板/齿轮)
   const [assetTreeV2, setAssetTreeV2] = useState<TreeNodeV2[]>([]);
@@ -124,15 +125,28 @@ export function SimulationRunningPage() {
     return m;
   }, [equipmentInfoById]);
 
+  // 产线 prim 路径 → 中文线名（漫游传送轮盘/小地图 tooltip 用）：产线进度事件的 prim_path
+  // 形如 /World/ProdLine/<线>/t_id_.../...，截到 ProdLine 下一级；经 equipment→line_id→线名
+  // 关联。prim_path 非全路径或命名不符时匹配不上 → WalkMode 回退显示 prim 名。fail-soft。
+  const linePrimNames = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of lineProgressEvents) {
+      if (!e.prim_path || !e.equipment_id) continue;
+      const info = equipmentInfoById.get(e.equipment_id);
+      const lineName = info ? lineStatById.get(info.line_id)?.name : undefined;
+      if (!lineName) continue;
+      const parts = e.prim_path.split('/');
+      const idx = parts.indexOf('ProdLine');
+      if (idx >= 0 && parts.length > idx + 1) {
+        m.set(parts.slice(0, idx + 2).join('/'), lineName);
+      }
+    }
+    return m;
+  }, [lineProgressEvents, equipmentInfoById, lineStatById]);
+
   const statusPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const triggeredRef = useRef(false);
-  // 重启 Kit 时复用第一次 load-from-backend 的上下文
-  const playbackContextRef = useRef<{
-    planId: string;
-    durationMs: number;
-    usdUrl: string | null;
-  } | null>(null);
 
   const stopPolls = () => {
     if (statusPollRef.current) { clearInterval(statusPollRef.current); statusPollRef.current = null; }
@@ -212,13 +226,6 @@ export function SimulationRunningPage() {
       // 步骤④「加载场景」实际耗时（开 USD + 灌回放数据）→ 定格显示
       setPhaseTimings(prev => ({ ...prev, scene: (performance.now() - sceneT0) / 1000 }));
 
-      // 暂存上下文：Kit 卡死重启时重新 load-from-backend
-      playbackContextRef.current = {
-        planId,
-        durationMs: planDurationMs,
-        usdUrl,
-      };
-
       // 拉 lookup：UUID → 中文名 + 线 → 目标产量/LBR。失败 fail-soft，不影响回放。
       try {
         const plan = await planApi.get(planId);
@@ -297,6 +304,21 @@ export function SimulationRunningPage() {
           }
         }
         setLbrSeriesByLine(lbrSeries);
+        // 物料库存时序：60s 快照 warehouse_states（每帧每物料 quantity）→ 每物料一条曲线。
+        // 仅 MATERIAL_SUPPLY 跑过才有数据；无则面板不渲染。fire-and-forget，不阻塞主加载。
+        planApi.snapshots(planId, 0, 5000).then((snaps) => {
+          const inv = new Map<string, Array<{ t_min: number; qty: number }>>();
+          for (const s of snaps) {
+            if (!s.warehouse_states) continue;
+            const tmin = s.sim_timestamp_sec / 60;
+            for (const [code, st] of Object.entries(s.warehouse_states)) {
+              if (!inv.has(code)) inv.set(code, []);
+              inv.get(code)!.push({ t_min: tmin, qty: st.quantity });
+            }
+          }
+          for (const arr of inv.values()) arr.sort((a, b) => a.t_min - b.t_min);
+          setInvSeriesByMaterial(inv);
+        }).catch(() => {});
         // product_id → product_name；后端 events 里 product_id 既可能是 UUID 也可能是 code，
         // 两者都建索引，前端取的时候双 fallback。
         const prodMap = new Map<string, string>();
@@ -591,84 +613,6 @@ export function SimulationRunningPage() {
     setExpandedAssetIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   }, []);
 
-  // ── 3.5 Kit 卡死重启流程 ───────────────────────────────────────────────
-  // 设计：sim_backend (uvicorn) 当外部看门人——pkill+spawn Kit 进程。前端这边：
-  //  (1) 暂停旧 state poll 避免它持续 spam 已死的 Kit 端口
-  //  (2) 调 /admin/kit/restart（同步返回 new_pid）
-  //  (3) polling Kit /ov/current_stage 等新进程起来 + USD 加载完成（最多 60s）
-  //  (4) 用 playbackContextRef 缓存的 events 重新 kitEnsureStage + ingestPlayback
-  //  (5) seek 回卡死前的 t_ms（保持暂停，让用户自己决定要不要继续播）
-  //  (6) 恢复 state poll
-  const handleKitRestartConfirm = useCallback(async () => {
-    setShowKitRestart(false);
-    setKitRestartError('');
-    const ctx = playbackContextRef.current;
-    const lastTMs = playbackState?.t_ms ?? 0;
-
-    // (1) 停掉 state poll：旧 Kit 已死，再去 fetch /kit/playback/state 是浪费
-    if (statePollRef.current) { clearInterval(statePollRef.current); statePollRef.current = null; }
-
-    try {
-      // (2) 后端 pkill + spawn
-      setKitRestartPhase('killing');
-      const res = await adminApi.restartKit();
-      console.info('[KitRestart]', res.message);
-
-      // (3) 等 Kit 起来：polling 直到 /ov/current_stage 返回非 null（USD 已加载完成）
-      setKitRestartPhase('waiting-stage');
-      const deadline = Date.now() + 60_000;
-      // 先等 5s 让 Kit 初始化（这段 polling 必失败、降低无用请求）
-      await new Promise<void>(r => setTimeout(r, 5000));
-      let stageReady = false;
-      while (Date.now() < deadline) {
-        const cur = await kitCurrentStage();
-        if (cur) { stageReady = true; break; }
-        await new Promise<void>(r => setTimeout(r, 1500));
-      }
-      if (!stageReady) {
-        // Kit 已 spawn 但 USD 还没加载完——这种情况下 ctx 里的 usdUrl 还要走一遍
-        // kitEnsureStage，由它显式打开。日志提醒，但不视为失败。
-        console.warn('[KitRestart] Kit 起来了但 60s 内未自动加载 USD，将由前端显式打开');
-      }
-
-      // (4) 重新 ingest
-      setKitRestartPhase('re-ingesting');
-      if (ctx) {
-        try {
-          if (ctx.usdUrl) await kitEnsureStage(ctx.usdUrl);
-        } catch (err) {
-          console.warn('[KitRestart] kitEnsureStage 失败:', err);
-        }
-        try {
-          await loadPlaybackFromBackend(ctx.planId, BACKEND_DIRECT_URL);
-        } catch (err) {
-          throw new Error(t('Re-ingest failed: {{message}}', { message: (err as Error).message ?? err }));
-        }
-        // (5) seek 回原 t_ms（保持暂停状态，由用户决定恢复播放）
-        if (lastTMs > 0) {
-          try { await playbackSeek(lastTMs); } catch { /* 静默 */ }
-        }
-      } else {
-        console.warn('[KitRestart] 没有缓存的 playback 上下文，跳过重 ingest（可能进页就卡死过）');
-      }
-
-      // (6) 恢复 state poll
-      const poll = setInterval(async () => {
-        try {
-          const s = await getPlaybackState();
-          setPlaybackState(s);
-        } catch { /* ignore */ }
-      }, 250);
-      statePollRef.current = poll;
-
-      setKitRestartPhase(null);
-    } catch (err) {
-      console.error('[KitRestart] 失败:', err);
-      setKitRestartError((err as Error).message ?? String(err));
-      setKitRestartPhase('failed');
-    }
-  }, [playbackState, t]);
-
   // ── 4. 退出处理 ────────────────────────────────────────────────────────
   const handleBackToConfig = () => {
     stopPolls();
@@ -734,15 +678,15 @@ export function SimulationRunningPage() {
   return (
     <div className="flex flex-col h-full">
       {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-[#142235] bg-[#07111e] flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--c-142235)] bg-[var(--c-07111e)] flex-shrink-0">
         <button
           onClick={handleBackToConfig}
-          className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 transition-colors border border-[#1e3a55] hover:border-[#2a4a6a] rounded-lg px-2.5 py-1.5"
+          className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 transition-colors border border-[var(--c-1e3a55)] hover:border-[var(--c-2a4a6a)] rounded-lg px-2.5 py-1.5"
         >
           <ChevronLeft size={12} />{t('Back to Config')}
         </button>
 
-        <div className="w-px h-4 bg-[#142235]" />
+        <div className="w-px h-4 bg-[var(--c-142235)]" />
 
         <div className="flex items-center gap-2">
           {(isReady || isPrepared) ? <CheckCircle2 size={14} className="text-emerald-400" /> :
@@ -764,7 +708,7 @@ export function SimulationRunningPage() {
 
         {/* 3D / 2D 回放视图切换（回放就绪时显示，放 header 始终可见） */}
         {isReady && (
-          <div className="flex items-center gap-0.5 bg-[#0b1d30] border border-[#1e3a55] rounded p-0.5 text-[11px] font-medium mr-1">
+          <div className="flex items-center gap-0.5 bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded p-0.5 text-[11px] font-medium mr-1">
             <button
               onClick={() => setViewMode('3d')}
               className={`px-2.5 py-1 rounded transition-colors ${viewMode === '3d' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
@@ -800,17 +744,6 @@ export function SimulationRunningPage() {
             <Footprints size={13} /> {walkActive ? t('Exit Walk Mode') : t('Walk Mode')}
           </Button>
         )}
-        {isReady && KIT_STREAM_URL && (
-          <Button
-            size="sm"
-            variant="danger"
-            disabled={kitRestartPhase !== null && kitRestartPhase !== 'failed'}
-            onClick={() => setShowKitRestart(true)}
-            title={t('Click here when the Kit process hangs: sim_backend will pkill and re-spawn it')}
-          >
-            <RotateCw size={13} className={kitRestartPhase && kitRestartPhase !== 'failed' ? 'animate-spin' : ''} /> {t('Restart Kit')}
-          </Button>
-        )}
         {isRunning && (
           <Button size="sm" variant="danger" onClick={() => setShowCancel(true)}>
             <XCircle size={13} /> {t('Cancel Simulation')}
@@ -824,7 +757,7 @@ export function SimulationRunningPage() {
       </div>
 
       {/* ── Body ── */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-[#07111e]">
+      <div className="flex-1 flex flex-col overflow-hidden bg-[var(--c-07111e)]">
         {(isRunning || isPrepared) && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
@@ -861,7 +794,7 @@ export function SimulationRunningPage() {
                   );
                 })}
               </div>
-              <div className="w-72 h-1 bg-[#1e3a55] rounded-full overflow-hidden mt-2 mx-auto">
+              <div className="w-72 h-1 bg-[var(--c-1e3a55)] rounded-full overflow-hidden mt-2 mx-auto">
                 <div className="h-full bg-blue-500 transition-all duration-300"
                   style={{ width: `${progressPct}%` }} />
               </div>
@@ -874,7 +807,7 @@ export function SimulationRunningPage() {
                   'mt-7 mx-auto flex items-center gap-2 px-7 py-2.5 rounded-lg text-sm font-semibold transition-all',
                   isPrepared
                     ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-lg shadow-blue-900/30'
-                    : 'bg-[#13243a] text-slate-500 cursor-not-allowed',
+                    : 'bg-[var(--c-13243a)] text-slate-500 cursor-not-allowed',
                 )}
               >
                 <PlayCircle size={16} /> {t('Replay')}
@@ -933,14 +866,17 @@ export function SimulationRunningPage() {
 
         {isReady && (
           <>
-            {/* Kit WebRTC iframe */}
-            <div className="flex-1 relative overflow-hidden bg-black">
+            {/* Kit WebRTC iframe。漫游时切成 fixed inset-0 整页铺满（CSS 全屏，见上方注释；
+                同一元素只换 className，KitViewport 不重挂载、WebRTC 流不断） */}
+            <div className={walkActive
+              ? 'fixed inset-0 z-50 overflow-hidden bg-[var(--c-07111e)]'
+              : 'flex-1 relative overflow-hidden bg-[var(--c-07111e)]'}>
               {viewMode === '2d' ? (
                 <div className="absolute top-0 left-0 right-[2%] bottom-[2%]">
                   <Playback2DView planId={planId} tMs={playbackState?.t_ms ?? 0} />
                 </div>
               ) : KIT_STREAM_URL ? (
-                <div className="absolute top-0 left-0 right-[2%] bottom-[2%]">
+                <div className={walkActive ? 'absolute inset-0' : 'absolute top-0 left-0 right-[2%] bottom-[2%]'}>
                   {/* 直连 Kit WebRTC（替代原 5183 iframe 页）。回放控制仍走 HTTP /kit/playback。 */}
                   <KitViewport className="w-full h-full" />
                 </div>
@@ -953,50 +889,21 @@ export function SimulationRunningPage() {
                   </div>
                 </div>
               )}
-              <div className="absolute bottom-2 left-3 text-[9px] font-mono text-slate-400 select-none pointer-events-none tracking-widest z-10 bg-black/40 px-1.5 py-0.5 rounded">
-                {viewMode === '2d' ? '🗺 2D OVERHEAD · REPLAY' : KIT_STREAM_URL ? '🟢 OMNIVERSE KIT · REPLAY' : '⚠ KIT STREAM NOT CONFIGURED'}
-              </div>
-
-              {/* Kit 进程重启进度蒙层（pkill+spawn 总耗 20~40s，期间盖住 iframe） */}
-              {kitRestartPhase !== null && (
-                <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/75 backdrop-blur-sm">
-                  <div className="bg-[#07111e] border border-[#1e3a55] rounded-xl p-6 w-[420px] text-center shadow-2xl">
-                    {kitRestartPhase !== 'failed' ? (
-                      <>
-                        <Loader2 size={36} className="text-amber-400 mx-auto mb-3 animate-spin" />
-                        <div className="text-sm font-semibold text-slate-200 mb-1">{t('Restarting Kit Process')}</div>
-                        <div className="text-[11px] text-slate-400">
-                          {kitRestartPhase === 'killing' && t('Killing the old Kit process and spawning a new one...')}
-                          {kitRestartPhase === 'waiting-stage' && t('Waiting for Kit to restart and load the USD (usually 20-40 seconds)...')}
-                          {kitRestartPhase === 're-ingesting' && t('Reloading playback events and returning to the previous moment...')}
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-3 font-mono">{t('The 3D view is not interactive during this time, please wait')}</div>
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle size={36} className="text-red-400 mx-auto mb-3" />
-                        <div className="text-sm font-semibold text-slate-200 mb-1">{t('Kit Restart Failed')}</div>
-                        <div className="text-[11px] text-slate-400 break-words mb-3 whitespace-pre-wrap text-left max-h-48 overflow-auto">
-                          {kitRestartError || t('Unknown error')}
-                        </div>
-                        <div className="text-[10px] text-slate-500 mb-3 font-mono">
-                          {t('Full log:')} <code className="text-slate-300">/tmp/kit_spawn.log</code>
-                        </div>
-                        <Button size="sm" variant="ghost" onClick={() => setKitRestartPhase(null)}>
-                          {t('Close')}
-                        </Button>
-                      </>
-                    )}
-                  </div>
+              {/* 左下角标（漫游时让位给小地图） */}
+              {!walkActive && (
+                <div className="absolute bottom-2 left-3 text-[9px] font-mono text-slate-400 select-none pointer-events-none tracking-widest z-10 bg-black/40 px-1.5 py-0.5 rounded">
+                  {viewMode === '2d' ? '🗺 2D OVERHEAD · REPLAY' : KIT_STREAM_URL ? '🟢 OMNIVERSE KIT · REPLAY' : '⚠ KIT STREAM NOT CONFIGURED'}
                 </div>
               )}
 
-              {/* 漫游模式覆盖层（active 时接管键盘 + pointer lock，→ Kit 移动相机） */}
-              <WalkMode active={walkActive} onExit={() => setWalkActive(false)} />
+              {/* 漫游模式覆盖层（active 时接管键盘 + pointer lock，→ Kit 移动相机；
+                  含 Tab 传送轮盘 + 左下角俯视小地图） */}
+              <WalkMode active={walkActive} onExit={() => setWalkActive(false)} linePrimNames={linePrimNames} />
 
               {/* 左侧资产树浮层（AssetSidebar 自带 absolute top-3 left-3 + calc 高度，
-                  外层不要再包 wrapper，否则 height: calc(100% - 24px) 取 wrapper 的 0 高 → 一条黑线 */}
-              {assetTreeV2.length > 0 && (
+                  外层不要再包 wrapper，否则 height: calc(100% - 24px) 取 wrapper 的 0 高 → 一条黑线。
+                  漫游时隐藏——全屏漫游只留 HUD（提示条/准星/小地图/设备信息面板） */}
+              {!walkActive && assetTreeV2.length > 0 && (
                 <AssetSidebar
                   tree={assetTreeV2}
                   selectedId={selectedAssetId}
@@ -1025,16 +932,26 @@ export function SimulationRunningPage() {
                     />
                   )}
                 </div>
-                <div className="pointer-events-auto flex-1 min-h-0">
-                  <LineProgressPanel
-                    events={lineProgressEvents}
-                    tMs={playbackState?.t_ms ?? 0}
-                    equipmentInfoById={equipmentInfoById}
-                    lineStatById={lineStatById}
-                    lineLastEquipmentById={lineLastEquipmentById}
-                    lbrSeriesByLine={lbrSeriesByLine}
-                  />
-                </div>
+                {/* 物料库存/产线进度：漫游时隐藏（沉浸式，只留设备信息面板给 F 选中用） */}
+                {!walkActive && (
+                  <div className="pointer-events-auto flex-1 min-h-0 flex flex-col gap-3">
+                    {invSeriesByMaterial.size > 0 && (
+                      <div className="flex-shrink-0">
+                        <MaterialInventoryPanel seriesByMaterial={invSeriesByMaterial} tMs={playbackState?.t_ms ?? 0} />
+                      </div>
+                    )}
+                    <div className="flex-1 min-h-0">
+                      <LineProgressPanel
+                        events={lineProgressEvents}
+                        tMs={playbackState?.t_ms ?? 0}
+                        equipmentInfoById={equipmentInfoById}
+                        lineStatById={lineStatById}
+                        lineLastEquipmentById={lineLastEquipmentById}
+                        lbrSeriesByLine={lbrSeriesByLine}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1056,7 +973,7 @@ export function SimulationRunningPage() {
 
       {showCancel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-2xl p-6 w-96 shadow-2xl">
+          <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-2xl p-6 w-96 shadow-2xl">
             <div className="flex items-start gap-3 mb-4">
               <AlertCircle size={20} className="text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
@@ -1072,25 +989,6 @@ export function SimulationRunningPage() {
         </div>
       )}
 
-      {showKitRestart && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-2xl p-6 w-[420px] shadow-2xl">
-            <div className="flex items-start gap-3 mb-4">
-              <RotateCw size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-sm font-semibold text-slate-200">{t('Restart Kit process?')}</h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  {t('Use this when the Kit main thread hangs: sim_backend will pkill the old process and spawn a new one. The whole process takes about 20-40 seconds; once done it will automatically resume playback at the current moment.')}
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setShowKitRestart(false)}>{t('Cancel')}</Button>
-              <Button variant="danger" size="sm" onClick={handleKitRestartConfirm}>{t('Confirm Restart')}</Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -1111,8 +1009,8 @@ function LogModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center pb-8 bg-black/50 backdrop-blur-sm">
-      <div className="bg-[#07111e] border border-[#1e3a55] rounded-2xl shadow-2xl w-[720px] max-h-[55vh] flex flex-col">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-[#142235] flex-shrink-0">
+      <div className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-2xl shadow-2xl w-[720px] max-h-[55vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--c-142235)] flex-shrink-0">
           <div className="flex items-center gap-3">
             <span className="text-sm font-semibold text-slate-300">{t('Run Log')}</span>
             <div className="flex items-center gap-1.5">
@@ -1121,16 +1019,16 @@ function LogModal({ onClose }: { onClose: () => void }) {
                   className={cn('px-2 py-0.5 rounded text-[10px] font-semibold transition-all',
                     filter.includes(level)
                       ? level === 'INFO' ? 'bg-blue-600/20 text-blue-400' : level === 'WARN' ? 'bg-amber-600/20 text-amber-400' : 'bg-red-600/20 text-red-400'
-                      : 'bg-[#0a1929] text-slate-400',
+                      : 'bg-[var(--c-0a1929)] text-slate-400',
                   )}>{level}</button>
               ))}
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-200 transition-colors"><X size={16} /></button>
         </div>
-        <div className="flex-1 overflow-y-auto font-mono text-[11px] space-y-0.5 bg-[#040d16] p-4">
+        <div className="flex-1 overflow-y-auto font-mono text-[11px] space-y-0.5 bg-[var(--c-040d16)] p-4">
           {LOG_ENTRIES.filter(l => filter.includes(l.level)).map((log, i) => (
-            <div key={i} className="flex gap-3 hover:bg-[#0a1929]/50 px-1 py-0.5 rounded transition-colors">
+            <div key={i} className="flex gap-3 hover:bg-[var(--c-0a1929)]/50 px-1 py-0.5 rounded transition-colors">
               <span className="text-slate-400 flex-shrink-0 w-16">[{log.time}]</span>
               <span className={cn('font-bold flex-shrink-0 w-10', log.level === 'INFO' ? 'text-blue-500' : log.level === 'WARN' ? 'text-amber-500' : 'text-red-500')}>[{log.level}]</span>
               <span className="text-cyan-400 flex-shrink-0 w-24">[{t(log.mod)}]</span>

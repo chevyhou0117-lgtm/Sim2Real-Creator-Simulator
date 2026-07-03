@@ -192,8 +192,8 @@ function ModelCard({
 
   return (
     <div
-      className={`bg-[#0b1d30] border rounded-lg p-3 cursor-pointer hover:border-[#2a4a6a] transition-all group`}
-      style={{ borderColor: showMenu ? '#2a4a6a' : '#142235' }}
+      className={`bg-[var(--c-0b1d30)] border rounded-lg p-3 cursor-pointer hover:border-[var(--c-2a4a6a)] transition-all group`}
+      style={{ borderColor: showMenu ? 'var(--c-2a4a6a)' : 'var(--c-142235)' }}
       onClick={() => onSelect(model)}
     >
       <div className="flex items-start justify-between gap-2">
@@ -209,19 +209,19 @@ function ModelCard({
         >
           <MoreHorizontal size={13} />
           {showMenu && (
-            <div className="absolute right-0 top-5 w-36 bg-[#0f2136] border border-[#1e3a55] rounded-lg shadow-xl z-20 py-1">
+            <div className="absolute right-0 top-5 w-36 bg-[var(--c-0f2136)] border border-[var(--c-1e3a55)] rounded-lg shadow-xl z-20 py-1">
               {cfg.transitions.map(to => (
                 <button
                   key={to}
                   onClick={(e) => { e.stopPropagation(); onTransition(model, to); setShowMenu(false); }}
-                  className="w-full text-left px-3 py-1.5 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-[#142235] flex items-center gap-2 transition-colors"
+                  className="w-full text-left px-3 py-1.5 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-[var(--c-142235)] flex items-center gap-2 transition-colors"
                 >
                   <ArrowRight size={9} />
                   移至 {STAGE_CONFIG[to].labelCN}
                 </button>
               ))}
-              <div className="border-t border-[#142235] my-1" />
-              <button className="w-full text-left px-3 py-1.5 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-[#142235] flex items-center gap-2 transition-colors">
+              <div className="border-t border-[var(--c-142235)] my-1" />
+              <button className="w-full text-left px-3 py-1.5 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-[var(--c-142235)] flex items-center gap-2 transition-colors">
                 <Eye size={9} /> 查看详情
               </button>
             </div>
@@ -280,11 +280,11 @@ function ModelDetailDrawer({
   return (
     <div className="fixed inset-0 z-40" onClick={onClose}>
       <div
-        className="absolute right-0 top-0 h-full w-[380px] bg-[#071526] border-l border-[#1e3a55] shadow-2xl flex flex-col overflow-hidden"
+        className="absolute right-0 top-0 h-full w-[380px] bg-[var(--c-071526)] border-l border-[var(--c-1e3a55)] shadow-2xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drawer header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235] flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)] flex-shrink-0">
           <div className="flex items-center gap-2">
             <Package size={14} className="text-blue-400" />
             <span className="text-sm font-semibold text-slate-100 truncate max-w-[260px]">{model.name}</span>
@@ -312,7 +312,7 @@ function ModelDetailDrawer({
                       ? `${STAGE_CONFIG[s].color} ${STAGE_CONFIG[s].bg} ${STAGE_CONFIG[s].border}`
                       : STAGE_ORDER.indexOf(s) < STAGE_ORDER.indexOf(model.stage)
                       ? 'text-slate-600 bg-slate-700/20 border-slate-700/30 line-through'
-                      : 'text-slate-700 bg-transparent border-[#142235]'
+                      : 'text-slate-700 bg-transparent border-[var(--c-142235)]'
                   }`}>
                     {STAGE_CONFIG[s].labelCN}
                   </div>
@@ -397,11 +397,11 @@ function ModelDetailDrawer({
         </div>
 
         {/* Actions footer */}
-        <div className="px-5 py-4 border-t border-[#142235] flex gap-2 flex-shrink-0">
-          <button className="flex-1 flex items-center justify-center gap-1.5 text-xs border border-[#1e3a55] text-slate-400 hover:text-slate-200 hover:border-[#2a4a6a] py-2 rounded-md transition-colors">
+        <div className="px-5 py-4 border-t border-[var(--c-142235)] flex gap-2 flex-shrink-0">
+          <button className="flex-1 flex items-center justify-center gap-1.5 text-xs border border-[var(--c-1e3a55)] text-slate-400 hover:text-slate-200 hover:border-[var(--c-2a4a6a)] py-2 rounded-md transition-colors">
             <History size={11} /> 版本历史
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 text-xs border border-[#1e3a55] text-slate-400 hover:text-slate-200 hover:border-[#2a4a6a] py-2 rounded-md transition-colors">
+          <button className="flex-1 flex items-center justify-center gap-1.5 text-xs border border-[var(--c-1e3a55)] text-slate-400 hover:text-slate-200 hover:border-[var(--c-2a4a6a)] py-2 rounded-md transition-colors">
             <Download size={11} /> 导出
           </button>
         </div>
@@ -443,7 +443,7 @@ export function ModelLifecyclePage() {
   }));
 
   return (
-    <div className="flex h-screen bg-[#07111e] text-slate-100 overflow-hidden">
+    <div className="flex h-screen bg-[var(--c-07111e)] text-slate-100 overflow-hidden">
       <NavSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -456,13 +456,13 @@ export function ModelLifecyclePage() {
             <>
               <button
                 onClick={() => navigate('/asset-library/asset-versions/irb-4600')}
-                className="flex items-center gap-1.5 text-xs border border-[#1e3a55] text-slate-400 hover:text-slate-200 hover:border-[#2a4a6a] px-3 py-1.5 rounded-md transition-colors"
+                className="flex items-center gap-1.5 text-xs border border-[var(--c-1e3a55)] text-slate-400 hover:text-slate-200 hover:border-[var(--c-2a4a6a)] px-3 py-1.5 rounded-md transition-colors"
               >
                 <GitBranch size={12} /> Version Mgmt
               </button>
               <button
                 onClick={() => navigate('/asset-library')}
-                className="flex items-center gap-1.5 text-xs border border-[#1e3a55] text-slate-400 hover:text-slate-200 hover:border-[#2a4a6a] px-3 py-1.5 rounded-md transition-colors"
+                className="flex items-center gap-1.5 text-xs border border-[var(--c-1e3a55)] text-slate-400 hover:text-slate-200 hover:border-[var(--c-2a4a6a)] px-3 py-1.5 rounded-md transition-colors"
               >
                 <Package size={12} /> Asset Library
               </button>
@@ -472,7 +472,7 @@ export function ModelLifecyclePage() {
 
         <div className="flex-1 overflow-hidden flex flex-col">
           {/* Toolbar */}
-          <div className="h-12 bg-[#07111e] border-b border-[#142235] flex items-center px-5 gap-3 flex-shrink-0">
+          <div className="h-12 bg-[var(--c-07111e)] border-b border-[var(--c-142235)] flex items-center px-5 gap-3 flex-shrink-0">
             {/* Search */}
             <div className="relative w-56">
               <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -480,7 +480,7 @@ export function ModelLifecyclePage() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search models..."
-                className="w-full bg-[#071526] border border-[#1e3a55] rounded-md pl-7 pr-8 py-1.5 text-[11px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md pl-7 pr-8 py-1.5 text-[11px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
@@ -498,7 +498,7 @@ export function ModelLifecyclePage() {
                   className={`text-[10px] px-2.5 py-1 rounded border transition-colors ${
                     filterCategory === cat
                       ? 'border-blue-500/60 bg-blue-600/15 text-blue-300'
-                      : 'border-[#1e3a55] text-slate-500 hover:text-slate-300 hover:border-[#2a4a6a]'
+                      : 'border-[var(--c-1e3a55)] text-slate-500 hover:text-slate-300 hover:border-[var(--c-2a4a6a)]'
                   }`}
                 >
                   {cat === 'all' ? 'All Categories' : cat}
@@ -519,7 +519,7 @@ export function ModelLifecyclePage() {
           </div>
 
           {/* Lifecycle flow banner */}
-          <div className="px-5 py-2.5 bg-[#050f1a] border-b border-[#142235] flex items-center gap-2 flex-shrink-0">
+          <div className="px-5 py-2.5 bg-[var(--c-050f1a)] border-b border-[var(--c-142235)] flex items-center gap-2 flex-shrink-0">
             <span className="text-[9px] font-semibold text-slate-600 uppercase tracking-wider mr-1">Lifecycle Flow</span>
             {STAGE_ORDER.map((s, i) => (
               <React.Fragment key={s}>
@@ -541,9 +541,9 @@ export function ModelLifecyclePage() {
                 const stageModels = filtered.filter(m => m.stage === stage);
 
                 return (
-                  <div key={stage} className="flex-1 flex flex-col border-r border-[#142235] last:border-r-0 min-w-0">
+                  <div key={stage} className="flex-1 flex flex-col border-r border-[var(--c-142235)] last:border-r-0 min-w-0">
                     {/* Column header */}
-                    <div className={`px-3 py-2.5 border-b border-[#142235] flex items-center justify-between flex-shrink-0 ${cfg.bg}`}>
+                    <div className={`px-3 py-2.5 border-b border-[var(--c-142235)] flex items-center justify-between flex-shrink-0 ${cfg.bg}`}>
                       <div className="flex items-center gap-2">
                         <div className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                         <span className={`text-[11px] font-semibold ${cfg.color}`}>{cfg.labelCN}</span>
@@ -553,7 +553,7 @@ export function ModelLifecyclePage() {
                     </div>
 
                     {/* Column description */}
-                    <div className="px-3 py-1.5 bg-[#050f1a] border-b border-[#142235] flex-shrink-0">
+                    <div className="px-3 py-1.5 bg-[var(--c-050f1a)] border-b border-[var(--c-142235)] flex-shrink-0">
                       <p className="text-[9px] text-slate-700 leading-relaxed">{cfg.description}</p>
                     </div>
 
@@ -594,7 +594,7 @@ export function ModelLifecyclePage() {
 
       {/* Transition toast */}
       {transitionToast && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-[#0b1d30] border border-emerald-500/40 text-emerald-400 text-[11px] px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 z-50">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-[var(--c-0b1d30)] border border-emerald-500/40 text-emerald-400 text-[11px] px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 z-50">
           <CheckCircle2 size={13} />
           {transitionToast}
         </div>

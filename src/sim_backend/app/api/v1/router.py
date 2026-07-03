@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 
-from app.api.v1.admin import router as admin_router
 from app.api.v1.bop import router as bop_router
 from app.api.v1.imports import router as imports_router
 from app.api.v1.master_data import (
@@ -29,4 +28,3 @@ api_router.include_router(templates_router)
 api_router.include_router(apply_router)
 api_router.include_router(exports_router)
 api_router.include_router(imports_router)
-api_router.include_router(admin_router)

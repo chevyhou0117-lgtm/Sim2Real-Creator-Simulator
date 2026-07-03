@@ -23,12 +23,12 @@ function Nav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-[#080c14]/80 backdrop-blur-md">
+    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-[var(--c-080c14)]/80 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-6 flex h-16 items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500">
-            <Shield className="h-4 w-4 text-[#080c14]" strokeWidth={2.5} />
+            <Shield className="h-4 w-4 text-[var(--c-080c14)]" strokeWidth={2.5} />
           </div>
           <span className="text-xl font-bold tracking-tight text-white">Roxy</span>
         </div>
@@ -49,7 +49,7 @@ function Nav() {
           </a>
           <a
             href="#"
-            className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-[#080c14] hover:bg-cyan-400 transition-colors"
+            className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-[var(--c-080c14)] hover:bg-cyan-400 transition-colors"
           >
             Start free trial
           </a>
@@ -66,7 +66,7 @@ function Nav() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-white/10 bg-[#080c14] px-6 py-4 flex flex-col gap-4 text-sm text-slate-400">
+        <div className="md:hidden border-t border-white/10 bg-[var(--c-080c14)] px-6 py-4 flex flex-col gap-4 text-sm text-slate-400">
           {['Product', 'Solutions', 'Pricing', 'Docs', 'Blog'].map((item) => (
             <a key={item} href="#" className="hover:text-white transition-colors">
               {item}
@@ -74,7 +74,7 @@ function Nav() {
           ))}
           <a
             href="#"
-            className="mt-2 rounded-lg bg-cyan-500 px-4 py-2 text-center font-semibold text-[#080c14] hover:bg-cyan-400 transition-colors"
+            className="mt-2 rounded-lg bg-cyan-500 px-4 py-2 text-center font-semibold text-[var(--c-080c14)] hover:bg-cyan-400 transition-colors"
           >
             Start free trial
           </a>
@@ -87,7 +87,7 @@ function Nav() {
 // ── Hero ─────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[#080c14] pt-32 pb-20 lg:pt-40 lg:pb-32">
+    <section className="relative overflow-hidden bg-[var(--c-080c14)] pt-32 pb-20 lg:pt-40 lg:pb-32">
       {/* Grid background */}
       <div
         className="pointer-events-none absolute inset-0 opacity-20"
@@ -122,7 +122,7 @@ function Hero() {
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href="#"
-            className="flex items-center gap-2 rounded-xl bg-cyan-500 px-7 py-3.5 text-base font-semibold text-[#080c14] hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20"
+            className="flex items-center gap-2 rounded-xl bg-cyan-500 px-7 py-3.5 text-base font-semibold text-[var(--c-080c14)] hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20"
           >
             Start free — no card needed
             <ArrowRight className="h-4 w-4" />
@@ -177,8 +177,8 @@ function DashboardPreview() {
   };
 
   return (
-    <section className="bg-[#080c14] py-12 px-6">
-      <div className="mx-auto max-w-5xl rounded-2xl border border-white/10 bg-[#0f1420] overflow-hidden shadow-2xl shadow-black/40">
+    <section className="bg-[var(--c-080c14)] py-12 px-6">
+      <div className="mx-auto max-w-5xl rounded-2xl border border-white/10 bg-[var(--c-0f1420)] overflow-hidden shadow-2xl shadow-black/40">
         {/* Window chrome */}
         <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
           <span className="h-3 w-3 rounded-full bg-red-500/60" />
@@ -271,7 +271,7 @@ const features = [
 
 function Features() {
   return (
-    <section id="product" className="bg-[#0a0f1c] py-24 px-6">
+    <section id="product" className="bg-[var(--c-0a0f1c)] py-24 px-6">
       <div className="mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <p className="text-sm font-medium text-cyan-400 uppercase tracking-widest mb-3">Platform</p>
@@ -285,7 +285,7 @@ function Features() {
           {features.map((f) => (
             <div
               key={f.title}
-              className="group rounded-2xl border border-white/10 bg-[#0f1420] p-6 hover:border-white/20 hover:bg-[#131925] transition-all"
+              className="group rounded-2xl border border-white/10 bg-[var(--c-0f1420)] p-6 hover:border-white/20 hover:bg-[var(--c-131925)] transition-all"
             >
               <div
                 className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${f.accent} text-white shadow-lg`}
@@ -323,7 +323,7 @@ const steps = [
 
 function HowItWorks() {
   return (
-    <section className="bg-[#080c14] py-24 px-6">
+    <section className="bg-[var(--c-080c14)] py-24 px-6">
       <div className="mx-auto max-w-4xl">
         <div className="text-center mb-16">
           <p className="text-sm font-medium text-cyan-400 uppercase tracking-widest mb-3">How it works</p>
@@ -382,7 +382,7 @@ const testimonials = [
 
 function Testimonials() {
   return (
-    <section className="bg-[#0a0f1c] py-24 px-6">
+    <section className="bg-[var(--c-0a0f1c)] py-24 px-6">
       <div className="mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <p className="text-sm font-medium text-cyan-400 uppercase tracking-widest mb-3">Customers</p>
@@ -402,7 +402,7 @@ function Testimonials() {
           {testimonials.map((t) => (
             <div
               key={t.name}
-              className="rounded-2xl border border-white/10 bg-[#0f1420] p-6 flex flex-col gap-4"
+              className="rounded-2xl border border-white/10 bg-[var(--c-0f1420)] p-6 flex flex-col gap-4"
             >
               <div className="flex gap-0.5">
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -482,7 +482,7 @@ const plans = [
 
 function Pricing() {
   return (
-    <section id="pricing" className="bg-[#080c14] py-24 px-6">
+    <section id="pricing" className="bg-[var(--c-080c14)] py-24 px-6">
       <div className="mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <p className="text-sm font-medium text-cyan-400 uppercase tracking-widest mb-3">Pricing</p>
@@ -496,12 +496,12 @@ function Pricing() {
               key={p.name}
               className={`relative rounded-2xl border p-8 flex flex-col gap-6 ${
                 p.highlight
-                  ? 'border-cyan-500/50 bg-gradient-to-b from-cyan-500/10 to-[#0f1420] shadow-xl shadow-cyan-500/10'
-                  : 'border-white/10 bg-[#0f1420]'
+                  ? 'border-cyan-500/50 bg-gradient-to-b from-cyan-500/10 to-[var(--c-0f1420)] shadow-xl shadow-cyan-500/10'
+                  : 'border-white/10 bg-[var(--c-0f1420)]'
               }`}
             >
               {p.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-cyan-500 px-3 py-0.5 text-xs font-bold text-[#080c14]">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-cyan-500 px-3 py-0.5 text-xs font-bold text-[var(--c-080c14)]">
                   MOST POPULAR
                 </div>
               )}
@@ -527,7 +527,7 @@ function Pricing() {
                 href="#"
                 className={`mt-2 block rounded-xl px-6 py-3 text-center text-sm font-semibold transition-colors ${
                   p.highlight
-                    ? 'bg-cyan-500 text-[#080c14] hover:bg-cyan-400 shadow-lg shadow-cyan-500/20'
+                    ? 'bg-cyan-500 text-[var(--c-080c14)] hover:bg-cyan-400 shadow-lg shadow-cyan-500/20'
                     : 'border border-white/10 text-white hover:border-white/30 hover:bg-white/5'
                 }`}
               >
@@ -565,7 +565,7 @@ function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section className="bg-[#0a0f1c] py-24 px-6">
+    <section className="bg-[var(--c-0a0f1c)] py-24 px-6">
       <div className="mx-auto max-w-3xl">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-white">Frequently asked questions</h2>
@@ -599,8 +599,8 @@ function FAQ() {
 // ── CTA ───────────────────────────────────────────────────────────────────────
 function CTA() {
   return (
-    <section className="bg-[#080c14] py-24 px-6">
-      <div className="mx-auto max-w-4xl rounded-3xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/10 to-[#0f1420] p-12 text-center shadow-2xl shadow-cyan-500/5">
+    <section className="bg-[var(--c-080c14)] py-24 px-6">
+      <div className="mx-auto max-w-4xl rounded-3xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/10 to-[var(--c-0f1420)] p-12 text-center shadow-2xl shadow-cyan-500/5">
         <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/20">
           <Shield className="h-7 w-7 text-cyan-400" />
         </div>
@@ -614,7 +614,7 @@ function CTA() {
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <a
             href="#"
-            className="flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-8 py-3.5 text-base font-semibold text-[#080c14] hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20"
+            className="flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-8 py-3.5 text-base font-semibold text-[var(--c-080c14)] hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20"
           >
             Start free trial
             <ArrowRight className="h-4 w-4" />
@@ -642,14 +642,14 @@ function Footer() {
   };
 
   return (
-    <footer className="border-t border-white/10 bg-[#080c14] px-6 pt-16 pb-10">
+    <footer className="border-t border-white/10 bg-[var(--c-080c14)] px-6 pt-16 pb-10">
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500">
-                <Shield className="h-4 w-4 text-[#080c14]" strokeWidth={2.5} />
+                <Shield className="h-4 w-4 text-[var(--c-080c14)]" strokeWidth={2.5} />
               </div>
               <span className="text-lg font-bold text-white">Roxy</span>
             </div>
@@ -693,7 +693,7 @@ function Footer() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export function RoxyLandingPage() {
   return (
-    <div className="min-h-screen bg-[#080c14] text-white antialiased">
+    <div className="min-h-screen bg-[var(--c-080c14)] text-white antialiased">
       <Nav />
       <main>
         <Hero />

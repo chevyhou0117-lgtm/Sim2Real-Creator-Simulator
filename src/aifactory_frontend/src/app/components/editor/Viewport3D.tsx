@@ -40,13 +40,13 @@ function ViewportToolbar() {
     <>
       {/* 快捷键提示浮层 — fixed定位，不影响布局 */}
       {hint && (
-        <div className="fixed left-[4.5rem] top-1/2 -translate-y-1/2 ml-2 bg-[#0f2638] border border-blue-500/30 rounded-md px-3 py-1.5 text-xs text-blue-300 whitespace-nowrap shadow-lg z-[9999] pointer-events-none">
+        <div className="fixed left-[4.5rem] top-1/2 -translate-y-1/2 ml-2 bg-[var(--c-0f2638)] border border-blue-500/30 rounded-md px-3 py-1.5 text-xs text-blue-300 whitespace-nowrap shadow-lg z-[9999] pointer-events-none">
           {hint}
         </div>
       )}
 
       <div
-        className="absolute left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 bg-[#071526]/90 border border-[#142235] rounded-lg p-1.5 backdrop-blur-sm z-10"
+        className="absolute left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 bg-[var(--c-071526)]/90 border border-[var(--c-142235)] rounded-lg p-1.5 backdrop-blur-sm z-10"
         onClick={(e) => {
           console.log("Toolbar container clicked", e.target);
           e.stopPropagation();
@@ -66,7 +66,7 @@ function ViewportToolbar() {
           className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${
             activeTool === id
               ? "bg-blue-600/30 text-blue-400"
-              : "text-slate-500 hover:text-slate-200 hover:bg-[#142235]"
+              : "text-slate-500 hover:text-slate-200 hover:bg-[var(--c-142235)]"
           }`}
         >
           <Icon size={13} />
@@ -74,7 +74,7 @@ function ViewportToolbar() {
       ))}
 
       {/* Divider */}
-      <div className="my-0.5 border-t border-[#142235]" />
+      <div className="my-0.5 border-t border-[var(--c-142235)]" />
 
       {/* Play / Pause toggle */}
       <button
@@ -87,7 +87,7 @@ function ViewportToolbar() {
         className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${
           playing
             ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
-            : "text-slate-500 hover:text-slate-200 hover:bg-[#142235]"
+            : "text-slate-500 hover:text-slate-200 hover:bg-[var(--c-142235)]"
         }`}
       >
         {playing ? <Pause size={13} /> : <Play size={13} />}
@@ -133,7 +133,7 @@ function FloorNavPanel() {
       }}
     >
       {/* View mode toggle */}
-      <div className="bg-[#071526]/90 border border-[#142235] rounded-lg p-1 backdrop-blur-sm flex">
+      <div className="bg-[var(--c-071526)]/90 border border-[var(--c-142235)] rounded-lg p-1 backdrop-blur-sm flex">
         {(["3d", "2d"] as const).map((mode) => (
           <button
             type="button"
@@ -154,14 +154,14 @@ function FloorNavPanel() {
       </div>
 
       {/* Floors */}
-      <div className="bg-[#071526]/90 border border-[#142235] rounded-lg backdrop-blur-sm overflow-hidden">
+      <div className="bg-[var(--c-071526)]/90 border border-[var(--c-142235)] rounded-lg backdrop-blur-sm overflow-hidden">
         <button
           type="button"
           onClick={() => {
             console.log("Floors toggle clicked");
             setFloorsOpen((v) => !v);
           }}
-          className="w-full flex items-center justify-between px-2.5 py-1.5 text-[9px] font-semibold text-slate-400 uppercase tracking-wider hover:bg-[#142235] transition-colors"
+          className="w-full flex items-center justify-between px-2.5 py-1.5 text-[9px] font-semibold text-slate-400 uppercase tracking-wider hover:bg-[var(--c-142235)] transition-colors"
         >
           Floors
           <svg
@@ -189,7 +189,7 @@ function FloorNavPanel() {
                 className={`w-full text-left px-2 py-1 text-[10px] rounded transition-colors ${
                   activeFloor === floor.id
                     ? "bg-blue-600/20 text-blue-300"
-                    : "text-slate-500 hover:text-slate-300 hover:bg-[#142235]"
+                    : "text-slate-500 hover:text-slate-300 hover:bg-[var(--c-142235)]"
                 }`}
               >
                 {floor.label}
@@ -200,14 +200,14 @@ function FloorNavPanel() {
       </div>
 
       {/* Overlays */}
-      <div className="bg-[#071526]/90 border border-[#142235] rounded-lg backdrop-blur-sm overflow-hidden">
+      <div className="bg-[var(--c-071526)]/90 border border-[var(--c-142235)] rounded-lg backdrop-blur-sm overflow-hidden">
         <button
           type="button"
           onClick={() => {
             console.log("Overlays toggle clicked");
             setOverlaysOpen((v) => !v);
           }}
-          className="w-full flex items-center justify-between px-2.5 py-1.5 text-[9px] font-semibold text-slate-400 uppercase tracking-wider hover:bg-[#142235] transition-colors"
+          className="w-full flex items-center justify-between px-2.5 py-1.5 text-[9px] font-semibold text-slate-400 uppercase tracking-wider hover:bg-[var(--c-142235)] transition-colors"
         >
           Overlays
           <svg
@@ -227,7 +227,7 @@ function FloorNavPanel() {
             {OVERLAYS.map(({ id, label, icon: Icon }) => (
               <label
                 key={id}
-                className="flex items-center gap-1.5 px-2 py-1 text-[10px] text-slate-500 hover:text-slate-300 cursor-pointer rounded hover:bg-[#142235] transition-colors"
+                className="flex items-center gap-1.5 px-2 py-1 text-[10px] text-slate-500 hover:text-slate-300 cursor-pointer rounded hover:bg-[var(--c-142235)] transition-colors"
               >
                 <Icon size={10} />
                 <span>{label}</span>
@@ -290,10 +290,10 @@ export function Viewport3D({
   };
 
   return (
-    <div className="w-full h-full relative flex flex-col overflow-hidden bg-[#07111e]">
+    <div className="w-full h-full relative flex flex-col overflow-hidden bg-[var(--c-07111e)]">
       {/* ── Breadcrumb bar ── */}
       {breadcrumb.length > 0 && (
-        <div className="flex-shrink-0 flex items-center gap-1 px-3 py-1 bg-[#050f1a]/80 border-b border-[#142235]">
+        <div className="flex-shrink-0 flex items-center gap-1 px-3 py-1 bg-[var(--c-050f1a)]/80 border-b border-[var(--c-142235)]">
           {breadcrumb.map((crumb, i) => {
             const isLast = i === breadcrumb.length - 1;
             const viewLabel: Record<string, string> = {
@@ -372,21 +372,21 @@ export function Viewport3D({
       </div>
 
       {/* ── Status bar ── */}
-      <div className="flex-shrink-0 h-6 bg-[#050f1a]/90 border-t border-[#142235] flex items-center px-3 gap-4 text-[10px] text-slate-600">
+      <div className="flex-shrink-0 h-6 bg-[var(--c-050f1a)]/90 border-t border-[var(--c-142235)] flex items-center px-3 gap-4 text-[10px] text-slate-600">
         {selectedNode && (
           <>
             <span className="flex items-center gap-1">
               <span className="text-slate-500">Selected:</span>
               <span className="text-slate-300">{selectedNode.name}</span>
             </span>
-            <span className="text-[#142235]">|</span>
+            <span className="text-[var(--c-142235)]">|</span>
             <span className="flex items-center gap-1">
               <span className="text-slate-500">Type:</span>
               <span className="text-blue-400 capitalize">
                 {selectedNode.type}
               </span>
             </span>
-            <span className="text-[#142235]">|</span>
+            <span className="text-[var(--c-142235)]">|</span>
             <span className="flex items-center gap-1">
               <span className="text-slate-500">View:</span>
               <span className="text-emerald-400 capitalize">

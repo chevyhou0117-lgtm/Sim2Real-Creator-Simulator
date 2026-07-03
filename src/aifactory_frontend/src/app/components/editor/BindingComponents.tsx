@@ -43,7 +43,7 @@ export function RuleBindingEntry({
 
   if (locked) {
     return (
-      <div className="flex items-center justify-between py-1.5 px-2 rounded border border-[#142235] bg-[#040d18]/50">
+      <div className="flex items-center justify-between py-1.5 px-2 rounded border border-[var(--c-142235)] bg-[var(--c-040d18)]/50">
         <div className="flex items-center gap-1.5 text-slate-600">
           <span className="text-[9px]">{icon}</span>
           <span className="text-[10px]">{label}</span>
@@ -69,7 +69,7 @@ export function RuleBindingEntry({
 
   if (configuredCount === 0) {
     return (
-      <div className="flex items-center justify-between py-1.5 px-2 rounded border border-[#142235] bg-[#040d18]/50">
+      <div className="flex items-center justify-between py-1.5 px-2 rounded border border-[var(--c-142235)] bg-[var(--c-040d18)]/50">
         <div className="flex items-center gap-1.5 text-slate-500">
           <span className="text-[9px]">{icon}</span>
           <span className="text-[10px]">{label}</span>
@@ -219,7 +219,7 @@ export function DataBindingSection({
         </button>
         <button
           onClick={() => setShowUnbindConfirm(false)}
-          className="flex-1 py-1 bg-[#071526] border border-[#1e3a55] rounded text-[10px] text-slate-400 hover:bg-[#0e243a] transition-colors"
+          className="flex-1 py-1 bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-400 hover:bg-[var(--c-0e243a)] transition-colors"
         >
           {t("bindingComponents.dataBindingSection.cancel")}
         </button>
@@ -248,20 +248,20 @@ export function DataBindingSection({
             </span>
           </div>
           <div className="space-y-0.5">
-            <div className="flex items-center justify-between py-1 border-b border-[#142235]/60">
+            <div className="flex items-center justify-between py-1 border-b border-[var(--c-142235)]/60">
               <span className="text-[10px] text-slate-500">{t("bindingComponents.dataBindingSection.externalId")}</span>
               <span className="text-[10px] text-slate-200 text-right max-w-[55%] truncate">
                 {bindingRecord?.externalId}
               </span>
             </div>
-            <div className="flex items-center justify-between py-1 border-b border-[#142235]/60">
+            <div className="flex items-center justify-between py-1 border-b border-[var(--c-142235)]/60">
               <span className="text-[10px] text-slate-500">{t("bindingComponents.dataBindingSection.sourceName")}</span>
               <span className="text-[10px] text-slate-200 text-right max-w-[55%] truncate">
                 {bindingRecord?.externalName}
               </span>
             </div>
             {bindingRecord?.lastSync && (
-              <div className="flex items-center justify-between py-1 border-b border-[#142235]/60">
+              <div className="flex items-center justify-between py-1 border-b border-[var(--c-142235)]/60">
                 <span className="text-[10px] text-slate-500">{t("bindingComponents.dataBindingSection.lastSync")}</span>
                 <span className="text-[10px] text-slate-200 text-right max-w-[55%] truncate">
                   {bindingRecord?.lastSync}
@@ -355,13 +355,13 @@ export function DataBindingSection({
           </span>
         </div>
         <div className="space-y-0.5">
-          <div className="flex items-center justify-between py-1 border-b border-[#142235]/60">
+          <div className="flex items-center justify-between py-1 border-b border-[var(--c-142235)]/60">
             <span className="text-[10px] text-slate-500">{t("bindingComponents.dataBindingSection.externalId")}</span>
             <span className="text-[10px] text-slate-200 text-right max-w-[55%] truncate">
               {bindingRecord?.externalId}
             </span>
           </div>
-          <div className="flex items-center justify-between py-1 border-b border-[#142235]/60">
+          <div className="flex items-center justify-between py-1 border-b border-[var(--c-142235)]/60">
             <span className="text-[10px] text-slate-500">{t("bindingComponents.dataBindingSection.lastSync")}</span>
             <span className="text-[10px] text-slate-200 text-right max-w-[55%] truncate">
               {bindingRecord?.lastSync}
@@ -492,10 +492,10 @@ export function BindPickerModal({
       onClick={onClose}
     >
       <div
-        className="bg-[#07111e] border border-[#1e3a55] rounded-xl shadow-2xl w-96 max-h-[70vh] flex flex-col overflow-hidden"
+        className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-xl shadow-2xl w-96 max-h-[70vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#142235]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--c-142235)]">
           <div>
             <div className="text-[12px] font-semibold text-slate-200">
               {t("bindingComponents.bindPickerModal.title")}
@@ -506,14 +506,14 @@ export function BindPickerModal({
           </div>
           <button
             onClick={onClose}
-            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-200 hover:bg-[#142235] rounded transition-colors"
+            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-200 hover:bg-[var(--c-142235)] rounded transition-colors"
           >
             <X size={12} />
           </button>
         </div>
 
         <div className="px-4 pt-3 pb-2">
-          <div className="flex items-center gap-2 bg-[#040d18] border border-[#1e3a55] rounded px-2.5 py-1.5">
+          <div className="flex items-center gap-2 bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded px-2.5 py-1.5">
             <Search size={11} className="text-slate-500 flex-shrink-0" />
             <input
               value={search}
@@ -530,7 +530,7 @@ export function BindPickerModal({
             <button
               key={rec.id}
               onClick={() => onSelect(rec)}
-              className="w-full text-left bg-[#040d18] border border-[#1e3a55] rounded-lg p-3 hover:border-blue-500/50 hover:bg-blue-500/5 transition-colors group"
+              className="w-full text-left bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded-lg p-3 hover:border-blue-500/50 hover:bg-blue-500/5 transition-colors group"
             >
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[11px] font-medium text-slate-200 group-hover:text-blue-300 transition-colors">
@@ -584,8 +584,8 @@ export function ConflictDiffModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#07111e] border border-[#1e3a55] rounded-xl shadow-2xl w-[420px] flex flex-col overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#142235] flex items-start gap-2.5">
+      <div className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-xl shadow-2xl w-[420px] flex flex-col overflow-hidden">
+        <div className="px-4 py-3 border-b border-[var(--c-142235)] flex items-start gap-2.5">
           <AlertCircle
             size={15}
             className="text-amber-400 flex-shrink-0 mt-0.5"
@@ -601,7 +601,7 @@ export function ConflictDiffModal({
         </div>
 
         <div className="px-4 py-3 max-h-60 overflow-y-auto">
-          <div className="grid grid-cols-3 gap-2 text-[9px] text-slate-500 pb-1.5 border-b border-[#142235] mb-1">
+          <div className="grid grid-cols-3 gap-2 text-[9px] text-slate-500 pb-1.5 border-b border-[var(--c-142235)] mb-1">
             <span>{t("bindingComponents.conflictDiffModal.fieldHeader")}</span>
             <span>{t("bindingComponents.conflictDiffModal.currentValueHeader")}</span>
             <span>{t("bindingComponents.conflictDiffModal.platformValueHeader")}</span>
@@ -609,7 +609,7 @@ export function ConflictDiffModal({
           {conflictState.conflicts.map((c) => (
             <div
               key={c.field}
-              className="grid grid-cols-3 gap-2 text-[10px] py-1.5 border-b border-[#142235]/40"
+              className="grid grid-cols-3 gap-2 text-[10px] py-1.5 border-b border-[var(--c-142235)]/40"
             >
               <span className="text-slate-400">{c.label}</span>
               <span className="text-slate-500 line-through">
@@ -622,7 +622,7 @@ export function ConflictDiffModal({
           ))}
         </div>
 
-        <div className="px-4 py-3 border-t border-[#142235] flex gap-2">
+        <div className="px-4 py-3 border-t border-[var(--c-142235)] flex gap-2">
           <button
             onClick={() => onConfirm(conflictState.platformRecord)}
             className="flex-1 py-1.5 bg-blue-600/25 border border-blue-500/50 rounded text-[11px] text-blue-300 hover:bg-blue-600/40 transition-colors"
@@ -631,7 +631,7 @@ export function ConflictDiffModal({
           </button>
           <button
             onClick={onCancel}
-            className="flex-1 py-1.5 bg-[#071526] border border-[#1e3a55] rounded text-[11px] text-slate-400 hover:bg-[#0e243a] transition-colors"
+            className="flex-1 py-1.5 bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded text-[11px] text-slate-400 hover:bg-[var(--c-0e243a)] transition-colors"
           >
             {t("bindingComponents.conflictDiffModal.cancel")}
           </button>
@@ -657,8 +657,8 @@ export function LineMismatchModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#07111e] border border-[#1e3a55] rounded-xl shadow-2xl w-[400px] flex flex-col overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#142235] flex items-start gap-2.5">
+      <div className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-xl shadow-2xl w-[400px] flex flex-col overflow-hidden">
+        <div className="px-4 py-3 border-b border-[var(--c-142235)] flex items-start gap-2.5">
           <AlertCircle
             size={15}
             className="text-amber-400 flex-shrink-0 mt-0.5"
@@ -690,7 +690,7 @@ export function LineMismatchModal({
             {t("bindingComponents.lineMismatchModal.suggestionPart2")}
           </p>
         </div>
-        <div className="px-4 py-3 border-t border-[#142235] flex justify-end">
+        <div className="px-4 py-3 border-t border-[var(--c-142235)] flex justify-end">
           <button
             onClick={onClose}
             className="px-4 py-1.5 bg-blue-600/25 border border-blue-500/50 rounded text-[11px] text-blue-300 hover:bg-blue-600/40 transition-colors"

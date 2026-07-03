@@ -53,7 +53,7 @@ docker compose -f docker/docker-compose.demo.yml logs -f sim-backend
 
 ## 4. 已知限制与排障（本机演示口径）
 
-- **「重启 Kit」按钮在容器内失效**：`admin.py` 用 `pgrep/os.kill/setsid` 操作宿主 Kit 进程，容器看不到宿主 PID。**只影响这个按钮，不影响串流本身**。需要它就手动在宿主重启 Kit，或后续把 watchdog 改成调宿主 agent。
+- **「重启 Kit」按钮已移除**：容器化后该按钮触发的 Kit 重启会丢失 WebRTC 串流（需手动刷新页面才恢复），效果不佳，已删（连同后端 `/admin/kit/*` 端点）。Kit 卡死时直接 `docker restart <kit 容器名>` 即可。
 - **sim 与 aifactory 用的是两个不同的 Kit 端口**：sim 前端连 Kit `:8233`（由 `docker/.env` 的 `KIT_API_PORT` 控制，运行期注入 `runtime-config.js`，改后 `up -d` 即可，无需 rebuild）；aifactory 前端的 `/ov` 走自己 nginx 反代到固定的 `:8011`（写死在 [aifactory_frontend/nginx.conf](../src/aifactory_frontend/nginx.conf)，要改需 rebuild）。两者勿混用。`/ov` + `/kit/playback` 实际端口以你运行的 Kit 扩展为准。
 - **Kit 的 CORS**：前端从 `:8080` 跨域调 Kit，需 Kit 扩展放行该源。Kit 在本仓库之外，需在 Kit 侧确认。
 - **直连 WebRTC 配置**：sim 前端已改为像 aifactory 那样直接连 Kit 的 WebRTC（移植 `@nvidia/omniverse-webrtc-streaming-library`，见 [src/components/composer/AppStream.tsx](../源码/sim_frontend/src/components/composer/AppStream.tsx) + [KitViewport.tsx](../源码/sim_frontend/src/components/KitViewport.tsx)）。`mediaPort` 12333 / `signalingPort` 12334；[源码/sim_frontend/stream.config.json](../源码/sim_frontend/stream.config.json) 的 `local.server`(默认 127.0.0.1) 仅作 dev/回退默认。`VITE_KIT_STREAM_URL` 现在只作开关（非空=启用，留空=2D mock）。**远程多机：改 `docker/.env` 的 `KIT_HOST_IP` 为 Kit 宿主 IP 后 `up -d` 重建前端容器即可（启动时运行期注入 `runtime-config.js`，无需 rebuild、无需手改 `stream.config.json`）。**

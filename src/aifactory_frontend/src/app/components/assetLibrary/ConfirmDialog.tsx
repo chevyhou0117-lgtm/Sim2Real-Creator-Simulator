@@ -14,18 +14,18 @@ interface ConfirmDialogProps {
 export function ConfirmDialog({ title, message, onConfirm, onCancel, confirmLabel, confirmCls, loading }: ConfirmDialogProps) {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[380px] shadow-2xl">
-        <div className="px-5 py-4 border-b border-[#142235]">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[380px] shadow-2xl">
+        <div className="px-5 py-4 border-b border-[var(--c-142235)]">
           <span className="text-sm font-semibold text-slate-100">{title}</span>
         </div>
         <div className="px-5 py-4">
           <p className="text-xs text-slate-400 leading-relaxed">{message}</p>
         </div>
-        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[#142235]">
+        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[var(--c-142235)]">
           <button
             onClick={onCancel}
             disabled={loading}
-            className="px-4 py-2 text-xs text-slate-400 border border-[#1e3a55] rounded-md hover:border-[#2a4a6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-xs text-slate-400 border border-[var(--c-1e3a55)] rounded-md hover:border-[var(--c-2a4a6a)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>

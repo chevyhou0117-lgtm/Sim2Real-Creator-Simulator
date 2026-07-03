@@ -9,15 +9,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       style={
         {
-          "--normal-bg": "#0b1d30",
+          "--normal-bg": "var(--c-0b1d30)",
           "--normal-text": "#e2e8f0",
-          "--normal-border": "#1e3a55",
-          "--error-bg": "#2c1010",
+          "--normal-border": "var(--c-1e3a55)",
+          "--error-bg": "var(--c-2c1010)",
           "--error-text": "#fca5a5",
           "--error-border": "#7f1d1d",
-          "--success-bg": "#0f2716",
+          "--success-bg": "var(--c-0f2716)",
           "--success-text": "#86efac",
-          "--success-border": "#166534",
+          "--success-border": "var(--c-166534)",
         } as React.CSSProperties
       }
       position="top-center"

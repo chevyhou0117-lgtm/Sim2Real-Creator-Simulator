@@ -50,7 +50,7 @@ function NewPlanModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
   const [desc, setDesc] = useState('');
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-2xl p-6 w-[440px] shadow-2xl">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-2xl p-6 w-[440px] shadow-2xl">
         <h2 className="text-base font-semibold text-slate-200 mb-1">{t('New Simulation Plan')}</h2>
         <p className="text-xs text-slate-500 mb-5">{t('Enter a name to proceed to the config page, where you can select the simulation type')}</p>
         <div className="space-y-4">
@@ -61,7 +61,7 @@ function NewPlanModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
               value={desc}
               onChange={e => setDesc(e.target.value)}
               placeholder={t('Describe the purpose and background of this simulation')}
-              className="bg-[#07111e] border border-[#1e3a55] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60 placeholder:text-slate-600 resize-none h-20"
+              className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60 placeholder:text-slate-600 resize-none h-20"
             />
           </div>
         </div>
@@ -86,7 +86,7 @@ function DeleteConfirmModal({ title, warning, strong, onClose, onConfirm }: {
   const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-2xl p-6 w-[420px] shadow-2xl">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-2xl p-6 w-[420px] shadow-2xl">
         <h2 className="text-base font-semibold text-slate-200 mb-2">{title}</h2>
         <p className={cn('text-xs leading-relaxed', strong ? 'text-amber-300' : 'text-slate-400')}>
           {warning}
@@ -189,7 +189,7 @@ export function PlanListPage() {
           { label: 'Completed', value: plans.filter(p => p.status === 'COMPLETED').length, color: 'text-emerald-400' },
           { label: 'Archived', value: plans.filter(p => p.status === 'ARCHIVED').length, color: 'text-purple-400' },
         ].map((s) => (
-          <div key={s.label} className="bg-[#0b1d30] border border-[#142235] rounded-xl px-4 py-3">
+          <div key={s.label} className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl px-4 py-3">
             <div className={cn('text-2xl font-bold', s.color)}>{s.value}</div>
             <div className="text-[11px] text-slate-600 mt-0.5">{t(s.label)}</div>
           </div>
@@ -197,7 +197,7 @@ export function PlanListPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-[#0b1d30] border border-[#142235] rounded-xl px-5 py-4">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl px-5 py-4">
         <div className="flex items-center gap-3 flex-wrap">
           {/* Search */}
           <div className="relative flex-1 min-w-48">
@@ -206,7 +206,7 @@ export function PlanListPage() {
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
               placeholder={t('Search by plan name or creator...')}
-              className="w-full bg-[#07111e] border border-[#1e3a55] rounded-lg pl-8 pr-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60 placeholder:text-slate-600"
+              className="w-full bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg pl-8 pr-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60 placeholder:text-slate-600"
             />
           </div>
 
@@ -220,7 +220,7 @@ export function PlanListPage() {
                   'px-3 py-1.5 rounded-lg text-xs font-medium transition-all border',
                   statusFilter === opt.value
                     ? 'bg-blue-600/20 text-blue-400 border-blue-500/30'
-                    : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-[#0d2035]',
+                    : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-[var(--c-0d2035)]',
                 )}
               >
                 {t(opt.label)}
@@ -253,12 +253,12 @@ export function PlanListPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-[#0b1d30] border border-[#142235] rounded-xl overflow-hidden">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#142235] bg-[#0a1929]">
+            <tr className="border-b border-[var(--c-142235)] bg-[var(--c-0a1929)]">
               <th className="w-10 px-4 py-3">
-                <input type="checkbox" className="rounded border-[#1e3a55] bg-[#07111e] accent-blue-500"
+                <input type="checkbox" className="rounded border-[var(--c-1e3a55)] bg-[var(--c-07111e)] accent-blue-500"
                   checked={filteredPlans.length > 0 && selected.length === filteredPlans.length}
                   onChange={() => setSelected(prev => prev.length === filteredPlans.length ? [] : filteredPlans.map(p => p.id))} />
               </th>
@@ -271,7 +271,7 @@ export function PlanListPage() {
               <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{t('Actions')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#0e1e2e]">
+          <tbody className="divide-y divide-[var(--c-0e1e2e)]">
             {filteredPlans.length === 0 ? (
               <tr>
                 <td colSpan={8} className="text-center py-16 text-slate-600 text-sm">
@@ -284,14 +284,14 @@ export function PlanListPage() {
                 return (
                   <tr
                     key={plan.id}
-                    className="hover:bg-[#0d2035]/50 transition-colors group"
+                    className="hover:bg-[var(--c-0d2035)]/50 transition-colors group"
                   >
                     <td className="px-4 py-3">
                       <input
                         type="checkbox"
                         checked={selected.includes(plan.id)}
                         onChange={() => toggleSelect(plan.id)}
-                        className="rounded border-[#1e3a55] bg-[#07111e] accent-blue-500"
+                        className="rounded border-[var(--c-1e3a55)] bg-[var(--c-07111e)] accent-blue-500"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -308,7 +308,7 @@ export function PlanListPage() {
                       {plan.tags && plan.tags.length > 0 && (
                         <div className="flex gap-1 mt-1">
                           {plan.tags.map(tag => (
-                            <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[#0a1929] rounded text-slate-600">{tag}</span>
+                            <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[var(--c-0a1929)] rounded text-slate-600">{tag}</span>
                           ))}
                         </div>
                       )}
@@ -344,7 +344,7 @@ export function PlanListPage() {
         </table>
 
         {/* Pagination */}
-        <div className="border-t border-[#142235] px-5 py-3 flex items-center justify-between">
+        <div className="border-t border-[var(--c-142235)] px-5 py-3 flex items-center justify-between">
           <span className="text-[11px] text-slate-600">{t('{{count}} items total', { count: filteredPlans.length })}</span>
           <div className="flex items-center gap-1">
             {[1].map(p => (
@@ -464,18 +464,18 @@ function PlanActions({ plan, navigate, onRefresh }: { plan: SimPlan; navigate: R
         <div
           ref={menuRef}
           style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
-          className="z-50 bg-[#0b1d30] border border-[#1e3a55] rounded-xl shadow-xl w-36 py-1"
+          className="z-50 bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl shadow-xl w-36 py-1"
         >
           {['DRAFT','READY','COMPLETED','FAILED'].includes(plan.status) && (
-            <button onClick={handleArchive} className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-[#0d2035] flex items-center gap-2">
+            <button onClick={handleArchive} className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-[var(--c-0d2035)] flex items-center gap-2">
               <Archive size={12} /> {t('Archive')}
             </button>
           )}
-          <button onClick={handleCopy} className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-[#0d2035] flex items-center gap-2">
+          <button onClick={handleCopy} className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-[var(--c-0d2035)] flex items-center gap-2">
             {t('Duplicate Plan')}
           </button>
           {plan.status !== 'RUNNING' && plan.status !== 'ARCHIVED' && (
-            <button onClick={() => { setOpen(false); setConfirmOpen(true); }} className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-[#0d2035] flex items-center gap-2">
+            <button onClick={() => { setOpen(false); setConfirmOpen(true); }} className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-[var(--c-0d2035)] flex items-center gap-2">
               <Trash2 size={12} /> {t('Delete')}
             </button>
           )}

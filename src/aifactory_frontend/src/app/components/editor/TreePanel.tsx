@@ -44,10 +44,10 @@ function ErrorDot({ message }: { message: string }) {
       {pos &&
         createPortal(
           <div
-            className="fixed z-[9999] w-60 bg-[#0c1c2e] border border-red-600/50 rounded-lg shadow-2xl p-3 pointer-events-none"
+            className="fixed z-[9999] w-60 bg-[var(--c-0c1c2e)] border border-red-600/50 rounded-lg shadow-2xl p-3 pointer-events-none"
             style={{ left: pos.x, top: pos.y - 4 }}
           >
-            <div className="absolute -left-[5px] top-3 w-2.5 h-2.5 bg-[#0c1c2e] border-l border-b border-red-600/50 rotate-45" />
+            <div className="absolute -left-[5px] top-3 w-2.5 h-2.5 bg-[var(--c-0c1c2e)] border-l border-b border-red-600/50 rotate-45" />
             <div className="flex items-center gap-1.5 mb-1.5">
               <AlertCircle size={11} className="text-red-400 flex-shrink-0" />
               <span className="text-[10px] font-semibold text-red-300 uppercase tracking-wide">
@@ -235,10 +235,10 @@ export function TreeNode({
             node.type !== "FACTORY" && node.bindStatus === "BIND_FAILED"
               ? isSelected
                 ? "bg-blue-600/20 text-red-300"
-                : "text-red-400 hover:text-red-300 hover:bg-[#0f2035]"
+                : "text-red-400 hover:text-red-300 hover:bg-[var(--c-0f2035)]"
               : isSelected
                 ? "bg-blue-600/20 text-blue-300"
-                : "text-slate-400 hover:text-slate-200 hover:bg-[#0f2035]"
+                : "text-slate-400 hover:text-slate-200 hover:bg-[var(--c-0f2035)]"
           }
         `}
         style={{ paddingLeft: `${8 + depth * 12}px` }}
@@ -335,7 +335,7 @@ export function TreeNode({
               onClick={() => setCtxMenu(null)}
             />
             <div
-              className="fixed z-50 bg-[#0d1f33] border border-[#1e3a55] rounded-lg shadow-xl py-1 text-[11px] min-w-[140px]"
+              className="fixed z-50 bg-[var(--c-0d1f33)] border border-[var(--c-1e3a55)] rounded-lg shadow-xl py-1 text-[11px] min-w-[140px]"
               style={{ left: ctxMenu.x, top: ctxMenu.y }}
             >
               <button
@@ -343,17 +343,17 @@ export function TreeNode({
                   onDrillIn(node.id);
                   setCtxMenu(null);
                 }}
-                className="w-full text-left px-3 py-1.5 text-blue-300 hover:bg-[#142235] flex items-center gap-2"
+                className="w-full text-left px-3 py-1.5 text-blue-300 hover:bg-[var(--c-142235)] flex items-center gap-2"
               >
                 <Maximize2 size={10} />
                 {node.type === "LINE"
                   ? "Enter Line View"
                   : "Enter Equipment View"}
               </button>
-              <div className="my-1 border-t border-[#142235]" />
+              <div className="my-1 border-t border-[var(--c-142235)]" />
               <button
                 onClick={() => setCtxMenu(null)}
-                className="w-full text-left px-3 py-1.5 text-slate-400 hover:bg-[#142235] flex items-center gap-2"
+                className="w-full text-left px-3 py-1.5 text-slate-400 hover:bg-[var(--c-142235)] flex items-center gap-2"
               >
                 <Copy size={10} /> 复制
               </button>
@@ -362,7 +362,7 @@ export function TreeNode({
                   setCtxMenu(null);
                   setShowDeleteConfirm(true);
                 }}
-                className="w-full text-left px-3 py-1.5 text-red-400 hover:bg-[#142235] flex items-center gap-2"
+                className="w-full text-left px-3 py-1.5 text-red-400 hover:bg-[var(--c-142235)] flex items-center gap-2"
               >
                 <Trash2 size={10} /> 删除
               </button>
@@ -379,7 +379,7 @@ export function TreeNode({
               className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
               onClick={() => setShowDeleteConfirm(false)}
             />
-            <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#0d1f33] border border-[#1e3a55] rounded-xl shadow-2xl p-5 w-80">
+            <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[var(--c-0d1f33)] border border-[var(--c-1e3a55)] rounded-xl shadow-2xl p-5 w-80">
               <div className="flex items-center gap-2.5 mb-3">
                 <div className="w-8 h-8 rounded-full bg-red-500/15 flex items-center justify-center flex-shrink-0">
                   <Trash2 size={14} className="text-red-400" />
@@ -395,7 +395,7 @@ export function TreeNode({
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-1.5 text-xs text-slate-400 hover:text-slate-200 border border-[#1e3a55] rounded-md hover:border-[#2a4a6a] transition-colors"
+                  className="px-4 py-1.5 text-xs text-slate-400 hover:text-slate-200 border border-[var(--c-1e3a55)] rounded-md hover:border-[var(--c-2a4a6a)] transition-colors"
                 >
                   取消
                 </button>
@@ -422,7 +422,7 @@ export function TreeNode({
               className="fixed inset-0 z-50 bg-black/50"
               onClick={resetAddStageDialog}
             />
-            <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#0d1f33] border border-[#1e3a55] rounded-lg shadow-2xl p-4 w-80">
+            <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[var(--c-0d1f33)] border border-[var(--c-1e3a55)] rounded-lg shadow-2xl p-4 w-80">
               <h3 className="text-sm font-medium text-slate-200 mb-3">
                 Add Stage
               </h3>
@@ -431,7 +431,7 @@ export function TreeNode({
                 value={stageName}
                 onChange={(e) => setStageName(e.target.value)}
                 placeholder="Stage name *"
-                className="w-full bg-[#0b1d30] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/60 mb-2"
+                className="w-full bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/60 mb-2"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && stageName.trim()) {
@@ -447,7 +447,7 @@ export function TreeNode({
                 value={stageCode}
                 onChange={(e) => setStageCode(e.target.value)}
                 placeholder="Stage code (optional)"
-                className="w-full bg-[#0b1d30] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/60 mb-2"
+                className="w-full bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/60 mb-2"
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {
                     resetAddStageDialog();
@@ -459,7 +459,7 @@ export function TreeNode({
                 onChange={(e) => setStageDescription(e.target.value)}
                 placeholder="Description (optional)"
                 rows={2}
-                className="w-full bg-[#0b1d30] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/60 mb-3 resize-none"
+                className="w-full bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/60 mb-3 resize-none"
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {
                     resetAddStageDialog();

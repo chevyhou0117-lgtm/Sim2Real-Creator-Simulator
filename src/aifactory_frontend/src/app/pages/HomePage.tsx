@@ -333,12 +333,12 @@ export function HomePage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#07111e] text-slate-100 overflow-hidden select-none">
+    <div className="flex h-screen bg-[var(--c-07111e)] text-slate-100 overflow-hidden select-none">
       <NavSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="h-11 bg-[#07111e] border-b border-[#142235] flex items-center px-6 flex-shrink-0">
+        <header className="h-11 bg-[var(--c-07111e)] border-b border-[var(--c-142235)] flex items-center px-6 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center">
               <Layers3 size={13} />
@@ -361,7 +361,7 @@ export function HomePage() {
             {stats.map((s) => (
               <div
                 key={s.label}
-                className="bg-[#0b1d30] border border-[#142235] rounded-lg p-4 flex items-center gap-4"
+                className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-lg p-4 flex items-center gap-4"
               >
                 <div
                   className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${s.bg} ${s.color}`}
@@ -398,7 +398,7 @@ export function HomePage() {
                   label: t("home.browseAssetLibrary"),
                   sub: t("home.browseAssetLibrary"),
                   color:
-                    "bg-[#0b1d30] hover:bg-[#0e243a] border border-[#1e3a55]",
+                    "bg-[var(--c-0b1d30)] hover:bg-[var(--c-0e243a)] border border-[var(--c-1e3a55)]",
                   onClick: handleBrowseAssets,
                 },
                 {
@@ -406,7 +406,7 @@ export function HomePage() {
                   label: t("home.integrationConfig"),
                   sub: t("home.integrationConfig"),
                   color:
-                    "bg-[#0b1d30] hover:bg-[#0e243a] border border-[#1e3a55]",
+                    "bg-[var(--c-0b1d30)] hover:bg-[var(--c-0e243a)] border border-[var(--c-1e3a55)]",
                   onClick: handleIntegrationConfig,
                 },
                 {
@@ -414,7 +414,7 @@ export function HomePage() {
                   label: t("home.systemAdmin"),
                   sub: t("home.systemAdmin"),
                   color:
-                    "bg-[#0b1d30] hover:bg-[#0e243a] border border-[#1e3a55]",
+                    "bg-[var(--c-0b1d30)] hover:bg-[var(--c-0e243a)] border border-[var(--c-1e3a55)]",
                   onClick: handleSystemAdmin,
                 },
               ].map((a) => (
@@ -446,7 +446,7 @@ export function HomePage() {
                   <div
                     key={cat?.id}
                     onClick={() => handleBrowseAssetsByCategory(cat)}
-                    className="bg-[#0b1d30] border border-[#142235] rounded-lg overflow-hidden cursor-pointer hover:border-blue-500/50 hover:bg-[#0e243a] transition-all group"
+                    className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-lg overflow-hidden cursor-pointer hover:border-blue-500/50 hover:bg-[var(--c-0e243a)] transition-all group"
                   >
                     <div className="h-24 relative overflow-hidden">
                       {cat?.thumbnailPath ? (
@@ -455,11 +455,11 @@ export function HomePage() {
                           className="w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
                         />
                       ) : (
-                        <div className="w-full h-full bg-[#040d18] flex items-center justify-center">
+                        <div className="w-full h-full bg-[var(--c-040d18)] flex items-center justify-center">
                           <Layers3 size={32} className="text-slate-700" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0b1d30] via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--c-0b1d30)] via-transparent to-transparent" />
                       {/* 缩略图更新按钮（hover 右上角出现，与资产库一致） */}
                       <button
                         onClick={(e) => {
@@ -522,7 +522,7 @@ export function HomePage() {
                     <div
                       key={source.id}
                       onClick={() => navigate("/integration")}
-                      className="bg-[#0b1d30] border border-[#142235] rounded-lg px-4 py-3 cursor-pointer hover:border-blue-500/40 transition-all group flex items-center gap-3"
+                      className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-lg px-4 py-3 cursor-pointer hover:border-blue-500/40 transition-all group flex items-center gap-3"
                     >
                       <span
                         className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${st.dot}`}
@@ -532,7 +532,7 @@ export function HomePage() {
                           <span className="text-[11px] font-medium text-slate-200 truncate">
                             {source.name}
                           </span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded border border-[#1e3a55] text-slate-500 uppercase tracking-wider flex-shrink-0">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded border border-[var(--c-1e3a55)] text-slate-500 uppercase tracking-wider flex-shrink-0">
                             {TYPE_LABEL[source.type] ?? source.type}
                           </span>
                         </div>
@@ -568,9 +568,9 @@ export function HomePage() {
               {/* New Project Card */}
               <div
                 onClick={() => setShowModal(true)}
-                className="bg-[#0b1d30] border border-dashed border-[#1e3a55] rounded-lg h-48 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500/60 hover:bg-[#0e243a] transition-all group"
+                className="bg-[var(--c-0b1d30)] border border-dashed border-[var(--c-1e3a55)] rounded-lg h-48 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500/60 hover:bg-[var(--c-0e243a)] transition-all group"
               >
-                <div className="w-10 h-10 rounded-full border border-dashed border-[#2a4a6a] group-hover:border-blue-500 flex items-center justify-center mb-3 transition-colors">
+                <div className="w-10 h-10 rounded-full border border-dashed border-[var(--c-2a4a6a)] group-hover:border-blue-500 flex items-center justify-center mb-3 transition-colors">
                   <Plus
                     size={18}
                     className="text-slate-500 group-hover:text-blue-400 transition-colors"
@@ -590,7 +590,7 @@ export function HomePage() {
                   <div
                     key={proj.projectId}
                     onClick={() => handleViewProject(proj)}
-                    className="bg-[#0b1d30] border border-[#142235] rounded-lg overflow-hidden cursor-pointer hover:border-blue-500/50 transition-all group relative"
+                    className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-lg overflow-hidden cursor-pointer hover:border-blue-500/50 transition-all group relative"
                   >
                     <div className="h-32 relative overflow-hidden">
                       {proj?.thumbnailUrl ? (
@@ -599,11 +599,11 @@ export function HomePage() {
                           className="w-full h-full object-cover opacity-60 group-hover:opacity-85 group-hover:scale-105 transition-all duration-500"
                         />
                       ) : (
-                        <div className="w-full h-full bg-[#040d18] flex items-center justify-center">
+                        <div className="w-full h-full bg-[var(--c-040d18)] flex items-center justify-center">
                           <Layers3 size={32} className="text-slate-700" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0b1d30] via-[#0b1d30]/30 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--c-0b1d30)] via-[var(--c-0b1d30)]/30 to-transparent" />
                       <div
                         className={`absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded border flex items-center gap-1 font-medium ${sc?.cls || ""}`}
                       >
@@ -661,11 +661,11 @@ export function HomePage() {
               {recentFacilities.map((f) => (
                 <div
                   key={f.id}
-                  className="bg-[#0b1d30] border border-[#142235] rounded-lg overflow-hidden cursor-pointer hover:border-blue-500/50 transition-all group"
+                  className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-lg overflow-hidden cursor-pointer hover:border-blue-500/50 transition-all group"
                 >
                   <div className="h-24 overflow-hidden relative">
                     {/* 占位背景：图片加载失败时显示 */}
-                    <div className="absolute inset-0 bg-[#040d18] flex items-center justify-center">
+                    <div className="absolute inset-0 bg-[var(--c-040d18)] flex items-center justify-center">
                       <Package size={28} className="text-slate-700" />
                     </div>
                     <img
@@ -676,7 +676,7 @@ export function HomePage() {
                       }}
                       className="relative z-10 w-full h-full object-cover opacity-55 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0b1d30]/70 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--c-0b1d30)]/70 to-transparent" />
                   </div>
                   <div className="p-2.5">
                     <div className="text-xs font-medium text-slate-200">

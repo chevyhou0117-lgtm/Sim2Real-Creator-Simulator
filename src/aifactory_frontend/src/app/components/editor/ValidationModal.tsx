@@ -63,7 +63,7 @@ function IssueRow({ issue }: { issue: ValidationIssue }) {
           {issue.affectedItems.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {issue.affectedItems.map((item) => (
-                <span key={item} className="px-2 py-0.5 bg-[#0b1d30] border border-[#1e3a55] rounded text-slate-300">
+                <span key={item} className="px-2 py-0.5 bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded text-slate-300">
                   {item}
                 </span>
               ))}
@@ -82,7 +82,7 @@ function IssueRow({ issue }: { issue: ValidationIssue }) {
 function CategoryRow({ cat }: { cat: ValidationCategoryResult }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-md bg-[#071526] border border-[#1e3a55]">
+    <div className="rounded-md bg-[var(--c-071526)] border border-[var(--c-1e3a55)]">
       <button
         className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left"
         onClick={() => setOpen((v) => !v)}
@@ -95,7 +95,7 @@ function CategoryRow({ cat }: { cat: ValidationCategoryResult }) {
         )}
       </button>
       {open && cat.issues.length > 0 && (
-        <div className="px-3 pb-3 space-y-2 border-t border-[#1e3a55] pt-2">
+        <div className="px-3 pb-3 space-y-2 border-t border-[var(--c-1e3a55)] pt-2">
           <p className="text-[10px] text-slate-500 mb-1">{cat.description}</p>
           {cat.issues.map((iss) => <IssueRow key={iss.id} issue={iss} />)}
         </div>
@@ -124,10 +124,10 @@ export function ValidationModal({ status, onClose, onMarkComplete, factoryName }
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[600px] max-h-[80vh] shadow-2xl flex flex-col">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[600px] max-h-[80vh] shadow-2xl flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235] flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)] flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <ShieldCheck size={16} className="text-blue-400" />
             <span className="text-sm font-semibold text-slate-100">{t("editor.validation.title")}</span>
@@ -138,7 +138,7 @@ export function ValidationModal({ status, onClose, onMarkComplete, factoryName }
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-[#142235] flex-shrink-0">
+        <div className="flex border-b border-[var(--c-142235)] flex-shrink-0">
           {(['checklist', 'report'] as const).map((tabKey) => (
             <button
               key={tabKey}
@@ -157,12 +157,12 @@ export function ValidationModal({ status, onClose, onMarkComplete, factoryName }
         {/* ── CHECKLIST TAB ── */}
         {tab === 'checklist' && (
           <>
-            <div className="px-5 py-4 border-b border-[#142235] flex-shrink-0">
+            <div className="px-5 py-4 border-b border-[var(--c-142235)] flex-shrink-0">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-slate-400">{t("editor.validation.progress")}</span>
                 <span className="text-xs font-medium text-slate-200">{t("editor.validation.checksPassed", { passed, total })}</span>
               </div>
-              <div className="w-full h-2 bg-[#071526] rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-[var(--c-071526)] rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-700 ${allPassed ? 'bg-emerald-500' : 'bg-blue-500'}`}
                   style={{ width: `${(passed / total) * 100}%` }}
@@ -203,7 +203,7 @@ export function ValidationModal({ status, onClose, onMarkComplete, factoryName }
         {tab === 'report' && (
           <>
             {/* Report summary bar */}
-            <div className="px-5 py-4 border-b border-[#142235] flex-shrink-0">
+            <div className="px-5 py-4 border-b border-[var(--c-142235)] flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   {statusIcon(report.overallStatus, 16)}
@@ -222,7 +222,7 @@ export function ValidationModal({ status, onClose, onMarkComplete, factoryName }
                   { label: t("editor.validation.critical"), value: criticalCount, color: criticalCount > 0 ? 'text-red-400' : 'text-slate-300' },
                   { label: t("editor.validation.high"), value: highCount, color: highCount > 0 ? 'text-orange-400' : 'text-slate-300' },
                 ].map(({ label, value, color }) => (
-                  <div key={label} className="bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-center">
+                  <div key={label} className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-center">
                     <div className={`text-sm font-semibold ${color ?? 'text-slate-200'}`}>{value}</div>
                     <div className="text-[10px] text-slate-500 mt-0.5">{label}</div>
                   </div>
@@ -239,10 +239,10 @@ export function ValidationModal({ status, onClose, onMarkComplete, factoryName }
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[#142235] flex-shrink-0">
+        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[var(--c-142235)] flex-shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs text-slate-400 hover:text-slate-200 border border-[#1e3a55] rounded-md hover:border-[#2a4a6a] transition-colors"
+            className="px-4 py-2 text-xs text-slate-400 hover:text-slate-200 border border-[var(--c-1e3a55)] rounded-md hover:border-[var(--c-2a4a6a)] transition-colors"
           >
             {t("editor.validation.close")}
           </button>

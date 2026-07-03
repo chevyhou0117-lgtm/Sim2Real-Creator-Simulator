@@ -80,7 +80,7 @@ export function AIAnalysisPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-4 px-6 py-4 border-b border-[#142235] flex-shrink-0">
+      <div className="flex items-center gap-4 px-6 py-4 border-b border-[var(--c-142235)] flex-shrink-0">
         <button onClick={() => navigate(`/simulation/plan/${planId}/result`)} className="text-slate-600 hover:text-slate-300 transition-colors">
           <ChevronLeft size={18} />
         </button>
@@ -121,7 +121,7 @@ export function AIAnalysisPage() {
             { label: 'Accepted Suggestions', value: accepted.length.toString(), unit: '', color: 'text-emerald-400' },
             { label: 'Expected LBR Improvement', value: '+13.3%', unit: '(if all accepted)', color: 'text-cyan-400' },
           ].map(m => (
-            <div key={m.label} className="bg-[#0a1929] border border-[#142235] rounded-xl p-4">
+            <div key={m.label} className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl p-4">
               <div className="text-[11px] text-slate-600 mb-1">{t(m.label)}</div>
               <div className={cn('text-2xl font-bold', m.color || 'text-slate-200')}>{m.value}<span className="text-sm font-normal text-slate-500 ml-1">{m.unit && t(m.unit)}</span></div>
             </div>
@@ -140,7 +140,7 @@ export function AIAnalysisPage() {
                 key={s.id}
                 className={cn(
                   'border rounded-xl overflow-hidden transition-all',
-                  isAccepted ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-[#142235] bg-[#0a1929]',
+                  isAccepted ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-[var(--c-142235)] bg-[var(--c-0a1929)]',
                 )}
               >
                 {/* Summary Row */}
@@ -166,7 +166,7 @@ export function AIAnalysisPage() {
 
                 {/* Expanded Detail */}
                 {isExpanded && (
-                  <div className="px-5 pb-4 pt-0 border-t border-[#142235]">
+                  <div className="px-5 pb-4 pt-0 border-t border-[var(--c-142235)]">
                     <div className="mt-3 space-y-2">
                       <p className="text-xs text-slate-400 leading-relaxed">{t(s.desc)}</p>
                       <div className="flex items-start gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">

@@ -62,6 +62,26 @@ docker run -d --name sim2real --gpus all --restart unless-stopped \
 
 起来后监听 Kit 的 /ov + /kit/playback 控制端口 —— **sim 前端用 `:8233`、aifactory 前端用 `:8011`（两者分开）** —— 以及 `:12333`（media）、`:12334`（signal）。`docker logs -f sim2real` 看启动日志。
 
+### 3.2 Kit 卡死自愈（帧看门狗）
+
+Kit 进程内置了**主循环卡死看门狗**（`fastapi.service.setup/frame_watchdog.py`）：一个独立 OS 线程靠 update 帧心跳判活，连续 `STALL_SEC` 秒无帧推进即判定主循环 wedged，直接 `os._exit(70)` 杀掉 Kit。Kit 是容器主进程，进程一退 → 容器退出 → 上面 `--restart unless-stopped` 自动拉起一个全新 Kit。**这就是「检测到卡死自动重启」的闭环，无需 docker.sock、无需外挂 autoheal。**
+
+可用环境变量调（都可选，加在 `docker run` 的 `-e` 里）：
+
+| 变量 | 默认 | 含义 |
+|---|---|---|
+| `KIT_WATCHDOG_ENABLED` | `true` | 设 `false` 只告警不退出（本地调试用） |
+| `KIT_WATCHDOG_STALL_SEC` | `30` | 连续多少秒无帧判定卡死。需 > 冷加载大场景的最长同步阻塞，否则误杀 |
+| `KIT_WATCHDOG_GRACE_SEC` | `60` | 启动宽限期，避免冷启动 + 打开大 USD 时首帧迟到被误杀 |
+| `KIT_WATCHDOG_CHECK_SEC` | `3` | 看门狗线程检查周期 |
+
+**可观测（可选）**：Kit 同时暴露 `GET :8233/healthz`，`last_tick_age_s` 超 `STALL_SEC` 返回 503，否则 200。给 `docker run` 加下面这组让 `docker ps` 显示 healthy/unhealthy（**仅展示状态，真正触发重启的是看门狗 `os._exit`，不是这个健康检查**）：
+```bash
+  --health-cmd='/app/kit/python/bin/python3 -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8233/healthz\", timeout=3)"' \
+  --health-interval=15s --health-timeout=5s --health-retries=3 --health-start-period=90s \
+```
+> 改了 `frame_watchdog.py` 等 Kit 侧源码后需 **rebuild Kit 镜像**（`repo package_container`）才生效；阈值类只改 `-e` 环境变量则无需 rebuild。
+
 ---
 
 ## 4. 配置并启动 Docker（5 个服务）

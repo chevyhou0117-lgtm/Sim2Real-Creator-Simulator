@@ -139,9 +139,9 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[520px] shadow-2xl">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[520px] shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)]">
           <div className="flex items-center gap-2.5">
             <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center">
               <Layers3 size={13} />
@@ -164,7 +164,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
             <select
               value={selectedFactoryId}
               onChange={(e) => setSelectedFactoryId(e.target.value)}
-              className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
+              className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
             >
               {factoryInfos.map((factory) => (
                 <option key={factory.factoryId} value={factory.factoryId}>
@@ -191,7 +191,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
                 disabled={true}
                 onChange={(e) => setFactoryId(e.target.value)}
                 placeholder={t("newProjectModal.placeholderFactoryId")}
-                className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </Field>
           )}
@@ -201,7 +201,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
               value={factoryName}
               disabled={true}
               placeholder={t("newProjectModal.placeholderFactoryName")}
-              className="w-full bg-[#040d18] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-400 placeholder-slate-600 focus:outline-none transition-colors cursor-not-allowed"
+              className="w-full bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-400 placeholder-slate-600 focus:outline-none transition-colors cursor-not-allowed"
             />
           </Field>
 
@@ -212,7 +212,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
                 setProjectName(e.target.value);
               }}
               placeholder={t("newProjectModal.placeholderProjectName")}
-              className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </Field>
 
@@ -223,12 +223,12 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
                 setProjectCode(e.target.value);
               }}
               placeholder={t("newProjectModal.placeholderProjectCode")}
-              className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </Field>
 
           <Field label={t("newProjectModal.projectVersion")}>
-            <div className="w-full bg-[#040d18] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-blue-400 font-mono flex items-center gap-2 select-none">
+            <div className="w-full bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-blue-400 font-mono flex items-center gap-2 select-none">
               <span className="text-slate-600 text-[10px]">{t("newProjectModal.auto")}</span>
               <span>V{versionNumber}</span>
               <span className="ml-auto text-[10px] text-slate-600">
@@ -244,7 +244,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder={t("newProjectModal.placeholderLocation")}
-              className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </Field>
 
@@ -255,7 +255,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
                 value={siteLength}
                 onChange={(e) => setSiteLength(e.target.value)}
                 placeholder={t("newProjectModal.placeholderSiteDimension")}
-                className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </Field>
             <Field label={t("newProjectModal.siteWidth")}>
@@ -264,7 +264,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
                 value={siteWidth}
                 onChange={(e) => setSiteWidth(e.target.value)}
                 placeholder={t("newProjectModal.placeholderSiteDimension")}
-                className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </Field>
           </div>
@@ -275,11 +275,11 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t("newProjectModal.placeholderDescription")}
               rows={2}
-              className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+              className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
             />
           </Field>
 
-          <div className="bg-[#071526] border border-[#142235] rounded-md p-3 text-[11px] text-slate-400">
+          <div className="bg-[var(--c-071526)] border border-[var(--c-142235)] rounded-md p-3 text-[11px] text-slate-400">
             {t("newProjectModal.tip")}
           </div>
         </div>
@@ -288,7 +288,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
         <div className="flex items-center justify-end gap-3 px-5 pb-5">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs text-slate-400 hover:text-slate-200 border border-[#1e3a55] rounded-md hover:border-[#2a4a6a] transition-colors"
+            className="px-4 py-2 text-xs text-slate-400 hover:text-slate-200 border border-[var(--c-1e3a55)] rounded-md hover:border-[var(--c-2a4a6a)] transition-colors"
           >
             {t("newProjectModal.cancel")}
           </button>

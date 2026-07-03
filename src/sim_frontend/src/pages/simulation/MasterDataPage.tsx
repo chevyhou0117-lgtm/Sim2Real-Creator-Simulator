@@ -53,7 +53,7 @@ export function MasterDataPage() {
       {/* Data Category Cards */}
       <div className="grid grid-cols-3 gap-4">
         {DATA_CATEGORIES.map(cat => (
-          <div key={cat.id} className="bg-[#0b1d30] border border-[#142235] rounded-xl p-5">
+          <div key={cat.id} className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className={cn(
                 'w-9 h-9 rounded-lg flex items-center justify-center',
@@ -86,14 +86,14 @@ export function MasterDataPage() {
       </div>
 
       {/* Data Preview Table */}
-      <div className="bg-[#0b1d30] border border-[#142235] rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#142235] flex items-center gap-3">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-[var(--c-142235)] flex items-center gap-3">
           <h3 className="text-sm font-semibold text-slate-300">{t('Line Data Preview')}</h3>
           <span className="text-xs text-slate-500">{t('View only, not editable (from Master Data Platform)')}</span>
         </div>
         <table className="w-full text-xs">
-          <thead className="bg-[#0a1929] text-[11px] text-slate-600">
-            <tr className="border-b border-[#0e1e2e]">
+          <thead className="bg-[var(--c-0a1929)] text-[11px] text-slate-600">
+            <tr className="border-b border-[var(--c-0e1e2e)]">
               <th className="text-left px-5 py-3">{t('Line ID')}</th>
               <th className="text-left px-4 py-3">{t('Line Name')}</th>
               <th className="text-left px-4 py-3">{t('Stage Type')}</th>
@@ -103,7 +103,7 @@ export function MasterDataPage() {
               <th className="text-left px-4 py-3">{t('BoP Status')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#0e1e2e]">
+          <tbody className="divide-y divide-[var(--c-0e1e2e)]">
             {[
               ['L01', 'SMT Line L01', 'SMT', '7', '9', '45,000', 'Active'],
               ['L02', 'SMT Line L02', 'SMT', '7', '9', '42,000', 'Active'],
@@ -112,7 +112,7 @@ export function MasterDataPage() {
               ['T02', 'THT Line T02', 'THT', '5', '6', '—', 'Draft'],
               ['Q01', 'Test Line Q01', 'Test', '4', '5', '—', 'Active'],
             ].map(([id, name, type, ops, eqs, pph, bop]) => (
-              <tr key={id} className="hover:bg-[#0d2035]/50 transition-colors">
+              <tr key={id} className="hover:bg-[var(--c-0d2035)]/50 transition-colors">
                 <td className="px-5 py-2.5 font-mono text-slate-400">{id}</td>
                 <td className="px-4 py-2.5 text-slate-300 font-medium">{t(name)}</td>
                 <td className="px-4 py-2.5">
@@ -137,11 +137,11 @@ export function MasterDataPage() {
       </div>
 
       {/* Sync History */}
-      <div className="bg-[#0b1d30] border border-[#142235] rounded-xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-[#142235]">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-[var(--c-142235)]">
           <h3 className="text-sm font-semibold text-slate-300">{t('Sync History')}</h3>
         </div>
-        <div className="divide-y divide-[#0e1e2e]">
+        <div className="divide-y divide-[var(--c-0e1e2e)]">
           {[
             { time: '2026-04-10 08:30:00', by: 'System Auto', result: 'Success', changes: 'Updated 3 equipment parameters', version: 'v1.2.8' },
             { time: '2026-04-09 20:30:00', by: 'System Auto', result: 'Success', changes: 'No changes', version: 'v1.2.7' },
@@ -156,7 +156,7 @@ export function MasterDataPage() {
               )}>{t(h.result)}</div>
               <div className="text-xs text-slate-400 flex-1">{t(h.changes)}</div>
               <div className="text-[11px] text-slate-600">{t(h.by)}</div>
-              <div className="font-mono text-[11px] text-slate-600 bg-[#0a1929] px-1.5 py-0.5 rounded">{h.version}</div>
+              <div className="font-mono text-[11px] text-slate-600 bg-[var(--c-0a1929)] px-1.5 py-0.5 rounded">{h.version}</div>
             </div>
           ))}
         </div>

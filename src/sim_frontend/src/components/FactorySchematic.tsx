@@ -80,7 +80,6 @@ interface Props {
   mode?: "config" | "playback";
   opStates?: Record<string, OpState>;
   bufStates?: Record<string, BufState>;
-  materialStates?: Record<string, MaterialState>; // 回放：当前时刻各原料库存（warehouse_states）
   selectedOpId?: string | null;
   onSelectOp?: (op: SchematicOp, line: SchematicLine) => void;
 }
@@ -100,15 +99,16 @@ const MAT_H = 30;
 const nid = (lineId: string, opId: string) => `${lineId}::${opId}`;
 
 const STATE_STYLE: Record<string, { fill: string; stroke: string; text: string; mini: string }> = {
-  IDLE: { fill: "#11263e", stroke: "#2c4a68", text: "#8aa1bd", mini: "#2c4a68" },
-  BUSY: { fill: "#0e3566", stroke: "#3b82f6", text: "#bfdbfe", mini: "#3b82f6" },
-  BLOCKED: { fill: "#3f1622", stroke: "#ef4444", text: "#fecaca", mini: "#ef4444" },
-  STARVED: { fill: "#3e2c10", stroke: "#f59e0b", text: "#fde68a", mini: "#f59e0b" },
-  SHORTAGE: { fill: "#2e1065", stroke: "#a855f7", text: "#e9d5ff", mini: "#a855f7" }, // 缺料停工
-  FAILURE: { fill: "#3f1013", stroke: "#dc2626", text: "#fca5a5", mini: "#dc2626" },
-  DEFAULT: { fill: "#0e2138", stroke: "#2f4a67", text: "#cdd9e8", mini: "#2f4a67" },
+  IDLE: { fill: "var(--c-11263e)", stroke: "var(--c-2c4a68)", text: "var(--c-8aa1bd)", mini: "var(--c-2c4a68)" },
+  BUSY: { fill: "var(--c-0e3566)", stroke: "#3b82f6", text: "var(--c-bfdbfe)", mini: "#3b82f6" },
+  BLOCKED: { fill: "var(--c-3f1622)", stroke: "#ef4444", text: "var(--c-fecaca)", mini: "#ef4444" },
+  STARVED: { fill: "var(--c-3e2c10)", stroke: "#f59e0b", text: "var(--c-fde68a)", mini: "#f59e0b" },
+  SHORTAGE: { fill: "var(--c-2e1065)", stroke: "#a855f7", text: "var(--c-e9d5ff)", mini: "#a855f7" }, // 缺料停工
+  FAILURE: { fill: "var(--c-3f1013)", stroke: "#dc2626", text: "var(--c-fca5a5)", mini: "#dc2626" },
+  DEFAULT: { fill: "var(--c-0e2138)", stroke: "var(--c-2f4a67)", text: "var(--c-cdd9e8)", mini: "var(--c-2f4a67)" },
 };
-const STATE_KEYS = ["BUSY", "BLOCKED", "STARVED", "SHORTAGE", "FAILURE", "IDLE"] as const;
+// 图例只列这几项（按运行中→空闲→故障→缺料）；背压/饥饿仍会给工序着色，但不单列图例。
+const STATE_KEYS = ["BUSY", "IDLE", "FAILURE", "SHORTAGE"] as const;
 
 type OpData = {
   operation_id: string;
@@ -164,7 +164,7 @@ function OperationNode({ data, selected }: NodeProps) {
         overflow: "hidden",
       }}
     >
-      <Handle type="target" position={Position.Left} id="in" style={{ background: "#475569", width: 6, height: 6, border: "none" }} />
+      <Handle type="target" position={Position.Left} id="in" style={{ background: "var(--c-475569)", width: 6, height: 6, border: "none" }} />
       <Handle type="target" position={Position.Top} id="mat-in" style={{ background: "#b45309", width: 7, height: 7, border: "none" }} />
       <div
         style={{
@@ -183,21 +183,21 @@ function OperationNode({ data, selected }: NodeProps) {
         {d.name || d.code}
       </div>
       {d.mode === "playback" && d.status === "BUSY" && d.ctTotal != null ? (
-        <div style={{ fontSize: 9.5, fontWeight: 600, color: "#bfe0ff", marginTop: 2, whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 9.5, fontWeight: 600, color: "var(--c-bfe0ff)", marginTop: 2, whiteSpace: "nowrap" }}>
           ▶ {Number(d.ctElapsed ?? 0).toFixed(1)}/{Number(d.ctTotal).toFixed(1)}s
           {d.product ? ` · ${d.product}` : ""}
         </div>
       ) : (
-        <div style={{ fontSize: 9, color: "#6f8aa8", marginTop: 2, whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 9, color: "var(--c-6f8aa8)", marginTop: 2, whiteSpace: "nowrap" }}>
           {d.code}
           {d.ct != null ? ` · ${Number(d.ct).toFixed(1)}s` : ""}
         </div>
       )}
-      <Handle type="source" position={Position.Right} id="out" style={{ background: "#475569", width: 6, height: 6, border: "none" }} />
+      <Handle type="source" position={Position.Right} id="out" style={{ background: "var(--c-475569)", width: 6, height: 6, border: "none" }} />
       {hasProgress && (
         <>
-          <div style={{ position: "absolute", top: 2, right: 4, fontSize: 8.5, color: "#86a0bd" }}>{pct.toFixed(0)}%</div>
-          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 4, background: "#0a1626" }}>
+          <div style={{ position: "absolute", top: 2, right: 4, fontSize: 8.5, color: "var(--c-86a0bd)" }}>{pct.toFixed(0)}%</div>
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 4, background: "var(--c-0a1626)" }}>
             <div style={{ height: "100%", width: `${pct}%`, background: "#34d399", transition: "width 0.2s linear" }} />
           </div>
         </>
@@ -211,8 +211,8 @@ function LaneNode({ data }: NodeProps) {
   const d = data as unknown as { label: string; code: string };
   return (
     <div style={{ width: LABEL_W - 18, textAlign: "right", paddingRight: 8 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#d6e0ef" }}>{d.label}</div>
-      <div style={{ fontSize: 9, color: "#5b7a99" }}>{d.code}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--c-d6e0ef)" }}>{d.label}</div>
+      <div style={{ fontSize: 9, color: "var(--c-5b7a99)" }}>{d.code}</div>
     </div>
   );
 }
@@ -224,14 +224,14 @@ function MaterialNode({ data }: NodeProps) {
     <div
       style={{
         width: OP_W, minHeight: MAT_H, boxSizing: "border-box",
-        background: "#241a06", border: "1.5px solid #b45309", borderRadius: 8,
+        background: "var(--c-241a06)", border: "1.5px solid #b45309", borderRadius: 8,
         padding: "3px 6px", display: "flex", flexWrap: "wrap", gap: 5,
         alignItems: "center", justifyContent: "center",
         boxShadow: "0 1px 3px rgba(0,0,0,0.45)",
       }}
     >
       {d.materials.map(([code, qty]) => (
-        <span key={code} title={`${code} × ${qty}`} style={{ fontSize: 9.5, fontWeight: 600, color: "#fcd34d", whiteSpace: "nowrap" }}>
+        <span key={code} title={`${code} × ${qty}`} style={{ fontSize: 9.5, fontWeight: 600, color: "var(--c-fcd34d)", whiteSpace: "nowrap" }}>
           ● {shortMatLabel(code)}×{qty}
         </span>
       ))}
@@ -293,7 +293,7 @@ function buildEdges(lines: SchematicLine[], stageTransitions: StageEdge[], bufSt
       const buf = ln.buffers.find((x) => x.pre_operation_id === a.operation_id && x.post_operation_id === b.operation_id);
       let label: string | undefined;
       let stroke = "#39597b";
-      let labelColor = "#a78bda";
+      let labelColor = "var(--c-a78bda)";
       if (buf) {
         const bs = mode === "playback" && bufStates ? bufStates[buf.wip_id] : undefined;
         const cap = bs?.capacity ?? buf.capacity_qty;
@@ -308,7 +308,7 @@ function buildEdges(lines: SchematicLine[], stageTransitions: StageEdge[], bufSt
             : `≤${cap}`;
         if (full) {
           stroke = "#ef4444";
-          labelColor = "#fca5a5";
+          labelColor = "var(--c-fca5a5)";
         }
       }
       out.push({
@@ -320,7 +320,7 @@ function buildEdges(lines: SchematicLine[], stageTransitions: StageEdge[], bufSt
         type: "default",
         label,
         labelStyle: { fill: labelColor, fontSize: 10, fontWeight: 600 },
-        labelBgStyle: { fill: "#0b1626", fillOpacity: 0.85 },
+        labelBgStyle: { fill: "var(--c-0b1626)", fillOpacity: 0.85 },
         labelBgPadding: [4, 2],
         labelBgBorderRadius: 3,
         style: { stroke, strokeWidth: 1.6 },
@@ -354,8 +354,8 @@ function buildEdges(lines: SchematicLine[], stageTransitions: StageEdge[], bufSt
         type: "default",
         animated: true,
         label: fi === 0 ? `${e.connection_type} · ${secs}` : undefined, // 只在第一条标，避免重叠
-        labelStyle: { fill: "#5eead4", fontSize: 10 },
-        labelBgStyle: { fill: "#0b1626", fillOpacity: 0.85 },
+        labelStyle: { fill: "var(--c-5eead4)", fontSize: 10 },
+        labelBgStyle: { fill: "var(--c-0b1626)", fillOpacity: 0.85 },
         labelBgPadding: [4, 2],
         labelBgBorderRadius: 3,
         style: { stroke: "#2f9e8f", strokeWidth: 1.4, strokeDasharray: "6,4" },
@@ -384,7 +384,7 @@ function buildEdges(lines: SchematicLine[], stageTransitions: StageEdge[], bufSt
   return out;
 }
 
-export default function FactorySchematic({ lines, stageTransitions = [], mode = "config", opStates, bufStates, materialStates, onSelectOp }: Props) {
+export default function FactorySchematic({ lines, stageTransitions = [], mode = "config", opStates, bufStates, onSelectOp }: Props) {
   const { t } = useTranslation();
   const stateLabel = (s: string) =>
     ({ IDLE: t("Idle"), BUSY: t("Running"), BLOCKED: t("Backpressure"), STARVED: t("Starved"), SHORTAGE: t("Material shortage"), FAILURE: t("Failure") } as Record<string, string>)[s] || s;
@@ -428,7 +428,7 @@ export default function FactorySchematic({ lines, stageTransitions = [], mode = 
   );
 
   return (
-    <div className="w-full h-full" style={{ background: "#070f1a" }}>
+    <div className="w-full h-full" style={{ background: "var(--c-070f1a)" }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -442,64 +442,44 @@ export default function FactorySchematic({ lines, stageTransitions = [], mode = 
         elevateNodesOnSelect
         proOptions={{ hideAttribution: false }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="#1b2c40" />
+        <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="var(--c-1b2c40)" />
         <Controls showInteractive={false} />
         <MiniMap
           pannable
           zoomable
-          style={{ background: "#0b1626", border: "1px solid #16263a" }}
+          style={{ background: "var(--c-0b1626)", border: "1px solid var(--c-16263a)" }}
           maskColor="rgba(2,8,18,0.6)"
           nodeColor={(n) => {
-            if (n.type !== "operation") return "#16263a";
+            if (n.type !== "operation") return "var(--c-16263a)";
             const s = (n.data as unknown as OpData)?.status;
             return mode === "playback" ? (STATE_STYLE[s || "IDLE"] || STATE_STYLE.DEFAULT).mini : STATE_STYLE.DEFAULT.mini;
           }}
         />
         <Panel position="top-left">
-          {/* 图例 + 物料库存面板纵向堆叠在左上，避开右侧"产线进度"覆盖层 */}
-          <div className="flex flex-col gap-1.5 items-start">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-[#16263a] bg-[#0a1626]/90 px-2.5 py-1.5 text-[11px] text-slate-400 backdrop-blur">
-              {mode === "playback" ? (
-                STATE_KEYS.map((s) => (
-                  <span key={s} className="inline-flex items-center gap-1.5">
-                    <span className="inline-block w-3 h-3 rounded" style={{ background: STATE_STYLE[s].fill, border: `1.5px solid ${STATE_STYLE[s].stroke}` }} />
-                    {stateLabel(s)}
-                  </span>
-                ))
-              ) : (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="inline-block w-3 h-3 rounded" style={{ background: STATE_STYLE.DEFAULT.fill, border: `1.5px solid ${STATE_STYLE.DEFAULT.stroke}` }} />
-                  {t("Operation")}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-[var(--c-16263a)] bg-[var(--c-0a1626)]/90 px-2.5 py-1.5 text-[11px] text-slate-400 backdrop-blur">
+            {mode === "playback" ? (
+              STATE_KEYS.map((s) => (
+                <span key={s} className="inline-flex items-center gap-1.5">
+                  <span className="inline-block w-3 h-3 rounded" style={{ background: STATE_STYLE[s].fill, border: `1.5px solid ${STATE_STYLE[s].stroke}` }} />
+                  {stateLabel(s)}
                 </span>
-              )}
-              <span className="inline-flex items-center gap-1.5" style={{ color: "#fcd34d" }}>
-                ● {t("Feed materials")}
+              ))
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block w-3 h-3 rounded" style={{ background: STATE_STYLE.DEFAULT.fill, border: `1.5px solid ${STATE_STYLE.DEFAULT.stroke}` }} />
+                {t("Operation")}
               </span>
-              <span className="inline-flex items-center gap-1.5" style={{ color: "#a78bda" }}>
-                ▸ {t("Buffer")}
-              </span>
-              <span className="inline-flex items-center gap-1.5" style={{ color: "#5eead4" }}>
-                ┄ {t("Stage continuity")}
-              </span>
-            </div>
-            {mode === "playback" && materialStates && Object.keys(materialStates).length > 0 && (
-              <div className="rounded-md border border-[#16263a] bg-[#0a1626]/90 px-2.5 py-1.5 text-[11px] backdrop-blur min-w-[150px]">
-                <div className="text-slate-300 font-semibold mb-1">{t("Material inventory")}</div>
-                {Object.entries(materialStates)
-                  .sort((a, b) => a[0].localeCompare(b[0]))
-                  .map(([code, st]) => {
-                    const out = (st?.quantity ?? 0) <= 0;
-                    return (
-                      <div key={code} className="flex items-center justify-between gap-3" style={{ color: out ? "#fca5a5" : "#cdd9e8" }}>
-                        <span>{code}</span>
-                        <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                          {Math.round(st?.quantity ?? 0)}{out ? ` ⚠${t("Out of stock")}` : ""}
-                        </span>
-                      </div>
-                    );
-                  })}
-              </div>
             )}
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block w-4 h-3 rounded-sm" style={{ background: "var(--c-241a06)", border: "1.5px solid #b45309" }} />
+              {t("Feed inlet")}
+            </span>
+            <span className="inline-flex items-center gap-1.5" style={{ color: "var(--c-a78bda)" }}>
+              {t("Inter-process buffer")}（-m/n→）
+            </span>
+            <span className="inline-flex items-center gap-1.5" style={{ color: "var(--c-5eead4)" }}>
+              {t("Stage continuity")}（---→）
+            </span>
           </div>
         </Panel>
       </ReactFlow>

@@ -24,8 +24,8 @@ export function CopyAssetModal({ asset, onClose }: CopyAssetModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[440px] shadow-2xl flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235]">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[440px] shadow-2xl flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)]">
           <div className="flex items-center gap-2">
             <Copy size={14} className="text-emerald-400" />
             <span className="text-sm font-semibold text-slate-100">
@@ -54,7 +54,7 @@ export function CopyAssetModal({ asset, onClose }: CopyAssetModalProps) {
               <select
                 value={sourceVersionId}
                 onChange={(e) => setSourceVersionId(e.target.value)}
-                className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
               >
                 {asset.versions.map((v) => (
                   <option key={v.id} value={v.id}>
@@ -66,7 +66,7 @@ export function CopyAssetModal({ asset, onClose }: CopyAssetModalProps) {
                 ))}
               </select>
             ) : (
-              <div className="text-[11px] text-slate-500 bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2">
+              <div className="text-[11px] text-slate-500 bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2">
                 V1.0 (current)
               </div>
             )}
@@ -79,12 +79,12 @@ export function CopyAssetModal({ asset, onClose }: CopyAssetModalProps) {
             <input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
               placeholder="Enter new asset name"
             />
           </div>
 
-          <div className="bg-[#071526] border border-[#1e3a55] rounded-md p-3">
+          <div className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md p-3">
             <div className="text-[10px] text-slate-500 space-y-1">
               <div className="flex justify-between">
                 <span>Copied from</span>
@@ -106,10 +106,10 @@ export function CopyAssetModal({ asset, onClose }: CopyAssetModalProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[#142235]">
+        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[var(--c-142235)]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs text-slate-400 border border-[#1e3a55] rounded-md hover:border-[#2a4a6a] transition-colors"
+            className="px-4 py-2 text-xs text-slate-400 border border-[var(--c-1e3a55)] rounded-md hover:border-[var(--c-2a4a6a)] transition-colors"
           >
             Cancel
           </button>

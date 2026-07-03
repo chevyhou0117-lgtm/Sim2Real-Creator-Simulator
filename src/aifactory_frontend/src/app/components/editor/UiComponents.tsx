@@ -45,15 +45,15 @@ export function ConfigSection({ title, children }: { title: string; children: Re
 export function CollapsibleSection({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-[#1e3a55] rounded-md overflow-hidden">
+    <div className="border border-[var(--c-1e3a55)] rounded-md overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-3 py-2 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-[#0f2035] transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-[var(--c-0f2035)] transition-colors"
       >
         <span className="font-medium">{title}</span>
         <ChevronDown size={11} className={`transition-transform ${open ? '' : '-rotate-90'}`} />
       </button>
-      {open && <div className="px-3 pb-3 pt-1 border-t border-[#1e3a55] space-y-1">{children}</div>}
+      {open && <div className="px-3 pb-3 pt-1 border-t border-[var(--c-1e3a55)] space-y-1">{children}</div>}
     </div>
   );
 }
@@ -86,7 +86,7 @@ export function ConfigRow({
   };
 
   return (
-    <div className="flex items-center justify-between py-1 border-b border-[#142235]/60">
+    <div className="flex items-center justify-between py-1 border-b border-[var(--c-142235)]/60">
       <div className="flex items-center gap-1 flex-shrink-0 mr-2">
         {dropdown && <ChevronDown size={9} className="text-slate-600" />}
         <span className="text-[10px] text-slate-500">{label}</span>
@@ -96,7 +96,7 @@ export function ConfigRow({
           value={localValue}
           onChange={handleChange}
           onBlur={handleBlur}
-          className="text-[10px] text-slate-200 bg-[#071526] text-right border border-[#1e3a55] focus:border-blue-500 focus:outline-none rounded px-1.5 py-0.5 max-w-[55%]"
+          className="text-[10px] text-slate-200 bg-[var(--c-071526)] text-right border border-[var(--c-1e3a55)] focus:border-blue-500 focus:outline-none rounded px-1.5 py-0.5 max-w-[55%]"
         />
       ) : (
         <span className="text-[10px] text-slate-200 text-right max-w-[55%] truncate">{value || '—'}</span>
@@ -109,13 +109,13 @@ export function ConfigRow({
 
 export function IoTField({ label, value, placeholder, editing }: { label: string; value: string; placeholder: string; editing: boolean }) {
   return (
-    <div className="flex items-center justify-between py-1 border-b border-[#142235]/60">
+    <div className="flex items-center justify-between py-1 border-b border-[var(--c-142235)]/60">
       <span className="text-[10px] text-slate-500 flex-shrink-0 mr-2">{label}</span>
       {editing ? (
         <input
           defaultValue={value}
           placeholder={placeholder}
-          className="text-[10px] text-slate-200 bg-[#071526] border border-[#1e3a55] rounded px-2 py-0.5 text-right focus:outline-none focus:border-blue-500 w-28"
+          className="text-[10px] text-slate-200 bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-2 py-0.5 text-right focus:outline-none focus:border-blue-500 w-28"
         />
       ) : (
         <span className="text-[10px] text-slate-200">{value || <span className="text-slate-600 italic">Not set</span>}</span>
@@ -128,7 +128,7 @@ export function IoTField({ label, value, placeholder, editing }: { label: string
 
 export function FormCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-[#07111e] border border-[#1e3a55] rounded-lg p-4">
+    <div className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg p-4">
       <h4 className="text-xs font-semibold text-slate-200 mb-4 flex items-center gap-2">
         <div className="w-[2px] h-4 bg-blue-500 rounded-full" />
         {title}
@@ -149,14 +149,14 @@ export function FormField({
     <div>
       <label className="block text-[11px] text-slate-400 mb-1">{label}</label>
       {type === 'select' && options ? (
-        <select className="w-full bg-[#0b1d30] border border-[#1e3a55] rounded px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500">
+        <select className="w-full bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500">
           {options.map((o) => <option key={o}>{o}</option>)}
         </select>
       ) : (
         <input
           type={type}
           placeholder={placeholder}
-          className="w-full bg-[#0b1d30] border border-[#1e3a55] rounded px-3 py-2 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500"
+          className="w-full bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded px-3 py-2 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-blue-500"
         />
       )}
     </div>

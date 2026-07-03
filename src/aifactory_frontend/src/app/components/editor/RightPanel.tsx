@@ -363,9 +363,9 @@ export function RightPanel({
 
   return (
     <>
-      <div className="w-72 bg-[#071526] border-l border-[#142235] flex flex-col overflow-hidden flex-shrink-0">
+      <div className="w-72 bg-[var(--c-071526)] border-l border-[var(--c-142235)] flex flex-col overflow-hidden flex-shrink-0">
         {/* Panel Header */}
-        <div className="flex items-center justify-between px-3 py-2 border-b border-[#142235] flex-shrink-0">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--c-142235)] flex-shrink-0">
           <div className="flex items-center gap-2">
             <Cog size={12} className="text-blue-400" />
             <span className="text-[11px] font-semibold text-slate-200">
@@ -400,7 +400,7 @@ export function RightPanel({
                   <button
                     onClick={cancelEdit}
                     title={t("editor.rightPanel.cancel")}
-                    className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:bg-[#142235] transition-colors"
+                    className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:bg-[var(--c-142235)] transition-colors"
                   >
                     <X size={12} />
                   </button>
@@ -409,7 +409,7 @@ export function RightPanel({
                 <button
                   onClick={startEdit}
                   title={t("editor.rightPanel.edit")}
-                  className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 hover:bg-[#142235] transition-colors"
+                  className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 hover:bg-[var(--c-142235)] transition-colors"
                 >
                   <Edit2 size={12} />
                 </button>
@@ -420,7 +420,7 @@ export function RightPanel({
 
         {/* Factory / Line tabs — Binding (required) + Metrics (optional config) */}
         {(isLine || isFactory) && selectedNode && (
-          <div className="flex border-b border-[#142235] flex-shrink-0 overflow-x-auto">
+          <div className="flex border-b border-[var(--c-142235)] flex-shrink-0 overflow-x-auto">
             {[
               {
                 id: "base" as RightTab,
@@ -457,7 +457,7 @@ export function RightPanel({
                 className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 text-[9px] transition-colors border-b-2 ${
                   rightTab === tab.id
                     ? "border-blue-500 text-blue-400 bg-blue-500/10"
-                    : "border-transparent text-slate-500 hover:text-slate-300 hover:bg-[#0f2035]"
+                    : "border-transparent text-slate-500 hover:text-slate-300 hover:bg-[var(--c-0f2035)]"
                 }`}
               >
                 <div className="relative flex items-center justify-center">
@@ -477,7 +477,7 @@ export function RightPanel({
 
         {/* Equipment tabs — Ledger/IoT are bindings; Events/Monitor/Metrics are optional configs */}
         {isEquipment && selectedNode && (
-          <div className="flex border-b border-[#142235] flex-shrink-0 overflow-x-auto">
+          <div className="flex border-b border-[var(--c-142235)] flex-shrink-0 overflow-x-auto">
             {[
               {
                 id: "base" as RightTab,
@@ -521,7 +521,7 @@ export function RightPanel({
                 className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 text-[9px] transition-colors border-b-2 ${
                   rightTab === tab.id
                     ? "border-blue-500 text-blue-400 bg-blue-500/10"
-                    : "border-transparent text-slate-500 hover:text-slate-300 hover:bg-[#0f2035]"
+                    : "border-transparent text-slate-500 hover:text-slate-300 hover:bg-[var(--c-0f2035)]"
                 }`}
               >
                 <div className="relative flex items-center justify-center">

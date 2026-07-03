@@ -109,9 +109,9 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-2xl w-[540px] max-h-[85vh] overflow-hidden flex flex-col">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-2xl w-[540px] max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235] flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)] flex-shrink-0">
           <div>
             <h2 className="text-sm font-semibold text-slate-200">{t('Import Data · {{title}}', { title: section.title })}</h2>
             <p className="text-[11px] text-slate-500 mt-0.5">{t('Upload an Excel/CSV file and the system will automatically validate the data format')}</p>
@@ -133,7 +133,7 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
                   'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold border flex-shrink-0',
                   cur === idx ? 'bg-blue-500/20 border-blue-500 text-blue-400' :
                   cur > idx ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' :
-                  'bg-[#07111e] border-[#1e3a55] text-slate-500',
+                  'bg-[var(--c-07111e)] border-[var(--c-1e3a55)] text-slate-500',
                 )}>{i + 1}</div>
                 <span className={cn(
                   'text-[10px] font-medium ml-2 whitespace-nowrap',
@@ -144,7 +144,7 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
                 {i < 2 && (
                   <div className={cn(
                     'w-12 h-px mx-2',
-                    cur > idx ? 'bg-emerald-500/30' : 'bg-[#1e3a55]',
+                    cur > idx ? 'bg-emerald-500/30' : 'bg-[var(--c-1e3a55)]',
                   )} />
                 )}
               </div>
@@ -157,7 +157,7 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
           {step === 'upload' && (
             <div className="space-y-4">
               <div className="flex items-center justify-center">
-                <div className="w-32 h-32 rounded-full border-2 border-dashed border-[#1e3a55] flex items-center justify-center hover:border-blue-500/50 transition-colors cursor-pointer relative">
+                <div className="w-32 h-32 rounded-full border-2 border-dashed border-[var(--c-1e3a55)] flex items-center justify-center hover:border-blue-500/50 transition-colors cursor-pointer relative">
                   <input
                     type="file"
                     accept=".xlsx,.xls,.csv"
@@ -220,7 +220,7 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
                 <h3 className="text-sm font-semibold text-slate-200">{t('Data Validation Found Issues')}</h3>
               </div>
 
-              <div className="bg-[#07111e] border border-[#142235] rounded-xl p-4 space-y-3">
+              <div className="bg-[var(--c-07111e)] border border-[var(--c-142235)] rounded-xl p-4 space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="text-center">
                     <div className="text-2xl font-bold font-mono text-slate-300">{validation.total_rows}</div>
@@ -284,7 +284,7 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
                 <h3 className="text-sm font-semibold text-slate-200">{t('Data Validation Passed')}</h3>
               </div>
 
-              <div className="bg-[#07111e] border border-[#142235] rounded-xl p-4 space-y-3">
+              <div className="bg-[var(--c-07111e)] border border-[var(--c-142235)] rounded-xl p-4 space-y-3">
                 <div className="grid grid-cols-3 gap-2">
                   <div className="text-center">
                     <div className="text-xl font-bold font-mono text-slate-300">{validation.total_rows}</div>
@@ -305,7 +305,7 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
                   <div className="overflow-x-auto">
                     <table className="w-full text-[10px]">
                       <thead>
-                        <tr className="border-b border-[#0e1e2e]">
+                        <tr className="border-b border-[var(--c-0e1e2e)]">
                           {validation.columns.map((col, i) => (
                             <th key={i} className="text-left px-2 py-1 text-slate-400 font-medium">{col}</th>
                           ))}
@@ -313,7 +313,7 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
                       </thead>
                       <tbody>
                         {validation.preview_rows.map((row, i) => (
-                          <tr key={i} className="border-b border-[#0e1e2e]/50">
+                          <tr key={i} className="border-b border-[var(--c-0e1e2e)]/50">
                             {row.map((cell, j) => (
                               <td key={j} className="px-2 py-1 text-slate-400 font-mono">{cell}</td>
                             ))}
@@ -336,13 +336,13 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
         </div>
 
         {/* Footer actions */}
-        <div className="px-5 pb-5 border-t border-[#142235] pt-4 flex justify-end gap-2 flex-shrink-0">
+        <div className="px-5 pb-5 border-t border-[var(--c-142235)] pt-4 flex justify-end gap-2 flex-shrink-0">
           {step === 'upload' && (
             <>
               <button
                 onClick={onClose}
                 disabled={uploading}
-                className="text-[11px] px-3 py-1.5 rounded border border-[#1e3a55] text-slate-400 hover:border-slate-500 hover:text-slate-300 disabled:opacity-50"
+                className="text-[11px] px-3 py-1.5 rounded border border-[var(--c-1e3a55)] text-slate-400 hover:border-slate-500 hover:text-slate-300 disabled:opacity-50"
               >
                 {t('Cancel')}
               </button>
@@ -353,7 +353,7 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
                   'text-[11px] px-3 py-1.5 rounded inline-flex items-center gap-1',
                   file && !uploading
                     ? 'bg-blue-600 text-white hover:bg-blue-500'
-                    : 'bg-[#0d2035] text-slate-600 cursor-not-allowed',
+                    : 'bg-[var(--c-0d2035)] text-slate-600 cursor-not-allowed',
                 )}
               >
                 {uploading && <Loader2 size={12} className="animate-spin" />}
@@ -363,17 +363,17 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
           )}
           {step === 'validation' && (
             <>
-              <button onClick={handleRetry} className="text-[11px] px-3 py-1.5 rounded border border-[#1e3a55] text-slate-400 hover:border-slate-500 hover:text-slate-300">
+              <button onClick={handleRetry} className="text-[11px] px-3 py-1.5 rounded border border-[var(--c-1e3a55)] text-slate-400 hover:border-slate-500 hover:text-slate-300">
                 {t('Re-upload')}
               </button>
-              <button onClick={onClose} className="text-[11px] px-3 py-1.5 rounded border border-[#1e3a55] text-slate-400 hover:border-slate-500 hover:text-slate-300">
+              <button onClick={onClose} className="text-[11px] px-3 py-1.5 rounded border border-[var(--c-1e3a55)] text-slate-400 hover:border-slate-500 hover:text-slate-300">
                 {t('Cancel')}
               </button>
             </>
           )}
           {step === 'confirm' && (
             <>
-              <button onClick={handleRetry} disabled={committing} className="text-[11px] px-3 py-1.5 rounded border border-[#1e3a55] text-slate-400 hover:border-slate-500 hover:text-slate-300 disabled:opacity-50">
+              <button onClick={handleRetry} disabled={committing} className="text-[11px] px-3 py-1.5 rounded border border-[var(--c-1e3a55)] text-slate-400 hover:border-slate-500 hover:text-slate-300 disabled:opacity-50">
                 {t('Re-upload')}
               </button>
               <button
@@ -381,7 +381,7 @@ export function ImportDataModal({ section, planId, onClose, onDone }: Props) {
                 disabled={committing}
                 className={cn(
                   'text-[11px] px-3 py-1.5 rounded inline-flex items-center gap-1',
-                  !committing ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-[#0d2035] text-slate-600 cursor-not-allowed',
+                  !committing ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-[var(--c-0d2035)] text-slate-600 cursor-not-allowed',
                 )}
               >
                 {committing && <Loader2 size={12} className="animate-spin" />}

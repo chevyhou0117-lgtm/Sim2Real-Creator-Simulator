@@ -61,7 +61,7 @@ export function FilterModal({
 
       {/* Modal - positioned below the filter button */}
       <div
-        className="absolute bg-[#071526] border border-[#1e3a55] rounded-md shadow-xl overflow-hidden"
+        className="absolute bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md shadow-xl overflow-hidden"
         style={{
           left: rect.left,
           top: rect.bottom + 4,
@@ -69,7 +69,7 @@ export function FilterModal({
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#142235]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--c-142235)]">
           <span className="text-sm font-semibold text-slate-100">{t("asset.filter.title")}</span>
           <button
             onClick={onClose}
@@ -98,7 +98,7 @@ export function FilterModal({
                   className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
                     selectedProcessNode === proc || ""
                       ? "bg-blue-600/25 text-blue-300 border-blue-500/60"
-                      : "text-slate-500 border-[#1e3a55] hover:text-slate-300 hover:border-[#2a4a6a]"
+                      : "text-slate-500 border-[var(--c-1e3a55)] hover:text-slate-300 hover:border-[var(--c-2a4a6a)]"
                   }`}
                 >
                   {proc}
@@ -133,7 +133,7 @@ export function FilterModal({
                   className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
                     selectedType === type
                       ? "bg-blue-600/25 text-blue-300 border-blue-500/60"
-                      : "text-slate-500 border-[#1e3a55] hover:text-slate-300 hover:border-[#2a4a6a]"
+                      : "text-slate-500 border-[var(--c-1e3a55)] hover:text-slate-300 hover:border-[var(--c-2a4a6a)]"
                   }`}
                 >
                   {type}
@@ -167,7 +167,7 @@ export function FilterModal({
                   className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
                     selectedStatus === s
                       ? "bg-blue-600/25 text-blue-300 border-blue-500/60"
-                      : "text-slate-500 border-[#1e3a55] hover:text-slate-300 hover:border-[#2a4a6a]"
+                      : "text-slate-500 border-[var(--c-1e3a55)] hover:text-slate-300 hover:border-[var(--c-2a4a6a)]"
                   }`}
                 >
                   {s === "all" ? t("asset.filter.all") : t(ASSET_STATUS_LABEL_KEY[s])}
@@ -182,7 +182,7 @@ export function FilterModal({
               onClick={() => {
                 onClearAll();
               }}
-              className="w-full text-[10px] text-slate-500 hover:text-slate-300 border border-[#1e3a55] rounded py-1 transition-colors"
+              className="w-full text-[10px] text-slate-500 hover:text-slate-300 border border-[var(--c-1e3a55)] rounded py-1 transition-colors"
             >
               {t("asset.filter.clearAll")}
             </button>

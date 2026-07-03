@@ -14,7 +14,7 @@ from app.database import SessionLocal
 from app.engine.common import SimEvent
 from app.engine.des_engine import run_des
 from app.engine.line_balance import run_line_balance
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 from app.models.md import Equipment, ProductionLine, Stage, WIPBuffer
 from app.models.res import LineBalanceResult, SimulationEvent, SimulationResult, SimulationStateSnapshot
@@ -466,13 +466,30 @@ def state_at(plan_id: str, t_ms: int, db: Session = Depends(get_db)):
     cluster_by_key = {f"{ln}::{op}": [eq for _so, eq in eqs] for (ln, op), eqs in lineop_eqs.items()}
 
     # ── ops 状态 ──
-    rows = (
-        db.query(SimulationEvent)
-        .filter(SimulationEvent.result_id == result.result_id, SimulationEvent.timestamp_ms <= t_ms)
-        .order_by(SimulationEvent.equipment_id, SimulationEvent.timestamp_ms.desc(), SimulationEvent.event_id.desc())
-        .distinct(SimulationEvent.equipment_id)
-        .all()
-    )
+    # 每台设备「<= t_ms 的最后一条事件」。原先用 DISTINCT ON 会对 timestamp_ms<=t 的全部事件做
+    # Seq Scan + 外部归并排序（数十万行、溢盘），耗时随 t_ms 线性增长（8h 跑到秒级 → 回放卡顿）。
+    # 改为按设备列表做 LATERAL 索引回查：每台设备走 ix_sim_event_result_eq_ts 索引 LIMIT 1，
+    # O(设备数 × log N)、与 t_ms 无关。设备编号是 UUID（无逗号），用 string_to_array 传列表免 ARRAY 绑定。
+    if eq_map:
+        rows = db.execute(
+            text(
+                """
+                SELECT e.eqid AS equipment_id, ev.event_type AS event_type,
+                       ev.timestamp_ms AS timestamp_ms, ev.event_metadata AS event_metadata
+                FROM unnest(string_to_array(:eqids, ',')) AS e(eqid)
+                CROSS JOIN LATERAL (
+                    SELECT event_type, timestamp_ms, event_metadata
+                    FROM res_simulation_event
+                    WHERE result_id = :rid AND equipment_id = e.eqid AND timestamp_ms <= :t
+                    ORDER BY timestamp_ms DESC, event_id DESC
+                    LIMIT 1
+                ) ev
+                """
+            ),
+            {"eqids": ",".join(eq_map.keys()), "rid": result.result_id, "t": t_ms},
+        ).all()
+    else:
+        rows = []
     ops: dict = {}
     for r in rows:
         key = eq_map.get(r.equipment_id)

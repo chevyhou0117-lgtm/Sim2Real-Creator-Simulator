@@ -5,13 +5,13 @@ import {
   ChevronLeft, Save, CheckCircle2, AlertCircle, Upload, RefreshCw,
   ChevronDown, ChevronRight, Database, Cpu, Truck, Package, Layers,
   Sliders, Building2, Plus, Info, X, BookOpen, Play,
-  RotateCw, Loader2,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { planApi, masterApi, planMdApi, simulatorsToFrontend, simulatorsToBackend, parseReadyError, resolveCreatorUrl, adminApi } from '@/lib/api';
-import { kitSelectPrim, kitSelectMany, kitFocusPerspective, kitFocusPerspectiveMany, kitEnsureStage, kitCurrentStage, kitSetFullscreen, subscribeOpenedStageResult } from '@/lib/kit';
+import { planApi, masterApi, planMdApi, simulatorsToFrontend, simulatorsToBackend, parseReadyError, resolveCreatorUrl } from '@/lib/api';
+import { kitSelectPrim, kitSelectMany, kitFocusPerspective, kitFocusPerspectiveMany, kitEnsureStage, kitSetFullscreen, subscribeOpenedStageResult } from '@/lib/kit';
 import { playbackStop } from '@/lib/playback';
 import type { PlanOut, BopOut, BopProcessOut, ProductOut, StageOut, LineOut, TaskOut, CreatorProjectOut, ReadinessOut, ReadyValidationError } from '@/types/api';
 
@@ -140,8 +140,8 @@ function findNode(nodes: TreeNode[], id: string): TreeNode | null {
 function machineStyle(status: NodeStatus | undefined, selected: boolean) {
   if (selected)                return { border: '#3b82f6', bg: '#0d2035ee', text: '#93c5fd', dot: '#3b82f6', glow: true };
   if (status === 'bottleneck') return { border: '#ef4444', bg: '#1a0808ee', text: '#f87171', dot: '#ef4444', glow: false };
-  if (status === 'idle')       return { border: '#243548', bg: '#080f18ee', text: '#64748b', dot: '#334155', glow: false };
-  return                               { border: '#1e3a55', bg: '#071520ee', text: '#94a3b8', dot: '#22c55e', glow: false };
+  if (status === 'idle')       return { border: 'var(--c-243548)', bg: '#080f18ee', text: 'var(--c-64748b)', dot: 'var(--c-334155)', glow: false };
+  return                               { border: 'var(--c-1e3a55)', bg: '#071520ee', text: 'var(--c-94a3b8)', dot: '#22c55e', glow: false };
 }
 
 
@@ -227,11 +227,11 @@ function SimTimeline({
   }
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-10 bg-[#020a12]/96 border-t border-[#1e3a55]/60 backdrop-blur-sm select-none">
+    <div className="absolute bottom-0 left-0 right-0 z-10 bg-[var(--c-020a12)]/96 border-t border-[var(--c-1e3a55)]/60 backdrop-blur-sm select-none">
       {/* ── Ruler row ── */}
       <div className="relative h-5 mx-4 mt-1.5" ref={trackRef} onMouseDown={onTrackMouseDown}>
         {/* Track bg */}
-        <div className="absolute inset-y-0 left-0 right-0 rounded-sm bg-[#07111e] border border-[#142235]" />
+        <div className="absolute inset-y-0 left-0 right-0 rounded-sm bg-[var(--c-07111e)] border border-[var(--c-142235)]" />
 
         {/* Shift zones */}
         {shiftZones.map((z, i) => {
@@ -257,7 +257,7 @@ function SimTimeline({
           return (
             <div key={h} className="absolute top-0 bottom-0 flex flex-col justify-start items-start"
               style={{ left: `${pct}%` }}>
-              <div className={cn('w-px', isMajor ? 'h-2 bg-[#2a4a6a]' : 'h-1.5 bg-[#1a2e42]')} />
+              <div className={cn('w-px', isMajor ? 'h-2 bg-[var(--c-2a4a6a)]' : 'h-1.5 bg-[var(--c-1a2e42)]')} />
               {isMajor && (
                 <span className="text-[8px] font-mono text-slate-500 whitespace-nowrap" style={{ marginLeft: 2 }}>
                   {label}
@@ -276,7 +276,7 @@ function SimTimeline({
               style={{ left: `${pct}%` }}>
               <div className="w-2 h-2 rotate-45 border flex-shrink-0 -translate-x-1/2"
                 style={{ background: ev.color + '33', borderColor: ev.color }} />
-              <div className="hidden group-hover:flex absolute bottom-full mb-1.5 -translate-x-1/2 bg-[#0b1d30] border border-[#1e3a55] rounded px-2 py-1 flex-col items-center z-20 pointer-events-none"
+              <div className="hidden group-hover:flex absolute bottom-full mb-1.5 -translate-x-1/2 bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded px-2 py-1 flex-col items-center z-20 pointer-events-none"
                 style={{ minWidth: 56 }}>
                 <span className="text-[9px] font-medium whitespace-nowrap" style={{ color: ev.color }}>{t(ev.label)}</span>
                 <span className="text-[8px] font-mono text-slate-500">{formatSimTime(ev.hourOffset * 60)}</span>
@@ -299,7 +299,7 @@ function SimTimeline({
       {/* ── Controls row ── */}
       <div className="flex items-center gap-3 px-4 py-1.5">
         {/* Timecode display */}
-        <div className="flex items-center gap-1.5 bg-[#040d16] border border-[#142235] rounded px-2.5 py-1 flex-shrink-0">
+        <div className="flex items-center gap-1.5 bg-[var(--c-040d16)] border border-[var(--c-142235)] rounded px-2.5 py-1 flex-shrink-0">
           <span className="text-[11px] font-mono text-slate-300 tracking-widest">{formatSimTime(currentMin)}</span>
           <span className="text-[9px] text-slate-700 mx-1">/</span>
           <span className="text-[9px] font-mono text-slate-600">{formatSimTime(durationMin)}</span>
@@ -321,7 +321,7 @@ function SimTimeline({
                 'px-2 py-0.5 rounded text-[9px] font-mono transition-all',
                 durationHours === opt.hours
                   ? 'bg-blue-600/25 text-blue-300 border border-blue-500/40'
-                  : 'text-slate-500 hover:text-slate-300 border border-transparent hover:border-[#1e3a55]',
+                  : 'text-slate-500 hover:text-slate-300 border border-transparent hover:border-[var(--c-1e3a55)]',
               )}
             >
               {opt.label}
@@ -397,7 +397,7 @@ function FactoryViewport({
   }, [hasStream, creatorUrl]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#07111e]">
+    <div className="absolute inset-0 overflow-hidden bg-[var(--c-07111e)]">
       {/* Background: Kit WebRTC stream (iframe) — viewer 内部自动按 window 尺寸调用 AppStreamer.resize()
           将 Kit 渲染分辨率/比例匹配到当前 iframe 显示区域，不再固定 16:9。
           铺满整个 viewport 容器（AssetSidebar / 参数面板都是 absolute 浮层，会盖在 iframe 上）。*/}
@@ -461,7 +461,7 @@ function FactoryViewport({
           { cls: 'bg-slate-600',   label: 'Low Load' },
           { cls: 'bg-blue-500',    label: 'Selected' },
         ].map(({ cls, label }) => (
-          <div key={label} className="flex items-center gap-1 bg-black/50 backdrop-blur border border-[#1e3a55]/50 px-2 py-0.5 rounded text-[9px] text-slate-400">
+          <div key={label} className="flex items-center gap-1 bg-black/50 backdrop-blur border border-[var(--c-1e3a55)]/50 px-2 py-0.5 rounded text-[9px] text-slate-400">
             <div className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', cls)} />
             {t(label)}
           </div>
@@ -476,7 +476,7 @@ function FactoryViewport({
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50 flex-shrink-0" />
               <span className="text-[9px] font-mono text-blue-400/70 uppercase tracking-[0.15em] flex-shrink-0">{t(line.label)}</span>
-              <div className="flex-1 border-t border-dashed border-[#1e3a55]/60" />
+              <div className="flex-1 border-t border-dashed border-[var(--c-1e3a55)]/60" />
             </div>
 
             {/* Machines */}
@@ -498,10 +498,10 @@ function FactoryViewport({
                           <span className="text-[9px] font-mono truncate pr-1" style={{ color: st.text }}>{t(machine.label)}</span>
                           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: st.dot }} />
                         </div>
-                        <div className="text-[12px] font-bold font-mono leading-none" style={{ color: machine.status === 'bottleneck' ? '#f87171' : '#4a6070' }}>
+                        <div className="text-[12px] font-bold font-mono leading-none" style={{ color: machine.status === 'bottleneck' ? '#f87171' : 'var(--c-4a6070)' }}>
                           {machine.ct}
                         </div>
-                        <div className="text-[8px] font-mono mt-1 leading-none" style={{ color: machine.status === 'bottleneck' ? '#7f1d1d' : machine.status === 'idle' ? '#1e2d3d' : '#0d2035' }}>
+                        <div className="text-[8px] font-mono mt-1 leading-none" style={{ color: machine.status === 'bottleneck' ? '#7f1d1d' : machine.status === 'idle' ? 'var(--c-1e2d3d)' : 'var(--c-0d2035)' }}>
                           {machine.status === 'bottleneck' ? '▲ BOTTLENECK' : machine.status === 'idle' ? '— IDLE' : '● RUNNING'}
                         </div>
                       </div>
@@ -547,28 +547,28 @@ function TimeRangeOverrides({ availableParams }: { availableParams: Array<{ valu
         </button>
       </div>
       {rows.length === 0 ? (
-        <div className="text-[11px] text-slate-700 bg-[#040d16] rounded-lg px-3 py-2.5 text-center border border-[#0e1e2e]">
+        <div className="text-[11px] text-slate-700 bg-[var(--c-040d16)] rounded-lg px-3 py-2.5 text-center border border-[var(--c-0e1e2e)]">
           {t('Not configured · Click "Add Time Range" to set phased parameter changes (e.g. +20% CT during hours 2–4)')}
         </div>
       ) : (
         <div className="space-y-1.5">
           {rows.map(row => (
-            <div key={row.id} className="bg-[#040d16] border border-[#0e1e2e] rounded-lg px-2.5 py-2 flex items-center gap-1.5">
+            <div key={row.id} className="bg-[var(--c-040d16)] border border-[var(--c-0e1e2e)] rounded-lg px-2.5 py-2 flex items-center gap-1.5">
               <span className="text-[10px] text-slate-600 flex-shrink-0">T+</span>
               <input type="number" min="0" value={row.startH} onChange={e => update(row.id, 'startH', e.target.value)}
-                className="w-10 bg-[#07111e] border border-[#1e3a55] rounded px-1.5 py-1 text-[11px] font-mono text-slate-200 outline-none focus:border-blue-500/60 text-center" />
+                className="w-10 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-1.5 py-1 text-[11px] font-mono text-slate-200 outline-none focus:border-blue-500/60 text-center" />
               <span className="text-[10px] text-slate-600">h →</span>
               <span className="text-[10px] text-slate-600 flex-shrink-0">T+</span>
               <input type="number" min="0" value={row.endH} onChange={e => update(row.id, 'endH', e.target.value)}
-                className="w-10 bg-[#07111e] border border-[#1e3a55] rounded px-1.5 py-1 text-[11px] font-mono text-slate-200 outline-none focus:border-blue-500/60 text-center" />
+                className="w-10 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-1.5 py-1 text-[11px] font-mono text-slate-200 outline-none focus:border-blue-500/60 text-center" />
               <span className="text-[10px] text-slate-600 flex-shrink-0">h</span>
               <select value={row.param} onChange={e => update(row.id, 'param', e.target.value)}
-                className="flex-1 min-w-0 bg-[#07111e] border border-[#1e3a55] rounded px-1.5 py-1 text-[10px] text-slate-300 outline-none focus:border-blue-500/60">
+                className="flex-1 min-w-0 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-1.5 py-1 text-[10px] text-slate-300 outline-none focus:border-blue-500/60">
                 {availableParams.map(p => <option key={p.value} value={p.value}>{t(p.label)}</option>)}
               </select>
               <input type="text" value={row.value} onChange={e => update(row.id, 'value', e.target.value)}
                 placeholder={t('Value/±%')}
-                className="w-14 bg-[#07111e] border border-[#1e3a55] rounded px-1.5 py-1 text-[11px] font-mono text-slate-200 outline-none focus:border-blue-500/60 text-center" />
+                className="w-14 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-1.5 py-1 text-[11px] font-mono text-slate-200 outline-none focus:border-blue-500/60 text-center" />
               <button onClick={() => remove(row.id)} className="text-slate-700 hover:text-red-400 transition-colors flex-shrink-0">
                 <X size={11} />
               </button>
@@ -583,11 +583,11 @@ function TimeRangeOverrides({ availableParams }: { availableParams: Array<{ valu
 // ── Params section label helper ────────────────────────────────────────────────
 function PSection({ label }: { label: string }) {
   const { t } = useTranslation();
-  return <div className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold mt-1 mb-2 pt-3 border-t border-[#142235]">{t(label)}</div>;
+  return <div className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold mt-1 mb-2 pt-3 border-t border-[var(--c-142235)]">{t(label)}</div>;
 }
 
 // ── Shared input style ─────────────────────────────────────────────────────────
-const inputCls = 'bg-[#07111e] border border-[#1e3a55] rounded-lg px-3 py-2 text-sm font-mono text-slate-200 outline-none focus:border-blue-500/60 transition-colors w-full';
+const inputCls = 'bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg px-3 py-2 text-sm font-mono text-slate-200 outline-none focus:border-blue-500/60 transition-colors w-full';
 const labelCls = 'text-[11px] text-slate-500 font-medium';
 
 // ── Data Table Panel (center area in "input" mode) ─────────────────────────────
@@ -824,10 +824,7 @@ const DATA_SECTIONS: DataSection[] = [
     canSync: false,
     canImport: true,
     cols: ['Buffer Code', 'Capacity (pcs)'],
-    rows: [
-      ['WIP-PTH01-006-007', '3'],
-      ['WIP-PTH01-007-008', '3'],
-    ],
+    // rows wired from planApi.wipBuffers() in DataTablePanel (bounded buffers only)
   },
 ];
 
@@ -1122,6 +1119,24 @@ function DataTablePanel({ planId, factoryId, reloadKey, onImportClick }: {
         },
       }));
     }).catch(() => {});
+
+    // 线边仓容量（WIP_CAPACITY 软约束）：导入后只展示已设容量的（有界）缓冲；其余保持无限
+    planApi.wipBuffers(planId).then(buffers => {
+      const bounded = buffers.filter(b => b.capacity_qty != null);
+      const rows = bounded.map(b => [b.wip_code, String(b.capacity_qty)]);
+      setOverrides(prev => ({
+        ...prev,
+        'wip-capacity': {
+          cols: [t('Buffer Code'), t('Capacity (pcs)')],
+          rows,
+          summary: rows.length
+            ? t('{{count}} buffers with capacity set · others unbounded', { count: rows.length })
+            : t('No buffer capacity imported'),
+          status: rows.length ? 'ok' : 'missing',
+          warning: rows.length ? undefined : t('No buffer capacity imported; all line-side buffers are unbounded (no backpressure even if the constraint is enabled)'),
+        },
+      }));
+    }).catch(() => {});
   }, [planId, reloadKey, t]);
 
   const groups = [
@@ -1146,13 +1161,13 @@ function DataTablePanel({ planId, factoryId, reloadKey, onImportClick }: {
                 return (
                   <div key={sec.id} className={cn(
                     'border rounded-xl overflow-hidden transition-all',
-                    sec.status === 'ok'      ? 'bg-[#07111e] border-[#142235]' :
-                    sec.status === 'missing' ? 'bg-[#07111e] border-[#142235]' :
+                    sec.status === 'ok'      ? 'bg-[var(--c-07111e)] border-[var(--c-142235)]' :
+                    sec.status === 'missing' ? 'bg-[var(--c-07111e)] border-[var(--c-142235)]' :
                     'bg-amber-900/5 border-amber-500/20',
                   )}>
                     {/* Header row */}
                     <div
-                      className="px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-[#0d2035]/30 transition-colors"
+                      className="px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-[var(--c-0d2035)]/30 transition-colors"
                       onClick={() => toggle(sec.id)}
                     >
                       {/* Status dot */}
@@ -1174,7 +1189,7 @@ function DataTablePanel({ planId, factoryId, reloadKey, onImportClick }: {
                             {t(sec.sourceSystem)}
                           </span>
                           {sec.status === 'missing' && (
-                            <span className="text-[10px] text-slate-600 bg-[#0a1929] px-1.5 py-0.5 rounded">{t('Not Configured')}</span>
+                            <span className="text-[10px] text-slate-600 bg-[var(--c-0a1929)] px-1.5 py-0.5 rounded">{t('Not Configured')}</span>
                           )}
                         </div>
                         {!isExpanded && (
@@ -1204,9 +1219,9 @@ function DataTablePanel({ planId, factoryId, reloadKey, onImportClick }: {
 
                     {/* Expanded content */}
                     {isExpanded && (
-                      <div className="border-t border-[#0e1e2e]">
+                      <div className="border-t border-[var(--c-0e1e2e)]">
                         {/* Description + source info bar */}
-                        <div className="px-4 py-2.5 bg-[#040d16] flex items-start justify-between gap-4">
+                        <div className="px-4 py-2.5 bg-[var(--c-040d16)] flex items-start justify-between gap-4">
                           <p className="text-[11px] text-slate-500">{t(sec.desc)}</p>
                           <span className="text-[10px] text-slate-700 font-mono flex-shrink-0">{t(sec.sourceNote)}</span>
                         </div>
@@ -1229,15 +1244,15 @@ function DataTablePanel({ planId, factoryId, reloadKey, onImportClick }: {
                           <div className="overflow-x-auto">
                             <table className="w-full text-xs">
                               <thead>
-                                <tr className="border-y border-[#0e1e2e] bg-[#040d16]">
+                                <tr className="border-y border-[var(--c-0e1e2e)] bg-[var(--c-040d16)]">
                                   {sec.cols.map(col => (
                                     <th key={col} className="text-left px-4 py-2 text-[11px] text-slate-600 font-medium">{t(col)}</th>
                                   ))}
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-[#0e1e2e]">
+                              <tbody className="divide-y divide-[var(--c-0e1e2e)]">
                                 {sec.rows.map((row, i) => (
-                                  <tr key={i} className="hover:bg-[#0d2035]/30 transition-colors">
+                                  <tr key={i} className="hover:bg-[var(--c-0d2035)]/30 transition-colors">
                                     {row.map((cell, j) => (
                                       <td key={j} className={cn('px-4 py-2', j === 0 ? 'font-mono text-slate-400' : 'text-slate-500')}>{t(cell)}</td>
                                     ))}
@@ -1314,9 +1329,9 @@ function ConstraintVersionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-2xl w-[480px] shadow-2xl overflow-hidden">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-2xl w-[480px] shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)]">
           <div>
             <h2 className="text-sm font-semibold text-slate-200">{t('Constraint Configuration Version Management')}</h2>
             <p className="text-[11px] text-slate-600 mt-0.5">{t('Save the current constraint configuration as a version, or load a historical version')}</p>
@@ -1329,7 +1344,7 @@ function ConstraintVersionModal({
         {/* Version list */}
         <div className="p-4 space-y-2 max-h-72 overflow-y-auto">
           {versions.map(v => (
-            <div key={v.id} className="flex items-center gap-3 bg-[#07111e] border border-[#142235] rounded-xl px-4 py-3 group">
+            <div key={v.id} className="flex items-center gap-3 bg-[var(--c-07111e)] border border-[var(--c-142235)] rounded-xl px-4 py-3 group">
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-slate-300 truncate">{t(v.name)}</div>
                 <div className="text-[10px] text-slate-600 mt-0.5 flex items-center gap-2">
@@ -1348,7 +1363,7 @@ function ConstraintVersionModal({
         </div>
 
         {/* Save current */}
-        <div className="px-4 pb-4 border-t border-[#142235] pt-4">
+        <div className="px-4 pb-4 border-t border-[var(--c-142235)] pt-4">
           {showSaveInput ? (
             <div className="flex items-center gap-2">
               <input
@@ -1357,7 +1372,7 @@ function ConstraintVersionModal({
                 onChange={e => setSaveName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setShowSaveInput(false); }}
                 placeholder={t('Enter version name...')}
-                className="flex-1 bg-[#07111e] border border-[#1e3a55] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60 placeholder:text-slate-600"
+                className="flex-1 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60 placeholder:text-slate-600"
               />
               <Button size="xs" variant="primary" disabled={!saveName.trim()} onClick={handleSave}>{t('Save')}</Button>
               <Button size="xs" variant="ghost" onClick={() => setShowSaveInput(false)}>{t('Cancel')}</Button>
@@ -1516,7 +1531,7 @@ function ConstraintsPanel({ plan, planId, onOpenVersionManager }: {
           <span className="text-xs font-semibold text-slate-300">{t('Simulation Duration')}</span>
           <span className="text-[10px] text-slate-600">{t('Up to 30 days')}</span>
         </div>
-        <div className="bg-[#07111e] border border-[#142235] rounded-xl p-4">
+        <div className="bg-[var(--c-07111e)] border border-[var(--c-142235)] rounded-xl p-4">
           <div className="flex items-center gap-3">
             <input
               type="number"
@@ -1524,18 +1539,18 @@ function ConstraintsPanel({ plan, planId, onOpenVersionManager }: {
               value={duration}
               onChange={e => setDuration(e.target.value.replace(/[^0-9]/g, '') || '1')}
               className={cn(
-                'w-24 bg-[#040d16] border rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none text-center font-mono',
-                durationExceeds ? 'border-red-500/60 focus:border-red-500' : 'border-[#1e3a55] focus:border-blue-500/60',
+                'w-24 bg-[var(--c-040d16)] border rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none text-center font-mono',
+                durationExceeds ? 'border-red-500/60 focus:border-red-500' : 'border-[var(--c-1e3a55)] focus:border-blue-500/60',
               )}
             />
-            <div className="flex rounded-lg overflow-hidden border border-[#1e3a55]">
+            <div className="flex rounded-lg overflow-hidden border border-[var(--c-1e3a55)]">
               {([['h', 'Hours'], ['d', 'Days']] as const).map(([val, lbl]) => (
                 <button
                   key={val}
                   onClick={() => setDurationUnit(val)}
                   className={cn(
                     'px-3 py-1.5 text-xs font-medium transition-colors',
-                    durationUnit === val ? 'bg-blue-600/30 text-blue-300' : 'text-slate-500 hover:text-slate-300 hover:bg-[#0d2035]',
+                    durationUnit === val ? 'bg-blue-600/30 text-blue-300' : 'text-slate-500 hover:text-slate-300 hover:bg-[var(--c-0d2035)]',
                   )}
                 >
                   {t(lbl)}
@@ -1573,9 +1588,9 @@ function ConstraintsPanel({ plan, planId, onOpenVersionManager }: {
                 key={opt.id}
                 className={cn(
                   'border rounded-xl p-3.5 transition-all',
-                  blocked   ? 'opacity-40 border-[#142235] bg-[#07111e]' :
+                  blocked   ? 'opacity-40 border-[var(--c-142235)] bg-[var(--c-07111e)]' :
                   isOn      ? 'border-blue-500/20 bg-blue-600/5' :
-                              'border-[#142235] bg-[#07111e]',
+                              'border-[var(--c-142235)] bg-[var(--c-07111e)]',
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -1618,7 +1633,7 @@ function ConstraintsPanel({ plan, planId, onOpenVersionManager }: {
         <div
           className={cn(
             'border rounded-xl p-3.5 transition-all',
-            ignoreWo ? 'border-amber-500/20 bg-amber-600/5' : 'border-[#142235] bg-[#07111e]',
+            ignoreWo ? 'border-amber-500/20 bg-amber-600/5' : 'border-[var(--c-142235)] bg-[var(--c-07111e)]',
           )}
         >
           <div className="flex items-center gap-3">
@@ -1669,9 +1684,9 @@ function ConstraintsPanel({ plan, planId, onOpenVersionManager }: {
                 key={c.id}
                 className={cn(
                   'border rounded-xl p-4 transition-all',
-                  depBlocked ? 'opacity-50 border-[#142235] bg-[#07111e]' :
+                  depBlocked ? 'opacity-50 border-[var(--c-142235)] bg-[var(--c-07111e)]' :
                   isOn        ? 'bg-blue-600/5 border-blue-500/20' :
-                                'border-[#142235] bg-[#07111e]',
+                                'border-[var(--c-142235)] bg-[var(--c-07111e)]',
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -1735,8 +1750,8 @@ function RBtn({ icon, label, onClick, active, variant = 'default', disabled }: R
         'flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-lg transition-all min-w-[46px] disabled:opacity-40 disabled:cursor-not-allowed',
         variant === 'primary' ? 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-500/20' :
         variant === 'danger'  ? 'text-red-400 hover:bg-red-900/20 border border-transparent' :
-        active                ? 'bg-[#0d2035] text-blue-400 border border-blue-500/15' :
-        'text-slate-400 hover:bg-[#0d2035] hover:text-slate-200 border border-transparent',
+        active                ? 'bg-[var(--c-0d2035)] text-blue-400 border border-blue-500/15' :
+        'text-slate-400 hover:bg-[var(--c-0d2035)] hover:text-slate-200 border border-transparent',
       )}
     >
       {icon}
@@ -1772,9 +1787,9 @@ function Ribbon({
   ];
 
   return (
-    <div className="border-b border-[#142235] bg-[#07111e] flex-shrink-0">
+    <div className="border-b border-[var(--c-142235)] bg-[var(--c-07111e)] flex-shrink-0">
       {/* Tab row */}
-      <div className="flex items-center px-4 gap-0 border-b border-[#0e1e2e]">
+      <div className="flex items-center px-4 gap-0 border-b border-[var(--c-0e1e2e)]">
         {tabs.map(tab => (
           <button
             key={tab.id}
@@ -1834,15 +1849,6 @@ export function PlanConfigPage() {
   // 方案关联的 Creator 工厂项目对应的 USD 地址（FactoryViewport 据此让 Kit 开 USD）
   const [viewportUsdUrl, setViewportUsdUrl] = useState<string | null>(null);
 
-  // Kit 进程重启流程（顶部「重启 Kit」按钮触发）
-  // 由 sim_backend pkill+spawn → 等 Kit 起来 → 显式 kitEnsureStage 重开 USD → bump key 让 FactoryViewport 重 mount 重连 WebRTC
-  const [showKitRestart, setShowKitRestart] = useState(false);
-  const [kitRestartPhase, setKitRestartPhase] = useState<
-    null | 'killing' | 'waiting-stage' | 'restoring-stage' | 'failed'
-  >(null);
-  const [kitRestartError, setKitRestartError] = useState<string>('');
-  // 每次 Kit 重启完成 +1，作为 FactoryViewport 的 key 强制重 mount → iframe 重连 WebRTC
-  const [kitReloadKey, setKitReloadKey] = useState(0);
 
   // 数据导入弹窗
   const [importingSection, setImportingSection] = useState<ImportSectionDef | null>(null);
@@ -2120,47 +2126,6 @@ export function PlanConfigPage() {
     }
   };
 
-  // Kit 卡死时的重启流程（与 RunningPage 同模板，但配置页无 playback context → 不重 ingest）
-  // 步骤：(1) 后端 pkill+spawn (2) polling /ov/current_stage 等 Kit 起来 (3) 显式 kitEnsureStage 重开 USD
-  //       (4) bump kitReloadKey 让 FactoryViewport 重 mount → iframe 重连 WebRTC
-  const handleKitRestartConfirm = useCallback(async () => {
-    setShowKitRestart(false);
-    setKitRestartError('');
-    try {
-      setKitRestartPhase('killing');
-      const res = await adminApi.restartKit();
-      console.info('[KitRestart]', res.message);
-
-      setKitRestartPhase('waiting-stage');
-      // 给 Kit 至少 5s 启动时间（这段 polling 必失败、无意义）
-      await new Promise<void>(r => setTimeout(r, 5000));
-      const deadline = Date.now() + 60_000;
-      let stageReady = false;
-      while (Date.now() < deadline) {
-        const cur = await kitCurrentStage();
-        if (cur) { stageReady = true; break; }
-        await new Promise<void>(r => setTimeout(r, 1500));
-      }
-      if (!stageReady) {
-        console.warn('[KitRestart] Kit 起来了但 60s 内未自动加载 USD，将由前端显式打开');
-      }
-
-      // 显式重开 USD（PlanConfigPage 的 FactoryViewport useEffect 依赖未变，不会自动重跑）
-      setKitRestartPhase('restoring-stage');
-      if (viewportUsdUrl) {
-        try { await kitEnsureStage(viewportUsdUrl); }
-        catch (err) { console.warn('[KitRestart] kitEnsureStage 失败:', err); }
-      }
-      // bump key → FactoryViewport 重 mount → iframe 用新 src 重连 WebRTC
-      setKitReloadKey(k => k + 1);
-      setKitRestartPhase(null);
-    } catch (err) {
-      console.error('[KitRestart] 失败:', err);
-      setKitRestartError((err as Error).message ?? String(err));
-      setKitRestartPhase('failed');
-    }
-  }, [viewportUsdUrl]);
-
   const [resyncing, setResyncing] = useState(false);
   const handleGlobalResync = useCallback(async () => {
     if (!planId || resyncing) return;
@@ -2189,9 +2154,9 @@ export function PlanConfigPage() {
   const handleTabChange = (t: RibbonTab) => setRibbonTab(t);
 
   return (
-    <div className="flex flex-col h-full bg-[#07111e]">
+    <div className="flex flex-col h-full bg-[var(--c-07111e)]">
       {/* ── Slim header ── */}
-      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[#142235] flex-shrink-0 bg-[#07111e]">
+      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--c-142235)] flex-shrink-0 bg-[var(--c-07111e)]">
         <button
           onClick={() => navigate('/simulation')}
           className="text-slate-600 hover:text-slate-300 transition-colors"
@@ -2222,29 +2187,13 @@ export function PlanConfigPage() {
           ].map(({ label, pct }) => (
             <div key={label} className="flex items-center gap-1.5" title={(readiness?.sections.filter(s => s.section_id.startsWith(label === 'Constraints' ? 'constraints' : label === 'Parameters' ? 'params' : 'input')).map(s => `${s.label}: ${s.pct}%`).join(' · ') ?? '') + (label === 'Constraints' ? t(' (for reference only, does not block readiness)') : '')}>
               <span>{t(label)}</span>
-              <div className="w-14 h-1 bg-[#0a1929] rounded-full overflow-hidden">
+              <div className="w-14 h-1 bg-[var(--c-0a1929)] rounded-full overflow-hidden">
                 <div className={cn('h-full rounded-full', pct === 100 ? 'bg-emerald-500' : pct > 0 ? 'bg-blue-500' : 'bg-slate-700')} style={{ width: `${pct}%` }} />
               </div>
               <span className={pct === 100 ? 'text-emerald-500' : ''}>{pct}%</span>
             </div>
           ))}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowKitRestart(true)}
-          disabled={kitRestartPhase !== null && kitRestartPhase !== 'failed'}
-          title={t('Click here when the Kit process is frozen: sim_backend will pkill and respawn it')}
-        >
-          <RotateCw
-            size={12}
-            className={cn(
-              'text-red-400',
-              kitRestartPhase && kitRestartPhase !== 'failed' && 'animate-spin',
-            )}
-          />
-          {t('Restart Kit')}
-        </Button>
         <Button variant="ghost" size="sm">
           <Save size={12} />{t('Save')}
         </Button>
@@ -2264,7 +2213,7 @@ export function PlanConfigPage() {
       </div>
 
       {/* ── Creator 项目下拉栏（仅 DRAFT 可编辑）── */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-[#142235] flex-shrink-0 bg-[#0a1628]">
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-[var(--c-142235)] flex-shrink-0 bg-[var(--c-0a1628)]">
         <Building2 size={14} className="text-slate-400 shrink-0" />
         <span className="text-[11px] text-slate-400 whitespace-nowrap">{t('Linked Creator Plant Project')}</span>
         {plan?.status === 'DRAFT' ? (
@@ -2309,7 +2258,7 @@ export function PlanConfigPage() {
         {/* ── Params tab: viewport with floating panels ── */}
         {showViewport && (
           <div className="flex-1 overflow-hidden relative">
-            <FactoryViewport key={kitReloadKey} selectedId={selectedId} onSelect={handleSelect} creatorUrl={viewportUsdUrl} />
+            <FactoryViewport selectedId={selectedId} onSelect={handleSelect} creatorUrl={viewportUsdUrl} />
             <AssetSidebar
               tree={assetTreeV2}
               selectedId={selectedId}
@@ -2435,58 +2384,6 @@ export function PlanConfigPage() {
         />
       )}
 
-      {showKitRestart && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-2xl p-6 w-[420px] shadow-2xl">
-            <div className="flex items-start gap-3 mb-4">
-              <RotateCw size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-sm font-semibold text-slate-200">{t('Restart the Kit Process?')}</h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  {t('Use when the Kit main thread is frozen: sim_backend will pkill the old process and spawn a new one, taking about 20-40 seconds total. After completion, the USD linked to the current plan will be reopened automatically and the stream reconnected.')}
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setShowKitRestart(false)}>{t('Cancel')}</Button>
-              <Button variant="danger" size="sm" onClick={handleKitRestartConfirm}>{t('Confirm Restart')}</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {kitRestartPhase !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm">
-          <div className="bg-[#07111e] border border-[#1e3a55] rounded-xl p-6 w-[420px] text-center shadow-2xl">
-            {kitRestartPhase !== 'failed' ? (
-              <>
-                <Loader2 size={36} className="text-amber-400 mx-auto mb-3 animate-spin" />
-                <div className="text-sm font-semibold text-slate-200 mb-1">{t('Restarting Kit Process')}</div>
-                <div className="text-[11px] text-slate-400">
-                  {kitRestartPhase === 'killing' && t('Killing the old Kit process and spawning a new one…')}
-                  {kitRestartPhase === 'waiting-stage' && t('Waiting for Kit to restart and load USD (usually 20-40 seconds)…')}
-                  {kitRestartPhase === 'restoring-stage' && t('Reopening the plan USD and reconnecting the WebRTC stream…')}
-                </div>
-                <div className="text-[10px] text-slate-500 mt-3 font-mono">{t('The page is not interactive during this time; please wait')}</div>
-              </>
-            ) : (
-              <>
-                <AlertCircle size={36} className="text-red-400 mx-auto mb-3" />
-                <div className="text-sm font-semibold text-slate-200 mb-1">{t('Kit Restart Failed')}</div>
-                <div className="text-[11px] text-slate-400 break-words mb-3 whitespace-pre-wrap text-left max-h-48 overflow-auto">
-                  {kitRestartError || t('Unknown error')}
-                </div>
-                <div className="text-[10px] text-slate-500 mb-3 font-mono">
-                  {t('Full log:')} <code className="text-slate-300">/tmp/kit_spawn.log</code>
-                </div>
-                <Button size="sm" variant="ghost" onClick={() => setKitRestartPhase(null)}>
-                  {t('Close')}
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -2537,8 +2434,8 @@ function AddPlanScopedNodeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-2xl w-[440px] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235]">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-2xl w-[440px] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)]">
           <div>
             <h2 className="text-sm font-semibold text-slate-200">
               {isLine ? t('Add Line Within Plan') : t('Add Equipment Within Plan')}
@@ -2560,7 +2457,7 @@ function AddPlanScopedNodeModal({
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder={isLine ? 'L_HYPO_01' : 'EQ_HYPO_01'}
-              className="bg-[#07111e] border border-[#1e3a55] rounded-lg px-3 py-2 text-sm font-mono text-slate-200 outline-none focus:border-blue-500/60"
+              className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg px-3 py-2 text-sm font-mono text-slate-200 outline-none focus:border-blue-500/60"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -2569,7 +2466,7 @@ function AddPlanScopedNodeModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={isLine ? t('Hypothetical Line 01') : t('Hypothetical Equipment 01')}
-              className="bg-[#07111e] border border-[#1e3a55] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60"
+              className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60"
             />
           </div>
           {isEquipment && (
@@ -2579,7 +2476,7 @@ function AddPlanScopedNodeModal({
                 <select
                   value={eqType}
                   onChange={(e) => setEqType(e.target.value)}
-                  className="bg-[#07111e] border border-[#1e3a55] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60"
+                  className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500/60"
                 >
                   <option>ROBOT</option>
                   <option>WORKSTATION</option>
@@ -2591,32 +2488,32 @@ function AddPlanScopedNodeModal({
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] text-slate-400">{t('CT (s)')}</label>
                   <input type="number" value={ct} onChange={(e) => setCt(e.target.value)} placeholder="30"
-                    className="bg-[#07111e] border border-[#1e3a55] rounded px-2 py-1.5 text-[12px] font-mono text-slate-200 outline-none" />
+                    className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-2 py-1.5 text-[12px] font-mono text-slate-200 outline-none" />
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] text-slate-400">{t('Yield Rate (%)')}</label>
                   <input type="number" value={yieldRate} onChange={(e) => setYieldRate(e.target.value)} placeholder="99.5"
-                    className="bg-[#07111e] border border-[#1e3a55] rounded px-2 py-1.5 text-[12px] font-mono text-slate-200 outline-none" />
+                    className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-2 py-1.5 text-[12px] font-mono text-slate-200 outline-none" />
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] text-slate-400">{t('Headcount')}</label>
                   <input type="number" value={workers} onChange={(e) => setWorkers(e.target.value)} placeholder="1"
-                    className="bg-[#07111e] border border-[#1e3a55] rounded px-2 py-1.5 text-[12px] font-mono text-slate-200 outline-none" />
+                    className="bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-2 py-1.5 text-[12px] font-mono text-slate-200 outline-none" />
                 </div>
               </div>
             </>
           )}
         </div>
 
-        <div className="px-5 pb-5 border-t border-[#142235] pt-4 flex justify-end gap-2">
+        <div className="px-5 pb-5 border-t border-[var(--c-142235)] pt-4 flex justify-end gap-2">
           <button onClick={onClose} disabled={busy}
-            className="text-[11px] px-3 py-1.5 rounded border border-[#1e3a55] text-slate-400 hover:border-slate-500 hover:text-slate-300 disabled:opacity-50">
+            className="text-[11px] px-3 py-1.5 rounded border border-[var(--c-1e3a55)] text-slate-400 hover:border-slate-500 hover:text-slate-300 disabled:opacity-50">
             {t('Cancel')}
           </button>
           <button onClick={submit} disabled={busy}
             className={cn(
               'text-[11px] px-3 py-1.5 rounded',
-              busy ? 'bg-[#0d2035] text-slate-600 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-500',
+              busy ? 'bg-[var(--c-0d2035)] text-slate-600 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-500',
             )}>
             {busy ? t('Saving…') : t('Confirm Add')}
           </button>

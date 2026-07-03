@@ -78,8 +78,8 @@ export function PlanComparePage() {
             <div
               key={i}
               className={cn(
-                'bg-[#0b1d30] border rounded-xl p-4 relative',
-                plan ? 'border-[#1e3a55]' : 'border-dashed border-[#142235]',
+                'bg-[var(--c-0b1d30)] border rounded-xl p-4 relative',
+                plan ? 'border-[var(--c-1e3a55)]' : 'border-dashed border-[var(--c-142235)]',
               )}
               style={{ borderLeftColor: plan ? PLAN_COLORS[i] : undefined, borderLeftWidth: plan ? 3 : 1 }}
             >
@@ -120,14 +120,14 @@ export function PlanComparePage() {
       {selectedPlans.length >= 2 && (
         <>
           {/* Metrics Table */}
-          <div className="bg-[#0b1d30] border border-[#142235] rounded-xl overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#142235] flex items-center gap-2">
+          <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-[var(--c-142235)] flex items-center gap-2">
               <h3 className="text-sm font-semibold text-slate-300">{t('Key Metrics Comparison')}</h3>
               <span className="text-[11px] text-slate-600">{t('Green=Best, Orange=Gap>10%, Red=Gap>25%')}</span>
             </div>
             <table className="w-full text-xs">
-              <thead className="bg-[#0a1929] text-[11px] text-slate-600">
-                <tr className="border-b border-[#0e1e2e]">
+              <thead className="bg-[var(--c-0a1929)] text-[11px] text-slate-600">
+                <tr className="border-b border-[var(--c-0e1e2e)]">
                   <th className="text-left px-5 py-3">{t('Category')}</th>
                   <th className="text-left px-4 py-3">{t('Metric')}</th>
                   {Array.from({ length: numPlans }, (_, i) => (
@@ -135,12 +135,12 @@ export function PlanComparePage() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#0e1e2e]">
+              <tbody className="divide-y divide-[var(--c-0e1e2e)]">
                 {COMPARE_DATA.slice(0, 8).map(d => {
                   const vals = d.values.slice(0, numPlans);
                   const best = d.higherIsBetter ? Math.max(...vals) : Math.min(...vals);
                   return (
-                    <tr key={d.metric} className="hover:bg-[#0d2035]/50 transition-colors">
+                    <tr key={d.metric} className="hover:bg-[var(--c-0d2035)]/50 transition-colors">
                       <td className="px-5 py-3 text-slate-600">{t(d.category)}</td>
                       <td className="px-4 py-3 text-slate-400">{t(d.metric)}</td>
                       {vals.map((val, i) => {
@@ -167,15 +167,15 @@ export function PlanComparePage() {
           </div>
 
           {/* Bar Chart */}
-          <div className="bg-[#0b1d30] border border-[#142235] rounded-xl p-5">
+          <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl p-5">
             <h3 className="text-sm font-semibold text-slate-300 mb-4">{t('Output & Efficiency Comparison')}</h3>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={barData.slice(0, 5)} margin={{ top: 5, right: 10, left: 0, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#142235" />
-                <XAxis dataKey="metric" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} angle={-15} textAnchor="end" />
-                <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: '#0b1d30', border: '1px solid #1e3a55', borderRadius: 8, fontSize: 11 }} />
-                <Legend wrapperStyle={{ fontSize: 11, color: '#64748b', paddingTop: 16 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--c-142235)" />
+                <XAxis dataKey="metric" tick={{ fill: 'var(--c-64748b)', fontSize: 10 }} axisLine={false} tickLine={false} angle={-15} textAnchor="end" />
+                <YAxis tick={{ fill: 'var(--c-64748b)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ background: 'var(--c-0b1d30)', border: '1px solid var(--c-1e3a55)', borderRadius: 8, fontSize: 11 }} />
+                <Legend wrapperStyle={{ fontSize: 11, color: 'var(--c-64748b)', paddingTop: 16 }} />
                 {PLAN_LABELS.slice(0, numPlans).map((label, i) => (
                   <Bar key={label} dataKey={label} fill={PLAN_COLORS[i]} radius={[3, 3, 0, 0]} />
                 ))}

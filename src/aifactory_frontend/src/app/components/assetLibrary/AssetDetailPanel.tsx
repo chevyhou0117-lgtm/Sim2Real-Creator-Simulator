@@ -97,26 +97,26 @@ export function AssetDetailPanel({
   }
 
   return (
-    <aside className="w-64 bg-[#071526] border-l border-[#142235] flex flex-col overflow-hidden flex-shrink-0">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#142235]">
+    <aside className="w-64 bg-[var(--c-071526)] border-l border-[var(--c-142235)] flex flex-col overflow-hidden flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--c-142235)]">
         <span className="text-xs font-semibold text-slate-200">
           {t("detail.assetDetails")}
         </span>
         <button
           onClick={onClose}
-          className="text-slate-500 hover:text-slate-200 p-1 rounded hover:bg-[#142235] transition-colors"
+          className="text-slate-500 hover:text-slate-200 p-1 rounded hover:bg-[var(--c-142235)] transition-colors"
         >
           <X size={12} />
         </button>
       </div>
 
-      <div className="h-40 overflow-hidden relative bg-[#07111e] group">
+      <div className="h-40 overflow-hidden relative bg-[var(--c-07111e)] group">
         <img
           src={proxyMinioUrl(detailData?.thumbnailPath || "")}
           alt={L(detailData, 'name', 'nameEn') || ""}
           className="w-full h-full object-cover opacity-80"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#071526] to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--c-071526)] to-transparent" />
         {/* 缩略图上传按钮 — 悬浮显示 */}
         <button
           onClick={() => fileInputRef.current?.click()}
@@ -217,7 +217,7 @@ export function AssetDetailPanel({
         </DetailSection>
       </div>
 
-      <div className="p-4 border-t border-[#142235] space-y-2">
+      <div className="p-4 border-t border-[var(--c-142235)] space-y-2">
         {/* Open Editor 按钮 — 暂时注释，避免遮挡缩略图更新功能 */}
         {/* <button
           onClick={() => onOpenEditor(detailData?.id)}
@@ -227,7 +227,7 @@ export function AssetDetailPanel({
         </button> */}
         <button
           onClick={() => onCopyAsset(detailData)}
-          className="w-full text-xs bg-[#0b1d30] hover:bg-[#0e243a] border border-[#1e3a55] hover:border-emerald-500/50 text-slate-400 hover:text-emerald-300 px-3 py-2 rounded-md transition-colors flex items-center justify-center gap-1.5"
+          className="w-full text-xs bg-[var(--c-0b1d30)] hover:bg-[var(--c-0e243a)] border border-[var(--c-1e3a55)] hover:border-emerald-500/50 text-slate-400 hover:text-emerald-300 px-3 py-2 rounded-md transition-colors flex items-center justify-center gap-1.5"
         >
           <Copy size={11} /> {t("detail.copyAsset")}
         </button>

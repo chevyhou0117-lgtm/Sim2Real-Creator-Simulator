@@ -1,7 +1,172 @@
 @import "tailwindcss";
 
+/* ───────────────────────────────────────────────────────────────────────────
+   主题：深色（默认）/ 浅色。切换由 <html class="dark|light"> 控制（见 lib/theme.tsx）。
+   - 命名色工具类（text-slate-400 / bg-blue-600/20 …）在 Tailwind v4 里编译成
+     var(--color-*)，故浅色模式只需在 .light 覆盖 --color-slate-* 这组变量即可整体翻转，
+     无需改任何组件。
+   - 字面量 [#hex] 编译成死值，已由脚本统一替换为 var(--c-<hex>)，在此定义深/浅两套值。
+   ─────────────────────────────────────────────────────────────────────────── */
+
 :root {
   color-scheme: dark;
+
+  /* 应用底色 / 主文字（body 用） */
+  --app-bg: #07111e;
+  --app-fg: #e2e8f0;
+  --scrollbar-thumb: #1e3a55;
+  --scrollbar-thumb-hover: #2d5a8a;
+
+  /* —— 结构色（深色值 = 原值）—— */
+  --c-142235: #142235;
+  --c-1e3a55: #1e3a55;
+  --c-07111e: #07111e;
+  --c-0b1d30: #0b1d30;
+  --c-0d2035: #0d2035;
+  --c-0a1929: #0a1929;
+  --c-0e1e2e: #0e1e2e;
+  --c-040d16: #040d16;
+  --c-64748b: #64748b;
+  --c-475569: #475569;
+  --c-020a12: #020a12;
+  --c-2a4a6a: #2a4a6a;
+  --c-0b1626: #0b1626;
+  --c-16263a: #16263a;
+  --c-060e18: #060e18;
+  --c-1a2e42: #1a2e42;
+  --c-0f1e30: #0f1e30;
+  --c-2c4a68: #2c4a68;
+  --c-2f4a67: #2f4a67;
+  --c-0a1626: #0a1626;
+  --c-241a06: #241a06;
+  --c-243548: #243548;
+  --c-334155: #334155;
+  --c-94a3b8: #94a3b8;
+  --c-4a6070: #4a6070;
+  --c-1e2d3d: #1e2d3d;
+  --c-0a1628: #0a1628;
+  --c-13243a: #13243a;
+  --c-050e1a: #050e1a;
+  --c-11263e: #11263e;
+  --c-8aa1bd: #8aa1bd;
+  --c-0e3566: #0e3566;
+  --c-3f1622: #3f1622;
+  --c-3e2c10: #3e2c10;
+  --c-2e1065: #2e1065;
+  --c-3f1013: #3f1013;
+  --c-0e2138: #0e2138;
+  --c-6f8aa8: #6f8aa8;
+  --c-86a0bd: #86a0bd;
+  --c-5b7a99: #5b7a99;
+  --c-070f1a: #070f1a;
+  --c-1b2c40: #1b2c40;
+  --c-081523: #081523;
+  --c-dddddd: #dddddd;
+  --c-0e243a: #0e243a;
+  /* 节点图/图表的浅色强调文字（深色 = 原值） */
+  --c-bfdbfe: #bfdbfe; --c-fecaca: #fecaca; --c-fde68a: #fde68a; --c-e9d5ff: #e9d5ff;
+  --c-fca5a5: #fca5a5; --c-cdd9e8: #cdd9e8; --c-bfe0ff: #bfe0ff; --c-d6e0ef: #d6e0ef;
+  --c-fcd34d: #fcd34d; --c-a78bda: #a78bda; --c-5eead4: #5eead4;
+}
+
+/* ───────────── 浅色主题覆盖 ───────────── */
+html.light {
+  color-scheme: light;
+
+  --app-bg: #f1f4f9;
+  --app-fg: #0f172a;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
+
+  /* slate 色阶翻转：text-slate-{200..600} 变深→浅文字；slate-{700..900} 变浅色面板/边框 */
+  --color-slate-50:  #f8fafc;
+  --color-slate-100: #020617;
+  --color-slate-200: #0f172a;
+  --color-slate-300: #1e293b;
+  --color-slate-400: #334155;
+  --color-slate-500: #3f4b5e;
+  --color-slate-600: #4a5568;
+  --color-slate-700: #cbd5e1;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #f8fafc;
+
+  /* 强调色「浅档」(200/300/400)在浅色模式下压暗到 ~700，保证白/淡底上可读
+     （这些档在深色模式是亮色文字；浅色下若不压暗，如 amber-300 配 bg-amber-500/10 ≈ 1.5:1 看不清）。
+     500/600 不动（实底按钮/边框/淡底 tint 仍用它们）。深色模式不受影响。 */
+  --color-amber-200: #b45309;  --color-amber-300: #b45309;  --color-amber-400: #b45309;
+  --color-yellow-300: #a16207; --color-yellow-400: #a16207;
+  --color-orange-200: #c2410c; --color-orange-300: #c2410c; --color-orange-400: #c2410c;
+  --color-red-300: #b91c1c;    --color-red-400: #b91c1c;
+  --color-rose-300: #be123c;   --color-rose-400: #be123c;
+  --color-blue-200: #1d4ed8;   --color-blue-300: #1d4ed8;   --color-blue-400: #1d4ed8;
+  --color-sky-300: #0369a1;    --color-sky-400: #0369a1;
+  --color-cyan-200: #0e7490;   --color-cyan-300: #0e7490;   --color-cyan-400: #0e7490;
+  --color-indigo-300: #4338ca; --color-indigo-400: #4338ca;
+  --color-violet-300: #6d28d9; --color-violet-400: #6d28d9;
+  --color-purple-300: #7e22ce; --color-purple-400: #7e22ce;
+  --color-emerald-200: #047857;--color-emerald-300: #047857;--color-emerald-400: #047857;
+  --color-green-300: #15803d;  --color-green-400: #15803d;
+
+  /* —— 结构色浅色值（按角色分层：页面底色 / 卡片 / 边框 / 文字灰 / 强调淡底）—— */
+  /* 页面底色（最浅一层） */
+  --c-07111e: #f1f4f9;
+  --c-040d16: #e9edf3;
+  --c-020a12: #e9edf3;
+  --c-060e18: #e9edf3;
+  --c-050e1a: #e9edf3;
+  --c-070f1a: #eef1f6;
+  --c-081523: #eef1f6;
+  /* 卡片 / 面板（白 / 近白，叠在页面底色上有层次） */
+  --c-0b1d30: #ffffff;
+  --c-0a1929: #ffffff;
+  --c-0a1626: #ffffff;
+  --c-0a1628: #ffffff;
+  --c-0b1626: #ffffff;
+  --c-0d2035: #ffffff;
+  --c-0e1e2e: #fbfcfe;
+  --c-0e2138: #fbfcfe;
+  --c-0e243a: #fbfcfe;
+  --c-0f1e30: #fbfcfe;
+  --c-11263e: #fbfcfe;
+  --c-13243a: #fbfcfe;
+  /* 细分割线 / 浅边框 */
+  --c-142235: #e4e8ef;
+  --c-16263a: #e4e8ef;
+  --c-1a2e42: #dce2ea;
+  --c-1b2c40: #dce2ea;
+  --c-1e2d3d: #dce2ea;
+  --c-243548: #d2dae4;
+  /* 普通 / 较强边框 */
+  --c-1e3a55: #ccd5e1;
+  --c-2a4a6a: #c0cad8;
+  --c-2c4a68: #c0cad8;
+  --c-2f4a67: #c0cad8;
+  --c-0e3566: #c3d6ee;
+  /* 文字灰 / 图标灰（白底上加深，保证 ≥6:1 可读，避免浅灰看不清） */
+  --c-64748b: #4a5568;
+  --c-475569: #475569;
+  --c-334155: #334155;
+  --c-4a6070: #475569;
+  --c-5b7a99: #475569;
+  --c-6f8aa8: #4a5568;
+  --c-86a0bd: #4a5568;
+  --c-8aa1bd: #4a5568;
+  --c-94a3b8: #4a5568;
+  --c-dddddd: #e2e8f0;
+  /* 深色强调色背景 → 同色相淡底 */
+  --c-241a06: #fbf2dd;
+  --c-3e2c10: #f7ecd5;
+  --c-3f1013: #fce9e9;
+  --c-3f1622: #fbe7ec;
+  --c-2e1065: #ede7fb;
+  /* 节点图/图表强调文字 → 浅色下压成同色相深字（浅底/白底上可读） */
+  --c-bfdbfe: #1d4ed8; --c-bfe0ff: #1d4ed8;
+  --c-fecaca: #b91c1c; --c-fca5a5: #dc2626;
+  --c-fde68a: #b45309; --c-fcd34d: #b45309;
+  --c-e9d5ff: #7e22ce; --c-a78bda: #7e22ce;
+  --c-cdd9e8: #334155; --c-d6e0ef: #1e293b;
+  --c-5eead4: #0f766e;
 }
 
 * {
@@ -11,8 +176,8 @@
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  background: #07111e;
-  color: #e2e8f0;
+  background: var(--app-bg);
+  color: var(--app-fg);
   font-size: 13px;
   -webkit-font-smoothing: antialiased;
 }
@@ -27,7 +192,7 @@ body {
   height: 4px;
 }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #1e3a55; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #2d5a8a; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 
-* { scrollbar-width: thin; scrollbar-color: #1e3a55 transparent; }
+* { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) transparent; }

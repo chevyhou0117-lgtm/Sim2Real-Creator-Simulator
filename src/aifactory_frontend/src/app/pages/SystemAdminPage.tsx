@@ -82,13 +82,13 @@ function UsersTab() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="搜索用户..."
-            className="w-full pl-8 pr-3 py-1.5 bg-[#071526] border border-[#1e3a55] rounded text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full pl-8 pr-3 py-1.5 bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value as UserRole | 'all')}
-          className="bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+          className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
         >
           <option value="all">全部角色</option>
           {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
@@ -104,10 +104,10 @@ function UsersTab() {
       </div>
 
       {/* Table */}
-      <div className="border border-[#142235] rounded-lg overflow-hidden">
+      <div className="border border-[var(--c-142235)] rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-[#071526]">
-            <tr className="border-b border-[#142235]">
+          <thead className="bg-[var(--c-071526)]">
+            <tr className="border-b border-[var(--c-142235)]">
               <th className="px-4 py-2.5 text-left text-[10px] font-medium text-slate-500 uppercase tracking-wider">用户</th>
               <th className="px-3 py-2.5 text-left text-[10px] font-medium text-slate-500 uppercase tracking-wider">角色</th>
               <th className="px-3 py-2.5 text-left text-[10px] font-medium text-slate-500 uppercase tracking-wider">状态</th>
@@ -120,7 +120,7 @@ function UsersTab() {
             {filtered.map((u) => {
               const sc = STATUS_CONFIG[u.status];
               return (
-                <tr key={u.id} className="border-b border-[#142235] hover:bg-[#0e243a]/40 group transition-colors">
+                <tr key={u.id} className="border-b border-[var(--c-142235)] hover:bg-[var(--c-0e243a)]/40 group transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-full bg-blue-700 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
@@ -162,8 +162,8 @@ function UsersTab() {
       {/* Add modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[440px] shadow-2xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235]">
+          <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[440px] shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)]">
               <span className="text-sm font-semibold text-slate-100">邀请新用户</span>
               <button onClick={() => setShowAddModal(false)} className="text-slate-500 hover:text-slate-200 transition-colors">
                 <XCircle size={15} />
@@ -172,21 +172,21 @@ function UsersTab() {
             <div className="p-5 space-y-3">
               <div>
                 <label className="block text-[11px] text-slate-400 mb-1.5">邮箱地址 *</label>
-                <input placeholder="user@example.com" className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors" />
+                <input placeholder="user@example.com" className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors" />
               </div>
               <div>
                 <label className="block text-[11px] text-slate-400 mb-1.5">姓名</label>
-                <input placeholder="用户姓名" className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors" />
+                <input placeholder="用户姓名" className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors" />
               </div>
               <div>
                 <label className="block text-[11px] text-slate-400 mb-1.5">分配角色</label>
-                <select className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+                <select className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
                   {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
                 </select>
               </div>
             </div>
             <div className="flex justify-end gap-3 px-5 pb-5">
-              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 text-xs text-slate-400 border border-[#1e3a55] rounded hover:border-[#2a4a6a] transition-colors">取消</button>
+              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 text-xs text-slate-400 border border-[var(--c-1e3a55)] rounded hover:border-[var(--c-2a4a6a)] transition-colors">取消</button>
               <button onClick={() => setShowAddModal(false)} className="px-5 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors">发送邀请</button>
             </div>
           </div>
@@ -212,7 +212,7 @@ function RolesTab() {
               key={r}
               onClick={() => setSelectedRole(r)}
               className={`w-full text-left px-3 py-2.5 rounded-lg border transition-colors ${
-                selectedRole === r ? 'border-blue-500/60 bg-blue-600/15' : 'border-[#1e3a55] hover:border-[#2a4a6a] bg-[#071526]'
+                selectedRole === r ? 'border-blue-500/60 bg-blue-600/15' : 'border-[var(--c-1e3a55)] hover:border-[var(--c-2a4a6a)] bg-[var(--c-071526)]'
               }`}
             >
               <div className="text-[12px] font-medium text-slate-200">{ROLE_LABELS[r]}</div>
@@ -237,11 +237,11 @@ function RolesTab() {
             const hasAccess = ROLE_PERMS[selectedRole].includes(perm.id);
             const isLocked = selectedRole === 'admin';
             return (
-              <div key={perm.id} className="flex items-center justify-between py-2 px-3 rounded hover:bg-[#0e243a]/40 transition-colors">
+              <div key={perm.id} className="flex items-center justify-between py-2 px-3 rounded hover:bg-[var(--c-0e243a)]/40 transition-colors">
                 <div className="text-[12px] text-slate-300">{perm.label}</div>
                 <div className={`w-8 h-4 rounded-full relative cursor-pointer transition-colors ${
                   isLocked ? 'cursor-not-allowed' : ''
-                } ${hasAccess ? 'bg-blue-600' : 'bg-[#1e3a55]'}`}>
+                } ${hasAccess ? 'bg-blue-600' : 'bg-[var(--c-1e3a55)]'}`}>
                   <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${hasAccess ? 'left-4' : 'left-0.5'}`} />
                 </div>
               </div>
@@ -280,26 +280,26 @@ function AuditTab() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="搜索日志..."
-            className="w-full pl-8 pr-3 py-1.5 bg-[#071526] border border-[#1e3a55] rounded text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full pl-8 pr-3 py-1.5 bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+          className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
         >
           <option value="all">全部操作</option>
           {types.slice(1).map((t) => <option key={t}>{t}</option>)}
         </select>
-        <button className="ml-auto flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-300 border border-[#1e3a55] px-3 py-1.5 rounded transition-colors">
+        <button className="ml-auto flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-300 border border-[var(--c-1e3a55)] px-3 py-1.5 rounded transition-colors">
           <Download size={11} /> 导出 CSV
         </button>
       </div>
 
-      <div className="border border-[#142235] rounded-lg overflow-hidden">
+      <div className="border border-[var(--c-142235)] rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-[#071526]">
-            <tr className="border-b border-[#142235]">
+          <thead className="bg-[var(--c-071526)]">
+            <tr className="border-b border-[var(--c-142235)]">
               <th className="px-4 py-2.5 text-left text-[10px] font-medium text-slate-500 uppercase tracking-wider">时间</th>
               <th className="px-3 py-2.5 text-left text-[10px] font-medium text-slate-500 uppercase tracking-wider">用户</th>
               <th className="px-3 py-2.5 text-left text-[10px] font-medium text-slate-500 uppercase tracking-wider">模块</th>
@@ -310,7 +310,7 @@ function AuditTab() {
           </thead>
           <tbody>
             {filtered.map((log) => (
-              <tr key={log.id} className="border-b border-[#142235] hover:bg-[#0e243a]/40 transition-colors">
+              <tr key={log.id} className="border-b border-[var(--c-142235)] hover:bg-[var(--c-0e243a)]/40 transition-colors">
                 <td className="px-4 py-2.5 text-[10px] text-slate-500 whitespace-nowrap font-mono">{log.timestamp}</td>
                 <td className="px-3 py-2.5">
                   <div className="text-[11px] text-slate-300">{log.user}</div>
@@ -351,9 +351,9 @@ function ConfigTab() {
       {Object.entries(grouped).map(([group, items]) => (
         <div key={group}>
           <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <div className="flex-1 border-t border-[#142235]" />
+            <div className="flex-1 border-t border-[var(--c-142235)]" />
             {group}
-            <div className="flex-1 border-t border-[#142235]" />
+            <div className="flex-1 border-t border-[var(--c-142235)]" />
           </div>
           <div className="space-y-3">
             {items.map((cfg) => (
@@ -364,17 +364,17 @@ function ConfigTab() {
                 </div>
                 <div className="flex-1">
                   {cfg.type === 'boolean' ? (
-                    <div className={`w-9 h-5 rounded-full relative cursor-pointer transition-colors ${cfg.value === 'true' ? 'bg-blue-600' : 'bg-[#1e3a55]'}`}>
+                    <div className={`w-9 h-5 rounded-full relative cursor-pointer transition-colors ${cfg.value === 'true' ? 'bg-blue-600' : 'bg-[var(--c-1e3a55)]'}`}>
                       <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${cfg.value === 'true' ? 'left-4' : 'left-0.5'}`} />
                     </div>
                   ) : cfg.type === 'select' ? (
-                    <select defaultValue={cfg.value} className="bg-[#040d18] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+                    <select defaultValue={cfg.value} className="bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
                       {cfg.options?.map((o) => <option key={o}>{o}</option>)}
                     </select>
                   ) : (
                     <input
                       defaultValue={cfg.value}
-                      className="w-full bg-[#040d18] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   )}
                 </div>
@@ -384,7 +384,7 @@ function ConfigTab() {
         </div>
       ))}
       <div className="flex justify-end gap-3 pt-2">
-        <button className="text-xs text-slate-400 border border-[#1e3a55] px-4 py-1.5 rounded hover:border-[#2a4a6a] transition-colors">恢复默认</button>
+        <button className="text-xs text-slate-400 border border-[var(--c-1e3a55)] px-4 py-1.5 rounded hover:border-[var(--c-2a4a6a)] transition-colors">恢复默认</button>
         <button className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded font-medium transition-colors">保存配置</button>
       </div>
     </div>
@@ -416,13 +416,13 @@ function MonitorTab() {
         <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">系统资源</div>
         <div className="grid grid-cols-4 gap-4">
           {METRICS.map((m) => (
-            <div key={m.label} className="bg-[#071526] border border-[#142235] rounded-lg p-4">
+            <div key={m.label} className="bg-[var(--c-071526)] border border-[var(--c-142235)] rounded-lg p-4">
               <div className={`flex items-center gap-2 mb-2 ${m.color}`}>
                 {m.icon}
                 <span className="text-[10px] text-slate-400">{m.label}</span>
               </div>
               <div className="text-2xl font-bold text-slate-100">{m.value}<span className="text-sm text-slate-500 ml-1">{m.unit}</span></div>
-              <div className="mt-2 h-1.5 bg-[#142235] rounded-full overflow-hidden">
+              <div className="mt-2 h-1.5 bg-[var(--c-142235)] rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${m.bar}`}
                   style={{ width: `${m.unit === '%' ? m.value : Math.min(m.value * 5, 100)}%` }}
@@ -441,9 +441,9 @@ function MonitorTab() {
             <RefreshCw size={10} /> 刷新
           </button>
         </div>
-        <div className="border border-[#142235] rounded-lg overflow-hidden">
+        <div className="border border-[var(--c-142235)] rounded-lg overflow-hidden">
           <table className="w-full">
-            <thead className="bg-[#071526] border-b border-[#142235]">
+            <thead className="bg-[var(--c-071526)] border-b border-[var(--c-142235)]">
               <tr>
                 <th className="px-4 py-2.5 text-left text-[10px] font-medium text-slate-500 uppercase">服务名称</th>
                 <th className="px-3 py-2.5 text-left text-[10px] font-medium text-slate-500 uppercase">状态</th>
@@ -454,7 +454,7 @@ function MonitorTab() {
             </thead>
             <tbody>
               {SERVICES.map((svc, i) => (
-                <tr key={i} className="border-b border-[#142235] last:border-b-0 hover:bg-[#0e243a]/40 transition-colors">
+                <tr key={i} className="border-b border-[var(--c-142235)] last:border-b-0 hover:bg-[var(--c-0e243a)]/40 transition-colors">
                   <td className="px-4 py-3 text-[12px] text-slate-200 flex items-center gap-2">
                     <Server size={12} className="text-slate-500" /> {svc.name}
                   </td>
@@ -467,7 +467,7 @@ function MonitorTab() {
                   <td className="px-3 py-3 text-[11px] text-slate-500 font-mono">{svc.uptime}</td>
                   <td className="px-3 py-3 text-[11px] text-slate-600 font-mono">{svc.port}</td>
                   <td className="px-3 py-3">
-                    <button className="text-[10px] text-slate-500 hover:text-amber-400 border border-[#1e3a55] rounded px-2 py-0.5 transition-colors">重启</button>
+                    <button className="text-[10px] text-slate-500 hover:text-amber-400 border border-[var(--c-1e3a55)] rounded px-2 py-0.5 transition-colors">重启</button>
                   </td>
                 </tr>
               ))}
@@ -500,7 +500,7 @@ export function SystemAdminPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#07111e] text-slate-100 overflow-hidden">
+    <div className="flex h-screen bg-[var(--c-07111e)] text-slate-100 overflow-hidden">
       <NavSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -509,8 +509,8 @@ export function SystemAdminPage() {
         <div className="flex flex-1 overflow-hidden">
 
           {/* ── Left sidebar tabs ── */}
-          <aside className="w-44 bg-[#040d18] border-r border-[#142235] flex flex-col overflow-hidden flex-shrink-0">
-            <div className="px-3 py-3 border-b border-[#142235]">
+          <aside className="w-44 bg-[var(--c-040d18)] border-r border-[var(--c-142235)] flex flex-col overflow-hidden flex-shrink-0">
+            <div className="px-3 py-3 border-b border-[var(--c-142235)]">
               <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">系统管理</div>
             </div>
             <nav className="flex-1 py-2">
@@ -521,7 +521,7 @@ export function SystemAdminPage() {
                   className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-[12px] transition-colors ${
                     activeTab === t.id
                       ? 'bg-blue-600/20 text-blue-300 border-r-2 border-r-blue-500'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#0e243a]'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-[var(--c-0e243a)]'
                   }`}
                 >
                   <span className={activeTab === t.id ? 'text-blue-400' : 'text-slate-600'}>{t.icon}</span>

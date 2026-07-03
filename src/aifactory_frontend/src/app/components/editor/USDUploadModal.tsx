@@ -243,9 +243,9 @@ export function USDUploadModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#071526] border border-[#1e3a55] rounded-xl w-[680px] max-h-[85vh] flex flex-col shadow-2xl">
+      <div className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-xl w-[680px] max-h-[85vh] flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235] flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)] flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-600/30 flex items-center justify-center">
               <HardDrive size={15} className="text-blue-400" />
@@ -293,7 +293,7 @@ export function USDUploadModal({
             className={`border-2 border-dashed rounded-lg py-6 flex flex-col items-center justify-center cursor-pointer transition-all ${
               dragging
                 ? "border-blue-500 bg-blue-600/10"
-                : "border-[#1e3a55] hover:border-blue-500/60 hover:bg-[#0b1d30]"
+                : "border-[var(--c-1e3a55)] hover:border-blue-500/60 hover:bg-[var(--c-0b1d30)]"
             }`}
           >
             {!selectedFile ? (
@@ -320,7 +320,7 @@ export function USDUploadModal({
                       e.stopPropagation();
                       fileInputRef.current?.click();
                     }}
-                    className="text-[11px] text-slate-300 bg-[#0b1d30] border border-[#142235] rounded px-3 py-1.5 hover:border-blue-500/60 hover:bg-[#0b1d30] transition-colors flex items-center gap-1.5"
+                    className="text-[11px] text-slate-300 bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded px-3 py-1.5 hover:border-blue-500/60 hover:bg-[var(--c-0b1d30)] transition-colors flex items-center gap-1.5"
                   >
                     <FolderOpen size={11} /> {t("usdUploadModal.selectFile")}
                   </button>
@@ -332,7 +332,7 @@ export function USDUploadModal({
                   className="hidden"
                   onChange={(e) => handleFolderSelect(e.target.files)}
                 />
-                <div className="mt-3 pt-3 border-t border-[#142235] w-full">
+                <div className="mt-3 pt-3 border-t border-[var(--c-142235)] w-full">
                   <p className="text-[11px] text-slate-500 mb-2 text-center">
                     {t("usdUploadModal.manualPathLabel")}
                   </p>
@@ -342,7 +342,7 @@ export function USDUploadModal({
                       value={manualPath}
                       onChange={(e) => setManualPath(e.target.value)}
                       placeholder={t("usdUploadModal.pathPlaceholder")}
-                      className="flex-1 text-[11px] bg-[#0b1d30] border border-[#142235] rounded px-2.5 py-1.5 text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+                      className="flex-1 text-[11px] bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded px-2.5 py-1.5 text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
                     />
                     <button
                       onClick={() => handlePathSelect(manualPath)}
@@ -355,7 +355,7 @@ export function USDUploadModal({
               </>
             ) : (
               <div className="w-full px-4">
-                <div className="flex items-center gap-3 bg-[#0b1d30] border border-[#142235] rounded-lg px-3 py-2.5">
+                <div className="flex items-center gap-3 bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-lg px-3 py-2.5">
                   {/* Format badge */}
                   <span
                     className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase flex-shrink-0 tracking-wider ${FORMAT_COLOR[selectedFile.format] ?? "bg-slate-600/20 text-slate-400 border-slate-600/40"}`}
@@ -381,7 +381,7 @@ export function USDUploadModal({
                           <span>{t("usdUploadModal.uploading")}</span>
                           <span>{selectedFile.progress}%</span>
                         </div>
-                        <div className="h-0.5 bg-[#071526] rounded-full overflow-hidden">
+                        <div className="h-0.5 bg-[var(--c-071526)] rounded-full overflow-hidden">
                           <div
                             className="h-full bg-blue-500 rounded-full transition-all duration-300"
                             style={{ width: `${selectedFile.progress}%` }}
@@ -436,7 +436,7 @@ export function USDUploadModal({
           </div>
 
           {linkedFile ? (
-            <div className="flex items-center gap-3 bg-[#0b1d30] border border-[#142235] rounded-lg px-3 py-2.5">
+            <div className="flex items-center gap-3 bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-lg px-3 py-2.5">
               {/* Format badge */}
               <span
                 className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase flex-shrink-0 tracking-wider ${FORMAT_COLOR[linkedFile.format] ?? "bg-slate-600/20 text-slate-400 border-slate-600/40"}`}
@@ -486,7 +486,7 @@ export function USDUploadModal({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-[#142235] flex items-center justify-between flex-shrink-0">
+        <div className="px-5 py-3 border-t border-[var(--c-142235)] flex items-center justify-between flex-shrink-0">
           <p className="text-[10px] text-slate-600 flex items-center gap-1.5">
             <AlertCircle size={10} />
             {t("usdUploadModal.footerNote")}

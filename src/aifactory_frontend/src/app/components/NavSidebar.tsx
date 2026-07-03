@@ -5,6 +5,7 @@ import {
   Link2, Settings, ChevronRight, Bell, User, Globe,
 } from 'lucide-react';
 import { getCurrentLang, setCurrentLang, useLocalized } from '../utils/i18n';
+import { ThemeToggle } from './ThemeToggle';
 
 const NAV_ITEMS = [
   { icon: <LayoutDashboard size={15} />, label: 'Dashboard', path: '/' },
@@ -27,7 +28,7 @@ export function NavSidebar() {
   }
 
   return (
-    <aside className="w-12 bg-[#040d18] border-r border-[#142235] flex flex-col items-center py-3 gap-1 flex-shrink-0">
+    <aside className="w-12 bg-[var(--c-040d18)] border-r border-[var(--c-142235)] flex flex-col items-center py-3 gap-1 flex-shrink-0">
       {/* Logo */}
       <button
         onClick={() => navigate('/')}
@@ -46,26 +47,28 @@ export function NavSidebar() {
           className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors ${
             isActive(item.path)
               ? 'bg-blue-600/30 text-blue-400'
-              : 'text-slate-500 hover:text-slate-200 hover:bg-[#142235]'
+              : 'text-slate-500 hover:text-slate-200 hover:bg-[var(--c-142235)]'
           }`}
         >
           {item.icon}
         </button>
       ))}
 
-      {/* Bottom: lang toggle + notifications + avatar */}
+      {/* Bottom: theme toggle + lang toggle + notifications + avatar */}
       <div className="mt-auto flex flex-col items-center gap-2">
+        {/* Theme toggle */}
+        <ThemeToggle />
         {/* Language toggle */}
         <button
           onClick={() => setCurrentLang(currentLang === 'zh-CN' ? 'en' : 'zh-CN')}
           title={currentLang === 'zh-CN' ? 'Switch to English' : '切换到中文'}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-[10px] font-bold text-slate-400 hover:text-slate-200 hover:bg-[#142235] transition-colors"
+          className="w-8 h-8 rounded-md flex items-center justify-center text-[10px] font-bold text-slate-400 hover:text-slate-200 hover:bg-[var(--c-142235)] transition-colors"
         >
           <Globe size={14} />
         </button>
         <button
           title="Notifications"
-          className="relative w-8 h-8 rounded-md flex items-center justify-center text-slate-500 hover:text-slate-200 hover:bg-[#142235] transition-colors"
+          className="relative w-8 h-8 rounded-md flex items-center justify-center text-slate-500 hover:text-slate-200 hover:bg-[var(--c-142235)] transition-colors"
         >
           <Bell size={14} />
           <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500" />
@@ -93,7 +96,7 @@ export function PageHeader({
   const L = useLocalized();
   const currentLang = getCurrentLang();
   return (
-    <div className="h-11 bg-[#07111e] border-b border-[#142235] flex items-center px-5 flex-shrink-0 z-10">
+    <div className="h-11 bg-[var(--c-07111e)] border-b border-[var(--c-142235)] flex items-center px-5 flex-shrink-0 z-10">
       <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
         <div className="flex items-center gap-1.5 mr-2">
           <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center">
@@ -122,7 +125,7 @@ export function PageHeader({
         <button
           onClick={() => setCurrentLang(currentLang === 'zh-CN' ? 'en' : 'zh-CN')}
           title={currentLang === 'zh-CN' ? 'Switch to English' : '切换到中文'}
-          className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400 hover:text-slate-200 bg-[#0b1d30] hover:bg-[#142235] border border-[#1e3a55] hover:border-[#2a4a6a] rounded px-2.5 py-1 transition-colors"
+          className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400 hover:text-slate-200 bg-[var(--c-0b1d30)] hover:bg-[var(--c-142235)] border border-[var(--c-1e3a55)] hover:border-[var(--c-2a4a6a)] rounded px-2.5 py-1 transition-colors"
         >
           <Globe size={11} />
           <span className="uppercase tracking-wider">{currentLang === 'zh-CN' ? 'EN' : '中'}</span>

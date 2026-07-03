@@ -179,3 +179,105 @@
     line-height: 1.5;
   }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   结构色主题（与 sim_frontend 同方案）：原 UI 用大量硬编码深蓝灰 hex，已由脚本统一
+   替换成 var(--c-<hex>)。这里 :root = 深色（默认，保留原观感），html.light = 浅色覆盖。
+   <html> 的 dark/light class 由 utils/theme.tsx 管理，dark 同时驱动上面的 shadcn .dark token。
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* —— 结构色深色值（= 原值）—— */
+  --c-1e3a55: #1e3a55;
+  --c-142235: #142235;
+  --c-071526: #071526;
+  --c-0b1d30: #0b1d30;
+  --c-2a4a6a: #2a4a6a;
+  --c-07111e: #07111e;
+  --c-040d18: #040d18;
+  --c-0e243a: #0e243a;
+  --c-080c14: #080c14;
+  --c-0f2035: #0f2035;
+  --c-050f1a: #050f1a;
+  --c-0f1420: #0f1420;
+  --c-0c1c2e: #0c1c2e;
+  --c-0a0f1c: #0a0f1c;
+  --c-0d1f33: #0d1f33;
+  --c-0f2638: #0f2638;
+  --c-dddddd: #dddddd;
+  --c-030810: #030810;
+  --c-131925: #131925;
+  --c-0f2136: #0f2136;
+  --c-0d1e2e: #0d1e2e;
+  --c-0a1c2e: #0a1c2e;
+  --c-2c1010: #2c1010;
+  --c-0f2716: #0f2716;
+  --c-166534: #166534;
+}
+
+html.light {
+  /* slate 色阶翻转：text-slate-{200..600} 变深→浅文字；slate-{700..900} 变浅色面板/边框 */
+  --color-slate-50:  #f8fafc;
+  --color-slate-100: #020617;
+  --color-slate-200: #0f172a;
+  --color-slate-300: #1e293b;
+  --color-slate-400: #334155;
+  --color-slate-500: #3f4b5e;
+  --color-slate-600: #4a5568;
+  --color-slate-700: #cbd5e1;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #f8fafc;
+
+  /* 强调色「浅档」(200/300/400)在浅色模式下压暗到 ~700，保证白/淡底上可读。
+     500/600 不动（实底/边框/淡底 tint 仍用）。深色模式不受影响。 */
+  --color-amber-200: #b45309;  --color-amber-300: #b45309;  --color-amber-400: #b45309;
+  --color-yellow-300: #a16207; --color-yellow-400: #a16207;
+  --color-orange-200: #c2410c; --color-orange-300: #c2410c; --color-orange-400: #c2410c;
+  --color-red-300: #b91c1c;    --color-red-400: #b91c1c;
+  --color-rose-300: #be123c;   --color-rose-400: #be123c;
+  --color-blue-200: #1d4ed8;   --color-blue-300: #1d4ed8;   --color-blue-400: #1d4ed8;
+  --color-sky-300: #0369a1;    --color-sky-400: #0369a1;
+  --color-cyan-200: #0e7490;   --color-cyan-300: #0e7490;   --color-cyan-400: #0e7490;
+  --color-indigo-300: #4338ca; --color-indigo-400: #4338ca;
+  --color-violet-300: #6d28d9; --color-violet-400: #6d28d9;
+  --color-purple-300: #7e22ce; --color-purple-400: #7e22ce;
+  --color-emerald-200: #047857;--color-emerald-300: #047857;--color-emerald-400: #047857;
+  --color-green-300: #15803d;  --color-green-400: #15803d;
+
+  /* —— 结构色浅色值（按角色分层）—— */
+  /* 页面 / 深底色 → 最浅一层 */
+  --c-07111e: #f1f4f9;
+  --c-071526: #eef2f7;
+  --c-040d18: #eef2f7;
+  --c-080c14: #eef2f7;
+  --c-050f1a: #eef2f7;
+  --c-030810: #eef2f7;
+  --c-0a0f1c: #eef2f7;
+  --c-0f1420: #eef2f7;
+  --c-0a1c2e: #eef2f7;
+  /* 卡片 / 面板 → 白 / 近白 */
+  --c-0b1d30: #ffffff;
+  --c-0e243a: #ffffff;
+  --c-0c1c2e: #ffffff;
+  --c-0d1f33: #ffffff;
+  --c-0d1e2e: #ffffff;
+  --c-0f2035: #fbfcfe;
+  --c-0f2638: #fbfcfe;
+  --c-0f2136: #fbfcfe;
+  --c-131925: #fbfcfe;
+  /* 分割线 / 边框 */
+  --c-142235: #e4e8ef;
+  --c-1e3a55: #ccd5e1;
+  --c-2a4a6a: #c0cad8;
+  /* 杂项 / 强调淡底 */
+  --c-dddddd: #e2e8f0;
+  --c-2c1010: #f7e8e8;
+  --c-0f2716: #e7f4ea;
+  --c-166534: #15803d;
+}
+
+/* body 兜底底色（root 布局未覆盖处）：深色默认，浅色跟随 */
+body {
+  background: var(--c-07111e);
+}
+

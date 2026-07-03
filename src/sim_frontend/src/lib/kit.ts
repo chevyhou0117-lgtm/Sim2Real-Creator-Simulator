@@ -227,6 +227,91 @@ export async function kitWalkStep(opts: {
   }
 }
 
+// ─── 漫游：俯视小地图 + 传送 ─────────────────────────────────────────────────
+// 地面平面 (u, v) 坐标约定（与 Kit /ov/walk/map、/ov/walk/pose_stream 一致）：
+//   Z-up 场景 → (u,v)=(世界x, 世界y)；Y-up → (u,v)=(世界x, 世界z)。
+//   heading_deg：0°=+u，逆时针增（90°=+v）。
+
+/** 地面平面上的一个矩形（世界单位）。 */
+export interface WalkMapRect {
+  u_min: number; v_min: number; u_max: number; v_max: number;
+}
+
+/** 一条产线在地面平面上的包围矩形。name 已去掉 P9 'a_' 前缀。 */
+export interface WalkMapLine extends WalkMapRect {
+  prim_path: string;
+  name: string;
+}
+
+/** 俯视小地图数据：工厂整体范围 + 产线矩形 + 墙段矩形。
+ *  walls 由 Kit 异步预热产出：walls_ready=false 时 walls 为空，隔 ~2s 重拉即可。 */
+export interface WalkMapData extends WalkMapRect {
+  lines: WalkMapLine[];
+  walls?: WalkMapRect[];
+  walls_ready?: boolean;
+}
+
+/** 漫游相机在地面平面上的位姿（pose_stream 推送/teleport 返回）。 */
+export interface WalkPose2D {
+  u: number;
+  v: number;
+  heading_deg: number;
+  pitch_deg?: number;
+}
+
+/** 拉取俯视小地图数据（进入漫游后调一次即可；只依赖已打开的 stage）。 */
+export async function kitWalkMap(): Promise<WalkMapData> {
+  const res = await kitFetch('/ov/walk/map');
+  if (!res.ok) {
+    throw new Error(`Kit /ov/walk/map ${res.status}: ${await res.text().catch(() => '')}`);
+  }
+  const body = (await res.json()) as { data: WalkMapData };
+  return body.data;
+}
+
+/** 漫游"准星选中"（F 键）：让 Kit 对 viewport 中心做一次 GPU 拾取。结果不在响应里——
+ *  命中后 Kit set selection → 走 /ov/selection_stream SSE 推给前端（空串=未命中清空选中）。
+ *  为什么前端拦 F 而不是让串流库转发给 Kit：F 是 Kit viewport 的 Frame Selection 热键，
+ *  会在到达漫游键盘回调前被热键系统消费掉（按了没反应）。 */
+export async function kitWalkPick(): Promise<void> {
+  const res = await kitFetch('/ov/walk/pick', { method: 'POST', body: '{}' });
+  if (!res.ok) {
+    throw new Error(`Kit /ov/walk/pick ${res.status}: ${await res.text().catch(() => '')}`);
+  }
+}
+
+/** 漫游传送：传 prim_path 站到该产线正面并面向中心；传 (u,v) 直接落点（朝向不变）。 */
+export async function kitWalkTeleport(
+  target: { prim_path: string } | { u: number; v: number },
+): Promise<WalkPose2D> {
+  const res = await kitFetch('/ov/walk/teleport', {
+    method: 'POST',
+    body: JSON.stringify(target),
+  });
+  if (!res.ok) {
+    throw new Error(`Kit /ov/walk/teleport ${res.status}: ${await res.text().catch(() => '')}`);
+  }
+  const body = (await res.json()) as { data: WalkPose2D };
+  return body.data;
+}
+
+/** 订阅漫游相机平面位姿（漫游期间 Kit ~150ms 推一条）。EventSource 自动重连。
+ *  返回 unsubscribe 函数。 */
+export function subscribeWalkPose(onPose: (pose: WalkPose2D) => void): () => void {
+  const es = new EventSource(`${KIT_BASE}/ov/walk/pose_stream`);
+  es.onmessage = (ev) => {
+    try {
+      onPose(JSON.parse(ev.data) as WalkPose2D);
+    } catch (err) {
+      console.warn('[Kit] walk pose_stream parse failed:', err);
+    }
+  };
+  es.onerror = (err) => {
+    console.warn('[Kit] walk pose_stream error (auto-reconnect):', err);
+  };
+  return () => es.close();
+}
+
 // ─── viewport selection SSE 订阅 ─────────────────────────────────────────────
 
 /** 订阅 Kit viewport selection 变化。EventSource 自动重连。

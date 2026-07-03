@@ -40,12 +40,12 @@ function FileIcon({ type }: { type: FileEntry['type'] }) {
 // ── Mock 3D Preview Viewport ──────────────────────────────────────────────────
 function Preview3D({ hasFile }: { hasFile: boolean }) {
   return (
-    <div className="relative flex-1 bg-[#030810] rounded-lg overflow-hidden flex flex-col">
+    <div className="relative flex-1 bg-[var(--c-030810)] rounded-lg overflow-hidden flex flex-col">
       {/* Grid background */}
       <div
         className="absolute inset-0 opacity-20"
         style={{
-          backgroundImage: 'linear-gradient(#1e3a55 1px, transparent 1px), linear-gradient(90deg, #1e3a55 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(var(--c-1e3a55) 1px, transparent 1px), linear-gradient(90deg, var(--c-1e3a55) 1px, transparent 1px)',
           backgroundSize: '32px 32px',
         }}
       />
@@ -75,19 +75,19 @@ function Preview3D({ hasFile }: { hasFile: boolean }) {
           </div>
           {/* Model info overlay */}
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-            <div className="bg-[#040d18]/80 backdrop-blur rounded px-2.5 py-1.5 text-[10px] text-slate-400 space-y-0.5">
+            <div className="bg-[var(--c-040d18)]/80 backdrop-blur rounded px-2.5 py-1.5 text-[10px] text-slate-400 space-y-0.5">
               <div>顶点: <span className="text-slate-200">12,847</span></div>
               <div>面数: <span className="text-slate-200">8,432</span></div>
               <div>材质: <span className="text-slate-200">4</span></div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <button className="w-7 h-7 bg-[#040d18]/80 backdrop-blur rounded flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors">
+              <button className="w-7 h-7 bg-[var(--c-040d18)]/80 backdrop-blur rounded flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors">
                 <ZoomIn size={13} />
               </button>
-              <button className="w-7 h-7 bg-[#040d18]/80 backdrop-blur rounded flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors">
+              <button className="w-7 h-7 bg-[var(--c-040d18)]/80 backdrop-blur rounded flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors">
                 <ZoomOut size={13} />
               </button>
-              <button className="w-7 h-7 bg-[#040d18]/80 backdrop-blur rounded flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors">
+              <button className="w-7 h-7 bg-[var(--c-040d18)]/80 backdrop-blur rounded flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors">
                 <RotateCcw size={13} />
               </button>
             </div>
@@ -149,7 +149,7 @@ function DropZone({
         className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center gap-2 cursor-pointer transition-colors ${
           dragging
             ? 'border-blue-500 bg-blue-600/10'
-            : 'border-[#1e3a55] hover:border-[#2a4a6a] hover:bg-[#0e243a]/50'
+            : 'border-[var(--c-1e3a55)] hover:border-[var(--c-2a4a6a)] hover:bg-[var(--c-0e243a)]/50'
         }`}
       >
         <input ref={inputRef} type="file" multiple className="hidden" accept=".usd,.usda,.usdz,.fbx,.obj,.gltf,.glb,.png,.jpg,.jpeg" />
@@ -163,14 +163,14 @@ function DropZone({
       {files.length > 0 && (
         <div className="space-y-1.5 max-h-36 overflow-y-auto">
           {files.map((f) => (
-            <div key={f.name} className="bg-[#071526] border border-[#142235] rounded px-3 py-2 flex items-center gap-2.5">
+            <div key={f.name} className="bg-[var(--c-071526)] border border-[var(--c-142235)] rounded px-3 py-2 flex items-center gap-2.5">
               {STATUS_ICON[f.status]}
               <FileIcon type={f.type} />
               <div className="flex-1 min-w-0">
                 <div className="text-[11px] text-slate-300 truncate">{f.name}</div>
                 <div className="text-[10px] text-slate-600">{formatSize(f.size)}</div>
                 {f.status === 'uploading' && (
-                  <div className="mt-1 h-0.5 bg-[#142235] rounded overflow-hidden">
+                  <div className="mt-1 h-0.5 bg-[var(--c-142235)] rounded overflow-hidden">
                     <div className="h-full bg-blue-500 rounded transition-all" style={{ width: `${f.progress}%` }} />
                   </div>
                 )}
@@ -213,7 +213,7 @@ export function ModelUploadPage() {
   }
 
   return (
-    <div className="flex h-screen bg-[#07111e] text-slate-100 overflow-hidden">
+    <div className="flex h-screen bg-[var(--c-07111e)] text-slate-100 overflow-hidden">
       <NavSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -225,7 +225,7 @@ export function ModelUploadPage() {
           actions={
             <button
               onClick={() => navigate('/asset-library')}
-              className="text-xs text-slate-400 border border-[#1e3a55] px-3 py-1.5 rounded-md hover:border-[#2a4a6a] transition-colors"
+              className="text-xs text-slate-400 border border-[var(--c-1e3a55)] px-3 py-1.5 rounded-md hover:border-[var(--c-2a4a6a)] transition-colors"
             >
               取消
             </button>
@@ -244,7 +244,7 @@ export function ModelUploadPage() {
           <div className="flex flex-1 overflow-hidden">
 
             {/* ── Left: Form ── */}
-            <div className="w-96 border-r border-[#142235] flex flex-col overflow-y-auto">
+            <div className="w-96 border-r border-[var(--c-142235)] flex flex-col overflow-y-auto">
               <div className="p-6 space-y-5">
                 {/* File upload */}
                 <section>
@@ -266,7 +266,7 @@ export function ModelUploadPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. JUKI 高速贴片机 KE-3020"
-                      className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
 
@@ -278,7 +278,7 @@ export function ModelUploadPage() {
                           key={c.id}
                           onClick={() => setCategory(c.id)}
                           className={`border rounded p-2 text-left text-[11px] transition-colors ${
-                            category === c.id ? 'border-blue-500/60 bg-blue-600/10 text-blue-300' : 'border-[#1e3a55] text-slate-400 hover:border-[#2a4a6a]'
+                            category === c.id ? 'border-blue-500/60 bg-blue-600/10 text-blue-300' : 'border-[var(--c-1e3a55)] text-slate-400 hover:border-[var(--c-2a4a6a)]'
                           }`}
                         >
                           <span className="mr-1.5">{c.icon}</span>{c.label}
@@ -302,7 +302,7 @@ export function ModelUploadPage() {
                           className={`text-[10px] px-2.5 py-1 rounded border transition-colors ${
                             process.includes(p)
                               ? 'border-blue-500/60 bg-blue-600/20 text-blue-300'
-                              : 'border-[#1e3a55] text-slate-500 hover:border-[#2a4a6a]'
+                              : 'border-[var(--c-1e3a55)] text-slate-500 hover:border-[var(--c-2a4a6a)]'
                           }`}
                         >
                           {p}
@@ -316,7 +316,7 @@ export function ModelUploadPage() {
                     <select
                       value={type}
                       onChange={(e) => setType(e.target.value)}
-                      className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
                     >
                       <option value="">请选择</option>
                       {TYPE_OPTIONS.map((t) => <option key={t}>{t}</option>)}
@@ -335,7 +335,7 @@ export function ModelUploadPage() {
                         value={manufacturer}
                         onChange={(e) => setManufacturer(e.target.value)}
                         placeholder="e.g. JUKI"
-                        className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                        className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                       />
                     </div>
                     <div>
@@ -344,7 +344,7 @@ export function ModelUploadPage() {
                         value={model}
                         onChange={(e) => setModel(e.target.value)}
                         placeholder="e.g. KE-3020"
-                        className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                        className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                       />
                     </div>
                   </div>
@@ -357,7 +357,7 @@ export function ModelUploadPage() {
                       value={tags}
                       onChange={(e) => setTags(e.target.value)}
                       placeholder="多个标签用逗号分隔，e.g. 贴片, 高速, 8轴"
-                      className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
                 </section>
@@ -394,7 +394,7 @@ export function ModelUploadPage() {
 
               {/* Metadata preview */}
               {name && (
-                <div className="flex-shrink-0 bg-[#0b1d30] border border-[#142235] rounded-lg p-4 space-y-2">
+                <div className="flex-shrink-0 bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-lg p-4 space-y-2">
                   <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">入库预览</div>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
                     <MetaRow label="名称" value={name || '—'} />

@@ -13,7 +13,7 @@ export function Input({ label, error, className, ...props }: InputProps) {
       <input
         {...props}
         className={cn(
-          'bg-[#07111e] border border-[#1e3a55] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none',
+          'bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none',
           'placeholder:text-slate-600',
           'focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all',
           error && 'border-red-500/60',
@@ -32,7 +32,7 @@ export function Select({ label, error, className, children, ...props }: React.Se
       <select
         {...props}
         className={cn(
-          'bg-[#07111e] border border-[#1e3a55] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none cursor-pointer',
+          'bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none cursor-pointer',
           'focus:border-blue-500/60 transition-all',
           error && 'border-red-500/60',
           className,

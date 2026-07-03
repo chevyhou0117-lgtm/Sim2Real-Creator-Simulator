@@ -23,8 +23,8 @@ export function CategoryDialog({ parentId, target, onSave, onCancel }: CategoryD
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[400px] shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235]">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[400px] shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)]">
           <span className="text-sm font-semibold text-slate-100">
             {isEdit ? "Edit Category" : "Add Category"}
           </span>
@@ -45,7 +45,7 @@ export function CategoryDialog({ parentId, target, onSave, onCancel }: CategoryD
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. SMT Process"
-                className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                 autoFocus
               />
             </div>
@@ -57,7 +57,7 @@ export function CategoryDialog({ parentId, target, onSave, onCancel }: CategoryD
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="e.g. smt_process_01"
-                className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
             <div>
@@ -69,15 +69,15 @@ export function CategoryDialog({ parentId, target, onSave, onCancel }: CategoryD
                 onChange={(e) => setDesc(e.target.value)}
                 placeholder="Category description..."
                 rows={3}
-                className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
               />
             </div>
           </div>
-          <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[#142235]">
+          <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[var(--c-142235)]">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 text-xs text-slate-400 border border-[#1e3a55] rounded-md hover:border-[#2a4a6a] transition-colors"
+              className="px-4 py-2 text-xs text-slate-400 border border-[var(--c-1e3a55)] rounded-md hover:border-[var(--c-2a4a6a)] transition-colors"
             >
               Cancel
             </button>

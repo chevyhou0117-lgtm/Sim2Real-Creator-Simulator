@@ -143,7 +143,7 @@ function TreeItem({
         className={cn(
           'flex items-center gap-1.5 py-[5px] pr-2 rounded-md cursor-pointer transition-colors select-none group',
           isSelected && 'bg-blue-600/15 ring-1 ring-blue-500/40',
-          !isSelected && 'hover:bg-[#0d2035]/50',
+          !isSelected && 'hover:bg-[var(--c-0d2035)]/50',
           sizeCls[node.type],
         )}
       >
@@ -311,14 +311,14 @@ export function AssetSidebar({
     <>
       {/* ─── Left floating panel: 资产结构 ─────────────────────────────────── */}
       <div
-        className="absolute top-3 left-3 z-20 flex flex-col rounded-xl border border-[#1e3a55] bg-[#07111e]/90 backdrop-blur shadow-2xl transition-all overflow-hidden"
+        className="absolute top-3 left-3 z-20 flex flex-col rounded-xl border border-[var(--c-1e3a55)] bg-[var(--c-07111e)]/90 backdrop-blur shadow-2xl transition-all overflow-hidden"
         style={{
           width: collapsed ? 36 : TREE_PANEL_WIDTH,
           height: collapsed ? 36 : 'calc(100% - 24px)',
           maxHeight: collapsed ? 36 : 'calc(100% - 24px)',
         }}
       >
-        <div className="flex items-center gap-2 px-2.5 py-2 border-b border-[#142235] flex-shrink-0">
+        <div className="flex items-center gap-2 px-2.5 py-2 border-b border-[var(--c-142235)] flex-shrink-0">
           <button
             onClick={() => setCollapsed((v) => !v)}
             className="text-slate-400 hover:text-slate-200 transition-colors flex-shrink-0"
@@ -345,7 +345,7 @@ export function AssetSidebar({
             <div className="px-2 py-2 flex-shrink-0">
               <input
                 placeholder={t('Search assets...')}
-                className="w-full bg-[#040d16] border border-[#142235] rounded-md px-2.5 py-1 text-[11px] text-slate-300 outline-none focus:border-blue-500/40 placeholder:text-slate-600"
+                className="w-full bg-[var(--c-040d16)] border border-[var(--c-142235)] rounded-md px-2.5 py-1 text-[11px] text-slate-300 outline-none focus:border-blue-500/40 placeholder:text-slate-600"
               />
             </div>
             <div className="flex-1 overflow-y-auto py-1 px-1 min-h-0">
@@ -373,7 +373,7 @@ export function AssetSidebar({
                 ))
               )}
             </div>
-            <div className="border-t border-[#142235] px-3 py-1.5 flex-shrink-0 text-[9px] text-slate-600 leading-tight">
+            <div className="border-t border-[var(--c-142235)] px-3 py-1.5 flex-shrink-0 text-[9px] text-slate-600 leading-tight">
               {t('Click to highlight')} · <span className="text-slate-500">{t('Double-click to fly camera')}</span> {t('to the selected node · hover row end')} <Sliders size={9} className="inline -mt-0.5" /> {t('to open parameters')}
             </div>
           </div>
@@ -388,10 +388,10 @@ export function AssetSidebar({
           : PARAMS_PANEL_WIDTH_WIDE;
         return (
           <div
-            className="absolute top-3 right-3 z-20 flex flex-col rounded-xl border border-[#1e3a55] bg-[#07111e]/90 backdrop-blur shadow-2xl transition-all overflow-hidden"
+            className="absolute top-3 right-3 z-20 flex flex-col rounded-xl border border-[var(--c-1e3a55)] bg-[var(--c-07111e)]/90 backdrop-blur shadow-2xl transition-all overflow-hidden"
             style={{ width: panelWidth, height: 'calc(100% - 24px)', maxHeight: 'calc(100% - 24px)' }}
           >
-            <div className="flex items-center gap-2 px-2.5 py-2 border-b border-[#142235] flex-shrink-0">
+            <div className="flex items-center gap-2 px-2.5 py-2 border-b border-[var(--c-142235)] flex-shrink-0">
               <Sliders size={13} className="text-slate-400 flex-shrink-0" />
               <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex-1 truncate">
                 {paramsTitle}
@@ -473,13 +473,13 @@ function EquipmentTechParamsMock({ node }: { node: TreeNode }) {
             <input
               type="text"
               defaultValue={f.default}
-              className="bg-[#040d16] border border-[#142235] rounded px-2 py-1 text-[12px] font-mono text-slate-200 focus:outline-none focus:border-blue-500/40"
+              className="bg-[var(--c-040d16)] border border-[var(--c-142235)] rounded px-2 py-1 text-[12px] font-mono text-slate-200 focus:outline-none focus:border-blue-500/40"
             />
             {f.hint && <span className="text-[9px] text-slate-600 leading-tight">{t(f.hint)}</span>}
           </div>
         ))}
       </div>
-      <div className="mt-4 pt-3 border-t border-[#142235] text-[10px] text-slate-500 leading-relaxed">
+      <div className="mt-4 pt-3 border-t border-[var(--c-142235)] text-[10px] text-slate-500 leading-relaxed">
         <div className="font-semibold text-slate-400 mb-1">{t('Equipment Path')}</div>
         <div className="font-mono text-slate-600 break-all">{node.prim_path ?? '—'}</div>
       </div>

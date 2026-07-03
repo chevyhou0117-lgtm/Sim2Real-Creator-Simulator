@@ -52,7 +52,7 @@ export function TemplatesPage() {
 
       <div className="grid grid-cols-3 gap-4">
         {templates.map(tpl => (
-          <div key={tpl.id} className="bg-[#0b1d30] border border-[#142235] rounded-xl p-5 hover:border-[#1e3a55] transition-colors group">
+          <div key={tpl.id} className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl p-5 hover:border-[var(--c-1e3a55)] transition-colors group">
             <div className="flex items-start justify-between mb-3">
               <div className="w-10 h-10 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-sm">
                 {tpl.name[0]}
@@ -80,7 +80,7 @@ export function TemplatesPage() {
         ))}
 
         {/* New Template Card */}
-        <div className="bg-[#0b1d30] border-2 border-dashed border-[#142235] rounded-xl p-5 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-blue-500/30 hover:bg-[#0d2035]/50 transition-all text-slate-600 hover:text-slate-400 min-h-[180px]">
+        <div className="bg-[var(--c-0b1d30)] border-2 border-dashed border-[var(--c-142235)] rounded-xl p-5 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-blue-500/30 hover:bg-[var(--c-0d2035)]/50 transition-all text-slate-600 hover:text-slate-400 min-h-[180px]">
           <Plus size={20} />
           <span className="text-xs">{t('New Parameter Template')}</span>
         </div>

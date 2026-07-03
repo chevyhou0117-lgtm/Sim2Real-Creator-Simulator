@@ -421,24 +421,3 @@ export const importApi = {
     return uploadFile<ImportCommitResult>(`/imports/${sectionId}:commit`, fd);
   },
 };
-
-// ---------------------------------------------------------------------------
-// Admin API —— 让 sim_backend 当 Kit 看门人：当 Kit 主线程卡死时 pkill+spawn
-// ---------------------------------------------------------------------------
-export interface KitRestartResponse {
-  ok: boolean;
-  killed_pids: number[];
-  new_pid: number | null;
-  launch_script: string;
-  spawn_log?: string;
-  message: string;
-}
-export interface KitStatusResponse {
-  running: boolean;
-  pids: number[];
-  process_match: string;
-}
-export const adminApi = {
-  restartKit: () => api<KitRestartResponse>('/admin/kit/restart', { method: 'POST' }),
-  kitStatus: () => api<KitStatusResponse>('/admin/kit/status'),
-};

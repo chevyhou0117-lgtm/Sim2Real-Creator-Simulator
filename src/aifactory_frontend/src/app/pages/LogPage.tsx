@@ -45,7 +45,7 @@ export function LogPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#07111e] text-slate-100 overflow-hidden">
+    <div className="flex h-screen bg-[var(--c-07111e)] text-slate-100 overflow-hidden">
       <NavSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -70,7 +70,7 @@ export function LogPage() {
           {/* Log Table */}
           <div className="flex-1 overflow-y-auto p-6">
             {/* Filters */}
-            <div className="mb-6 bg-[#0b1d30] border border-[#142235] rounded-lg p-4 space-y-4">
+            <div className="mb-6 bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-lg p-4 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="relative flex-1 max-w-xs">
                   <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -78,24 +78,24 @@ export function LogPage() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="搜索日志..."
-                    className="w-full pl-8 pr-3 py-1.5 bg-[#071526] border border-[#1e3a55] rounded text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full pl-8 pr-3 py-1.5 bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                   />
                 </div>
                 <select
                   value={moduleFilter}
                   onChange={(e) => setModuleFilter(e.target.value)}
-                  className="bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
                 >
                   {modules.map((m) => <option key={m} value={m}>{m === 'all' ? '全部模块' : m}</option>)}
                 </select>
                 <select
                   value={resultFilter}
                   onChange={(e) => setResultFilter(e.target.value)}
-                  className="bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
                 >
                   {results.map((r) => <option key={r} value={r}>{r === 'all' ? '全部结果' : (r === 'success' ? '成功' : '失败')}</option>)}
                 </select>
-                <button className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 border border-[#1e3a55] px-3 py-1.5 rounded transition-colors">
+                <button className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 border border-[var(--c-1e3a55)] px-3 py-1.5 rounded transition-colors">
                   <Filter size={12} /> 更多筛选
                 </button>
               </div>
@@ -105,10 +105,10 @@ export function LogPage() {
             </div>
 
             {/* Table */}
-            <div className="border border-[#142235] rounded-lg overflow-hidden">
+            <div className="border border-[var(--c-142235)] rounded-lg overflow-hidden">
               <table className="w-full">
-                <thead className="bg-[#071526]">
-                  <tr className="border-b border-[#142235]">
+                <thead className="bg-[var(--c-071526)]">
+                  <tr className="border-b border-[var(--c-142235)]">
                     <th className="px-4 py-2.5 text-left text-[10px] font-medium text-slate-500 uppercase tracking-wider">时间</th>
                     <th className="px-3 py-2.5 text-left text-[10px] font-medium text-slate-500 uppercase tracking-wider">用户</th>
                     <th className="px-3 py-2.5 text-left text-[10px] font-medium text-slate-500 uppercase tracking-wider">模块</th>
@@ -119,7 +119,7 @@ export function LogPage() {
                 </thead>
                 <tbody>
                   {filteredLogs.map((log) => (
-                    <tr key={log.id} className="border-b border-[#142235] hover:bg-[#0e243a]/40 transition-colors">
+                    <tr key={log.id} className="border-b border-[var(--c-142235)] hover:bg-[var(--c-0e243a)]/40 transition-colors">
                       <td className="px-4 py-2.5 text-[10px] text-slate-500 whitespace-nowrap font-mono">{log.timestamp}</td>
                       <td className="px-3 py-2.5">
                         <div className="text-[11px] text-slate-300">{log.user}</div>
@@ -162,7 +162,7 @@ export function LogPage() {
           </div>
 
           {/* Right Info Panel */}
-          <aside className="w-64 bg-[#071526] border-l border-[#142235] flex flex-col overflow-hidden flex-shrink-0 p-5 space-y-5">
+          <aside className="w-64 bg-[var(--c-071526)] border-l border-[var(--c-142235)] flex flex-col overflow-hidden flex-shrink-0 p-5 space-y-5">
             <div>
               <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">项目信息</div>
               <div className="space-y-2">

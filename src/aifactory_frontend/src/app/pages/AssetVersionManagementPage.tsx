@@ -158,7 +158,7 @@ export function AssetVersionManagementPage() {
   }
 
   return (
-    <div className="flex h-screen bg-[#07111e] text-slate-100 overflow-hidden">
+    <div className="flex h-screen bg-[var(--c-07111e)] text-slate-100 overflow-hidden">
       <NavSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -172,7 +172,7 @@ export function AssetVersionManagementPage() {
             <>
               <button
                 onClick={() => navigate('/asset-library/lifecycle')}
-                className="flex items-center gap-1.5 text-xs border border-[#1e3a55] text-slate-400 hover:text-slate-200 hover:border-[#2a4a6a] px-3 py-1.5 rounded-md transition-colors"
+                className="flex items-center gap-1.5 text-xs border border-[var(--c-1e3a55)] text-slate-400 hover:text-slate-200 hover:border-[var(--c-2a4a6a)] px-3 py-1.5 rounded-md transition-colors"
               >
                 <History size={12} /> Lifecycle
               </button>
@@ -191,7 +191,7 @@ export function AssetVersionManagementPage() {
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
 
             {/* Asset summary bar */}
-            <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-lg px-5 py-3 flex items-center gap-4">
+            <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-lg px-5 py-3 flex items-center gap-4">
               <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
                 <Package size={16} className="text-blue-400" />
               </div>
@@ -207,7 +207,7 @@ export function AssetVersionManagementPage() {
 
             {/* Compare Bar */}
             {(compareA || compareB) && (
-              <div className="bg-[#0b1d30] border border-blue-500/40 rounded-lg px-4 py-3 flex items-center gap-4">
+              <div className="bg-[var(--c-0b1d30)] border border-blue-500/40 rounded-lg px-4 py-3 flex items-center gap-4">
                 <GitCommit size={13} className="text-blue-400 flex-shrink-0" />
                 <span className="text-[11px] text-slate-400">Compare:</span>
                 <span className="text-[11px] text-blue-300 font-medium bg-blue-600/15 px-2 py-0.5 rounded border border-blue-500/30">
@@ -249,8 +249,8 @@ export function AssetVersionManagementPage() {
                 return (
                   <div
                     key={v.id}
-                    className={`bg-[#0b1d30] border rounded-lg transition-all ${
-                      v.status === 'current' ? 'border-emerald-500/30' : 'border-[#142235]'
+                    className={`bg-[var(--c-0b1d30)] border rounded-lg transition-all ${
+                      v.status === 'current' ? 'border-emerald-500/30' : 'border-[var(--c-142235)]'
                     }`}
                   >
                     {/* Header Row */}
@@ -258,7 +258,7 @@ export function AssetVersionManagementPage() {
                       {/* Timeline dot */}
                       <div className="flex flex-col items-center flex-shrink-0">
                         <div className={`w-3 h-3 rounded-full border-2 ${v.status === 'current' ? 'border-emerald-400 bg-emerald-400/30' : 'border-slate-600 bg-slate-700'}`} />
-                        {idx < versions.length - 1 && <div className="w-px h-6 bg-[#142235] mt-1" />}
+                        {idx < versions.length - 1 && <div className="w-px h-6 bg-[var(--c-142235)] mt-1" />}
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -298,18 +298,18 @@ export function AssetVersionManagementPage() {
                               ? 'border-blue-500/60 bg-blue-600/15 text-blue-400'
                               : isCheckedB
                               ? 'border-purple-500/60 bg-purple-600/15 text-purple-400'
-                              : 'border-[#1e3a55] text-slate-500 hover:text-slate-300'
+                              : 'border-[var(--c-1e3a55)] text-slate-500 hover:text-slate-300'
                           }`}
                         >
                           {isCheckedA ? 'A' : isCheckedB ? 'B' : 'Compare'}
                         </button>
                         <button
-                          className="text-[10px] px-2 py-1 rounded border border-[#1e3a55] text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
+                          className="text-[10px] px-2 py-1 rounded border border-[var(--c-1e3a55)] text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
                         >
                           <Eye size={10} /> Preview
                         </button>
                         <button
-                          className="text-[10px] px-2 py-1 rounded border border-[#1e3a55] text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
+                          className="text-[10px] px-2 py-1 rounded border border-[var(--c-1e3a55)] text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
                         >
                           <Download size={10} /> Export
                         </button>
@@ -332,7 +332,7 @@ export function AssetVersionManagementPage() {
 
                     {/* Expanded: change summary */}
                     {isExpanded && (
-                      <div className="px-5 pb-4 border-t border-[#142235] pt-3 ml-6">
+                      <div className="px-5 pb-4 border-t border-[var(--c-142235)] pt-3 ml-6">
                         {v.changeSummary.length > 0 ? (
                           <>
                             <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Change Summary</div>
@@ -350,7 +350,7 @@ export function AssetVersionManagementPage() {
                         )}
 
                         {/* File metadata */}
-                        <div className="mt-3 pt-3 border-t border-[#142235] grid grid-cols-4 gap-4">
+                        <div className="mt-3 pt-3 border-t border-[var(--c-142235)] grid grid-cols-4 gap-4">
                           {[
                             { label: 'File Size', value: v.fileSize },
                             { label: 'Poly Count', value: v.polyCount },
@@ -372,7 +372,7 @@ export function AssetVersionManagementPage() {
           </div>
 
           {/* Right Info Panel */}
-          <aside className="w-64 bg-[#071526] border-l border-[#142235] flex flex-col overflow-hidden flex-shrink-0 p-5 space-y-5">
+          <aside className="w-64 bg-[var(--c-071526)] border-l border-[var(--c-142235)] flex flex-col overflow-hidden flex-shrink-0 p-5 space-y-5">
             <div>
               <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">Asset Info</div>
               <div className="space-y-2">
@@ -417,7 +417,7 @@ export function AssetVersionManagementPage() {
             <div className="mt-auto space-y-2">
               <button
                 onClick={() => navigate('/asset-library')}
-                className="w-full text-xs text-slate-400 border border-[#1e3a55] hover:border-[#2a4a6a] px-3 py-2 rounded-md transition-colors flex items-center justify-center gap-1.5"
+                className="w-full text-xs text-slate-400 border border-[var(--c-1e3a55)] hover:border-[var(--c-2a4a6a)] px-3 py-2 rounded-md transition-colors flex items-center justify-center gap-1.5"
               >
                 <Package size={11} /> Back to Library
               </button>
@@ -435,7 +435,7 @@ export function AssetVersionManagementPage() {
       {/* Restore Confirm Modal */}
       {showRestoreConfirm && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[400px] shadow-2xl p-6 space-y-4">
+          <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[400px] shadow-2xl p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
                 <AlertTriangle size={18} className="text-amber-400" />
@@ -449,7 +449,7 @@ export function AssetVersionManagementPage() {
               所有引用该资产的工厂项目将在下次同步时切换到恢复后的版本。此操作可通过再次 Restore 撤销。
             </p>
             <div className="flex gap-3 pt-2">
-              <button onClick={() => setShowRestoreConfirm(null)} className="flex-1 text-xs text-slate-400 border border-[#1e3a55] rounded-md py-2 hover:border-[#2a4a6a] transition-colors">
+              <button onClick={() => setShowRestoreConfirm(null)} className="flex-1 text-xs text-slate-400 border border-[var(--c-1e3a55)] rounded-md py-2 hover:border-[var(--c-2a4a6a)] transition-colors">
                 Cancel
               </button>
               <button onClick={() => setShowRestoreConfirm(null)} className="flex-1 text-xs bg-amber-600 hover:bg-amber-700 text-white rounded-md py-2 transition-colors">
@@ -463,8 +463,8 @@ export function AssetVersionManagementPage() {
       {/* Diff Modal */}
       {showDiffModal && compareA && compareB && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[720px] shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235]">
+          <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[720px] shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)]">
               <div className="flex items-center gap-2">
                 <Diff size={14} className="text-blue-400" />
                 <span className="text-sm font-semibold text-slate-100">Version Diff</span>
@@ -502,7 +502,7 @@ export function AssetVersionManagementPage() {
                   { type: 'mod', path: 'lod/lod2.usda', desc: 'LOD2 面数：15,200 → 18,100' },
                   { type: 'del', path: 'materials/metallic_v1.usda', desc: '旧版材质贴图已废弃' },
                 ].map((entry, i) => (
-                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded bg-[#071526] border border-[#142235]">
+                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded bg-[var(--c-071526)] border border-[var(--c-142235)]">
                     <span className={`text-[10px] font-mono font-bold w-8 text-center flex-shrink-0 ${
                       entry.type === 'add' ? 'text-emerald-400' :
                       entry.type === 'mod' ? 'text-amber-400' : 'text-red-400'
@@ -515,10 +515,10 @@ export function AssetVersionManagementPage() {
                 ))}
               </div>
             </div>
-            <div className="px-5 py-4 border-t border-[#142235] flex justify-end">
+            <div className="px-5 py-4 border-t border-[var(--c-142235)] flex justify-end">
               <button
                 onClick={() => setShowDiffModal(false)}
-                className="text-xs text-slate-400 border border-[#1e3a55] rounded-md px-4 py-2 hover:border-[#2a4a6a] transition-colors"
+                className="text-xs text-slate-400 border border-[var(--c-1e3a55)] rounded-md px-4 py-2 hover:border-[var(--c-2a4a6a)] transition-colors"
               >
                 Close
               </button>
@@ -549,8 +549,8 @@ function NewVersionModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[500px] shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235]">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[500px] shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)]">
           <div className="flex items-center gap-2">
             <Plus size={14} className="text-blue-400" />
             <span className="text-sm font-semibold text-slate-100">Publish New Version</span>
@@ -561,7 +561,7 @@ function NewVersionModal({ onClose }: { onClose: () => void }) {
           {/* Upload area */}
           <div>
             <label className="block text-[11px] text-slate-400 mb-2">Upload USD File</label>
-            <div className="border-2 border-dashed border-[#1e3a55] rounded-lg py-6 flex flex-col items-center gap-2 hover:border-blue-500/40 transition-colors cursor-pointer">
+            <div className="border-2 border-dashed border-[var(--c-1e3a55)] rounded-lg py-6 flex flex-col items-center gap-2 hover:border-blue-500/40 transition-colors cursor-pointer">
               <FileText size={20} className="text-slate-600" />
               <span className="text-[11px] text-slate-500">Drop .usd / .usda / .usdc file here</span>
               <span className="text-[10px] text-slate-700">or click to browse</span>
@@ -579,7 +579,7 @@ function NewVersionModal({ onClose }: { onClose: () => void }) {
                   className={`text-left p-3 rounded-lg border transition-all ${
                     bump === opt.id
                       ? 'border-blue-500/60 bg-blue-600/10'
-                      : 'border-[#1e3a55] hover:border-[#2a4a6a]'
+                      : 'border-[var(--c-1e3a55)] hover:border-[var(--c-2a4a6a)]'
                   }`}
                 >
                   <div className={`text-[11px] font-semibold mb-0.5 ${bump === opt.id ? 'text-blue-300' : 'text-slate-300'}`}>{opt.label}</div>
@@ -598,7 +598,7 @@ function NewVersionModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setComment(e.target.value)}
               placeholder="描述本次版本的主要变更..."
               rows={3}
-              className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-[11px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/60 transition-colors resize-none"
+              className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-[11px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/60 transition-colors resize-none"
             />
           </div>
 
@@ -609,12 +609,12 @@ function NewVersionModal({ onClose }: { onClose: () => void }) {
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               placeholder="e.g. SMT, Verified, Q2-2026"
-              className="w-full bg-[#071526] border border-[#1e3a55] rounded-md px-3 py-2 text-[11px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/60 transition-colors"
+              className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-[11px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500/60 transition-colors"
             />
           </div>
         </div>
-        <div className="px-5 py-4 border-t border-[#142235] flex gap-3">
-          <button onClick={onClose} className="flex-1 text-xs text-slate-400 border border-[#1e3a55] rounded-md py-2 hover:border-[#2a4a6a] transition-colors">
+        <div className="px-5 py-4 border-t border-[var(--c-142235)] flex gap-3">
+          <button onClick={onClose} className="flex-1 text-xs text-slate-400 border border-[var(--c-1e3a55)] rounded-md py-2 hover:border-[var(--c-2a4a6a)] transition-colors">
             Cancel
           </button>
           <button onClick={onClose} className="flex-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md py-2 transition-colors">

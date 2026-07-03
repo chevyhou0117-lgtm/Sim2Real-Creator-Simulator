@@ -18,8 +18,6 @@ export default function Playback2DView({ planId, tMs }: { planId?: string; tMs: 
   const [edges, setEdges] = useState<StageEdge[]>([]);
   const [segs, setSegs] = useState<Record<string, Seg>>({}); // 键=line::op
   const [bufLevels, setBufLevels] = useState<Record<string, number>>({}); // 键=wip_id
-  // 物料库存时序（60s 快照 warehouse_states）：[{t_ms, {material_code:{quantity,...}}}]，按时间升序
-  const [matTimeline, setMatTimeline] = useState<Array<{ t: number; wh: Record<string, { quantity: number; material_type?: string | null }> }>>([]);
   const [loading, setLoading] = useState(true);
 
   // 一次性：拉 schematic 骨架（产线/工序/缓冲/接续）
@@ -92,26 +90,6 @@ export default function Playback2DView({ planId, tMs }: { planId?: string; tMs: 
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
-  }, [planId]);
-
-  // 一次性：拉物料库存时序（60s 快照 warehouse_states）。仅 MATERIAL_SUPPLY 跑过才有数据。
-  useEffect(() => {
-    if (!planId) return;
-    let cancelled = false;
-    planApi
-      .snapshots(planId, 0, 2000)
-      .then((rows) => {
-        if (cancelled) return;
-        const tl = rows
-          .filter((r) => r.warehouse_states && Object.keys(r.warehouse_states).length > 0)
-          .map((r) => ({ t: r.sim_timestamp_sec * 1000, wh: r.warehouse_states as Record<string, { quantity: number; material_type?: string | null }> }))
-          .sort((a, b) => a.t - b.t);
-        setMatTimeline(tl);
-      })
-      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -199,17 +177,6 @@ export default function Playback2DView({ planId, tMs }: { planId?: string; tMs: 
     return m;
   }, [lines]);
 
-  // 物料库存：取 <= tMs 的最近一帧 warehouse_states（60s 粒度）
-  const materialStates = useMemo(() => {
-    if (!matTimeline.length) return undefined;
-    let chosen = matTimeline[0].wh;
-    for (const s of matTimeline) {
-      if (s.t <= tMs) chosen = s.wh;
-      else break;
-    }
-    return chosen;
-  }, [matTimeline, tMs]);
-
   // 线边仓当前 WIP（事件计数，毫秒级；与 ops 同一轮询）
   const bufStates = useMemo(() => {
     const out: Record<string, BufState> = {};
@@ -227,8 +194,8 @@ export default function Playback2DView({ planId, tMs }: { planId?: string; tMs: 
     return <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">{t("No visualization data")}</div>;
   }
   return (
-    <div className="w-full h-full bg-[#081523] p-1.5">
-      <FactorySchematic lines={lines} stageTransitions={edges} mode="playback" opStates={opStates} bufStates={bufStates} materialStates={materialStates} />
+    <div className="w-full h-full bg-[var(--c-081523)] p-1.5">
+      <FactorySchematic lines={lines} stageTransitions={edges} mode="playback" opStates={opStates} bufStates={bufStates} />
     </div>
   );
 }

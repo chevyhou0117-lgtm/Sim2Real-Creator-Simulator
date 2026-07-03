@@ -264,7 +264,7 @@ export default class AppStream extends Component<
         <div
           id="view"
           style={{
-            backgroundColor: this.state.streamReady ? "white" : "#dddddd",
+            backgroundColor: this.state.streamReady ? "white" : "var(--c-dddddd)",
             display: "flex",
             justifyContent: "space-between",
             height: "100%",
@@ -279,7 +279,7 @@ export default class AppStream extends Component<
           key={"stream-canvas"}
           id={"main-div"}
           style={{
-            // backgroundColor:this.state.streamReady ? 'white': '#dddddd',
+            // backgroundColor:this.state.streamReady ? 'white': 'var(--c-dddddd)',
             visibility: this.state.streamReady ? "visible" : "hidden",
             ...this.props.style,
           }}

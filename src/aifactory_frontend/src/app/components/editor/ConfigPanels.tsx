@@ -80,7 +80,7 @@ export function FactoryConfigPanel({
       </ConfigSection>
 
       <ConfigSection title={t("config.otherInformation")}>
-        <div className="rounded overflow-hidden border border-[#1e3a55] mt-1">
+        <div className="rounded overflow-hidden border border-[var(--c-1e3a55)] mt-1">
           <img
             src={proxyMinioUrl(nodeDetail?.thumbnailUrl)}
             alt="Factory Thumbnail"
@@ -398,7 +398,7 @@ export function IoTPanel({
   return (
     <div className="p-3 space-y-3">
       {locked && (
-        <div className="flex items-center gap-1.5 p-2 bg-[#040d18] border border-[#1e3a55] rounded text-[10px] text-slate-500">
+        <div className="flex items-center gap-1.5 p-2 bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-500">
           <svg
             width="10"
             height="10"
@@ -431,7 +431,7 @@ export function IoTPanel({
         <ConfigRow label={t("config.equipmentId")} value="UHP9SMT#01RSF#01" />
         <div className="flex items-center justify-between py-1">
           <span className="text-[10px] text-slate-500">{t("config.subDevice")}</span>
-          <select className="bg-[#071526] border border-[#1e3a55] rounded text-[10px] text-slate-300 px-2 py-1 focus:outline-none focus:border-blue-500">
+          <select className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-300 px-2 py-1 focus:outline-none focus:border-blue-500">
             <option>{t("config.subDeviceFurnaceCavity")}</option>
             <option>{t("config.subDeviceTransportSystem")}</option>
             <option>{t("config.subDeviceControlUnit")}</option>
@@ -440,10 +440,10 @@ export function IoTPanel({
       </ConfigSection>
 
       <ConfigSection title={t("config.iotConfiguration")}>
-        <div className="flex items-center justify-between py-1 border-b border-[#142235]/60">
+        <div className="flex items-center justify-between py-1 border-b border-[var(--c-142235)]/60">
           <span className="text-[10px] text-slate-500">{t("config.protocolDriver")}</span>
           {editing ? (
-            <select className="bg-[#071526] border border-[#1e3a55] rounded text-[10px] text-slate-300 px-2 py-1 focus:outline-none focus:border-blue-500">
+            <select className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-300 px-2 py-1 focus:outline-none focus:border-blue-500">
               <option>{t("config.nodeBasicProtocol")}</option>
               <option>OPC-UA</option>
               <option>MQTT</option>
@@ -507,10 +507,10 @@ export function IoTPanel({
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto rounded border border-[#1e3a55]">
+        <div className="overflow-x-auto rounded border border-[var(--c-1e3a55)]">
           <table className="w-full text-[9px]">
             <thead>
-              <tr className="bg-[#071526] border-b border-[#1e3a55]">
+              <tr className="bg-[var(--c-071526)] border-b border-[var(--c-1e3a55)]">
                 {[
                   t("config.tableName"),
                   t("config.tableVariableAddress"),
@@ -531,7 +531,7 @@ export function IoTPanel({
               {mockDataPoints.map((dp, i) => (
                 <tr
                   key={dp.id}
-                  className={`border-b border-[#142235] hover:bg-[#0f2035] cursor-pointer ${i % 2 === 0 ? "" : "bg-[#071526]/50"}`}
+                  className={`border-b border-[var(--c-142235)] hover:bg-[var(--c-0f2035)] cursor-pointer ${i % 2 === 0 ? "" : "bg-[var(--c-071526)]/50"}`}
                 >
                   <td className="px-1.5 py-1 text-slate-300">{dp.name}</td>
                   <td className="px-1.5 py-1 text-blue-400/80 font-mono">
@@ -563,7 +563,7 @@ export function EventsPanel({
   return (
     <div className="p-3 space-y-3">
       {locked && (
-        <div className="flex items-center gap-1.5 p-2 bg-[#040d18] border border-[#1e3a55] rounded text-[10px] text-slate-500">
+        <div className="flex items-center gap-1.5 p-2 bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-500">
           <svg
             width="10"
             height="10"
@@ -591,7 +591,7 @@ export function EventsPanel({
           ].map((evt) => (
             <div
               key={evt.name}
-              className="bg-[#071526] border border-[#1e3a55] rounded p-2"
+              className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded p-2"
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] text-slate-200 font-medium">
@@ -638,7 +638,7 @@ export function MonitoringPanel({
   return (
     <div className="p-3 space-y-3">
       {locked && (
-        <div className="flex items-center gap-1.5 p-2 bg-[#040d18] border border-[#1e3a55] rounded text-[10px] text-slate-500">
+        <div className="flex items-center gap-1.5 p-2 bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-500">
           <svg
             width="10"
             height="10"
@@ -665,7 +665,7 @@ export function MonitoringPanel({
         ].map((item) => (
           <div
             key={item.label}
-            className="bg-[#071526] border border-[#1e3a55] rounded p-2 mb-2"
+            className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded p-2 mb-2"
           >
             <div className="text-[10px] text-slate-300 font-medium mb-2">
               {item.label}
@@ -675,14 +675,14 @@ export function MonitoringPanel({
                 <label className="text-[9px] text-slate-500">{t("config.min")}</label>
                 <input
                   defaultValue={item.min}
-                  className="w-full bg-[#07111e] border border-[#1e3a55] rounded px-2 py-1 text-[10px] text-slate-300 focus:outline-none focus:border-blue-500 mt-0.5"
+                  className="w-full bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-2 py-1 text-[10px] text-slate-300 focus:outline-none focus:border-blue-500 mt-0.5"
                 />
               </div>
               <div className="flex-1">
                 <label className="text-[9px] text-slate-500">{t("config.max")}</label>
                 <input
                   defaultValue={item.max}
-                  className="w-full bg-[#07111e] border border-[#1e3a55] rounded px-2 py-1 text-[10px] text-slate-300 focus:outline-none focus:border-blue-500 mt-0.5"
+                  className="w-full bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-2 py-1 text-[10px] text-slate-300 focus:outline-none focus:border-blue-500 mt-0.5"
                 />
               </div>
               <div className="text-[10px] text-slate-500 mt-4">{item.unit}</div>
@@ -711,7 +711,7 @@ export function MetricsPanel({
   return (
     <div className="p-3 space-y-3">
       {locked && (
-        <div className="flex items-center gap-1.5 p-2 bg-[#040d18] border border-[#1e3a55] rounded text-[10px] text-slate-500">
+        <div className="flex items-center gap-1.5 p-2 bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded text-[10px] text-slate-500">
           <svg
             width="10"
             height="10"
@@ -739,7 +739,7 @@ export function MetricsPanel({
         ].map((m) => (
           <div
             key={m.name}
-            className="bg-[#071526] border border-[#1e3a55] rounded p-2 mb-2"
+            className="bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded p-2 mb-2"
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-slate-200 font-medium">

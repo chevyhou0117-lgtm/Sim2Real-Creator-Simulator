@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface Module {
   id: string;
@@ -139,9 +140,9 @@ export function AIFactoryHome() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07111e] text-slate-100 select-none">
+    <div className="min-h-screen bg-[var(--c-07111e)] text-slate-100 select-none">
       {/* Top bar */}
-      <header className="h-12 bg-[#07111e]/95 backdrop-blur border-b border-[#142235] flex items-center px-6 sticky top-0 z-20">
+      <header className="h-12 bg-[var(--c-07111e)]/95 backdrop-blur border-b border-[var(--c-142235)] flex items-center px-6 sticky top-0 z-20">
         <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
             <Cpu size={12} className="text-white" />
@@ -151,11 +152,12 @@ export function AIFactoryHome() {
         </div>
         <div className="flex-1" />
         <div className="flex items-center gap-3">
+          <ThemeToggle variant="bare" />
           <LanguageToggle variant="bare" />
-          <button className="w-8 h-8 rounded-lg bg-[#0b1d30] border border-[#142235] flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors">
+          <button className="w-8 h-8 rounded-lg bg-[var(--c-0b1d30)] border border-[var(--c-142235)] flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors">
             <Bell size={14} />
           </button>
-          <button className="w-8 h-8 rounded-lg bg-[#0b1d30] border border-[#142235] flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors">
+          <button className="w-8 h-8 rounded-lg bg-[var(--c-0b1d30)] border border-[var(--c-142235)] flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors">
             <Settings size={14} />
           </button>
           <button className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-xs text-blue-400 font-bold">
@@ -167,7 +169,7 @@ export function AIFactoryHome() {
       {/* Hero Banner */}
       <div className="relative h-72 overflow-hidden">
         {/* Background gradient layers */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050e1a] via-[#07111e] to-[#07111e]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--c-050e1a)] via-[var(--c-07111e)] to-[var(--c-07111e)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(59,130,246,0.15)_0%,_transparent_60%)]" />
         {/* Grid overlay */}
         <div className="absolute inset-0 opacity-5"
@@ -187,7 +189,7 @@ export function AIFactoryHome() {
 
         {/* Stats Bar */}
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-0">
-          <div className="bg-[#0b1d30]/80 backdrop-blur border border-[#142235] rounded-t-xl px-6 py-3 flex items-center divide-x divide-[#142235]">
+          <div className="bg-[var(--c-0b1d30)]/80 backdrop-blur border border-[var(--c-142235)] rounded-t-xl px-6 py-3 flex items-center divide-x divide-[var(--c-142235)]">
             {STATS.map((s) => (
               <div key={s.label} className="flex items-center gap-3 px-6 first:pl-0 last:pr-0">
                 <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', s.bg, s.color)}>
@@ -218,10 +220,10 @@ export function AIFactoryHome() {
               onMouseEnter={() => setHoveredModule(mod.id)}
               onMouseLeave={() => setHoveredModule(null)}
               className={cn(
-                'relative group bg-[#0b1d30] border rounded-xl p-4 flex flex-col items-center text-center gap-2 transition-all duration-200',
+                'relative group bg-[var(--c-0b1d30)] border rounded-xl p-4 flex flex-col items-center text-center gap-2 transition-all duration-200',
                 mod.active
-                  ? 'border-[#142235] hover:border-[#1e3a55] cursor-pointer hover:bg-[#0d2035]'
-                  : 'border-[#0e1e2e] opacity-40 cursor-not-allowed',
+                  ? 'border-[var(--c-142235)] hover:border-[var(--c-1e3a55)] cursor-pointer hover:bg-[var(--c-0d2035)]'
+                  : 'border-[var(--c-0e1e2e)] opacity-40 cursor-not-allowed',
                 mod.id === 'simulation' && 'ring-1 ring-blue-500/30',
                 hoveredModule === mod.id && mod.active && 'shadow-lg shadow-black/20',
               )}
@@ -264,8 +266,8 @@ export function AIFactoryHome() {
       <div className="px-6 pb-8">
         <div className="grid grid-cols-2 gap-4">
           {/* Recent Plans */}
-          <div className="bg-[#0b1d30] border border-[#142235] rounded-xl">
-            <div className="px-5 py-4 border-b border-[#142235] flex items-center justify-between">
+          <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl">
+            <div className="px-5 py-4 border-b border-[var(--c-142235)] flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-300">{t('Recent Simulation Plans')}</h3>
               <button onClick={() => navigate('/simulation')} className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-0.5 transition-colors">
                 {t('View All')} <ChevronRight size={11} />
@@ -277,7 +279,7 @@ export function AIFactoryHome() {
                 { name: 'Two-Shift Capacity Expansion Plan - Line B', status: 'Running', time: '10:05', color: 'text-amber-400' },
                 { name: 'Changeover Optimization - Line L03', status: 'Ready', time: '08:44', color: 'text-blue-400' },
               ].map((item, i) => (
-                <div key={i} onClick={() => navigate('/simulation')} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#0d2035] cursor-pointer transition-colors">
+                <div key={i} onClick={() => navigate('/simulation')} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[var(--c-0d2035)] cursor-pointer transition-colors">
                   <div className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded', item.color, 'bg-current/10')}>{t(item.status)}</div>
                   <span className="text-xs text-slate-300 flex-1 truncate">{t(item.name)}</span>
                   <span className="text-[10px] text-slate-600">{item.time}</span>
@@ -287,8 +289,8 @@ export function AIFactoryHome() {
           </div>
 
           {/* System Status */}
-          <div className="bg-[#0b1d30] border border-[#142235] rounded-xl">
-            <div className="px-5 py-4 border-b border-[#142235]">
+          <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-xl">
+            <div className="px-5 py-4 border-b border-[var(--c-142235)]">
               <h3 className="text-sm font-semibold text-slate-300">{t('System Status')}</h3>
             </div>
             <div className="p-4 space-y-3">

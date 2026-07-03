@@ -29,7 +29,7 @@ const RESULT_TABS = [
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: unknown[]; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl px-3 py-2 text-xs shadow-xl">
+    <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl px-3 py-2 text-xs shadow-xl">
       <div className="text-slate-400 mb-1">{label}</div>
       {(payload as Array<{ name: string; value: number; color: string }>).map((p, i) => (
         <div key={i} className="flex items-center gap-2">
@@ -101,7 +101,7 @@ function OutputTab({ result, tasks }: { result: SimResultOut | null; tasks: Task
           { label: t('Equipment Failures'), value: String(failureCount), sub: failureCount === 0 ? t('No failures') : t('has failures'), status: failureCount === 0 ? 'good' : 'warn', icon: failureCount === 0 ? <TrendingUp size={14} /> : <AlertTriangle size={14} /> },
           { label: t('Bottleneck Equipment Utilization'), value: result?.bottleneck_utilization ? `${(Number(result.bottleneck_utilization) * 100).toFixed(1)}%` : '—', sub: t('Bottleneck equipment'), status: 'good', icon: <TrendingUp size={14} /> },
         ].map(m => (
-          <div key={m.label} className="bg-[#0a1929] border border-[#142235] rounded-xl p-4">
+          <div key={m.label} className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl p-4">
             <div className="text-[11px] text-slate-600 mb-1">{m.label}</div>
             <div className={cn('text-2xl font-bold',
               m.status === 'good' ? 'text-emerald-400' : m.status === 'warn' ? 'text-amber-400' : 'text-red-400'
@@ -116,28 +116,28 @@ function OutputTab({ result, tasks }: { result: SimResultOut | null; tasks: Task
 
       <div className="grid grid-cols-3 gap-5">
         {/* Hourly Output */}
-        <div className="col-span-2 bg-[#0a1929] border border-[#142235] rounded-xl p-5">
+        <div className="col-span-2 bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-slate-300">{t('Output by Time Period')}</h3>
             <div className="flex items-center gap-2 text-[11px]">
               <div className="flex items-center gap-1"><div className="w-3 h-0.5 bg-blue-500 rounded" /><span className="text-slate-500">{t('Actual Output')}</span></div>
-              <div className="flex items-center gap-1"><div className="w-3 h-0.5 bg-slate-600 rounded dashed" style={{borderTop:'2px dashed #475569',height:0}} /><span className="text-slate-500">{t('Planned Output')}</span></div>
+              <div className="flex items-center gap-1"><div className="w-3 h-0.5 bg-slate-600 rounded dashed" style={{borderTop:'2px dashed var(--c-475569)',height:0}} /><span className="text-slate-500">{t('Planned Output')}</span></div>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <ComposedChart data={hourlyData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#142235" />
-              <XAxis dataKey="hour" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--c-142235)" />
+              <XAxis dataKey="hour" tick={{ fill: 'var(--c-64748b)', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'var(--c-64748b)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="actual" fill="#3b82f6" radius={[3, 3, 0, 0]} name={t('Actual Output')} />
-              <Line type="monotone" dataKey="plan" stroke="#475569" strokeDasharray="5 5" dot={false} name={t('Planned Output')} />
+              <Line type="monotone" dataKey="plan" stroke="var(--c-475569)" strokeDasharray="5 5" dot={false} name={t('Planned Output')} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
 
         {/* Product Mix Pie */}
-        <div className="bg-[#0a1929] border border-[#142235] rounded-xl p-5">
+        <div className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl p-5">
           <h3 className="text-sm font-semibold text-slate-300 mb-4">{t('Product Model Distribution')}</h3>
           {pieData.length === 0 ? (
             <div className="text-xs text-slate-600 text-center py-12">{t('No work orders')}</div>
@@ -148,7 +148,7 @@ function OutputTab({ result, tasks }: { result: SimResultOut | null; tasks: Task
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={35} outerRadius={60} dataKey="value" paddingAngle={3}>
                     {pieData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                   </Pie>
-                  <Tooltip formatter={(v) => [`${v} pcs`]} contentStyle={{ background: '#0b1d30', border: '1px solid #1e3a55', borderRadius: 8, fontSize: 11 }} />
+                  <Tooltip formatter={(v) => [`${v} pcs`]} contentStyle={{ background: 'var(--c-0b1d30)', border: '1px solid var(--c-1e3a55)', borderRadius: 8, fontSize: 11 }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="space-y-1.5 mt-2">
@@ -166,8 +166,8 @@ function OutputTab({ result, tasks }: { result: SimResultOut | null; tasks: Task
       </div>
 
       {/* Uncompleted Orders */}
-      <div className="bg-[#0a1929] border border-[#142235] rounded-xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-[#142235]">
+      <div className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-[var(--c-142235)]">
           <h3 className="text-sm font-semibold text-amber-400 flex items-center gap-2">
             <AlertTriangle size={13} /> {t('Uncompleted Work Order Analysis ({{count}} items)', { count: incompleteWos.length })}
           </h3>
@@ -177,15 +177,15 @@ function OutputTab({ result, tasks }: { result: SimResultOut | null; tasks: Task
         ) : (
           <table className="w-full text-xs">
             <thead className="text-[11px] text-slate-600">
-              <tr className="border-b border-[#0e1e2e]">
+              <tr className="border-b border-[var(--c-0e1e2e)]">
                 <th className="text-left px-5 py-2.5">{t('Work Order No.')}</th>
                 <th className="text-left px-4 py-2.5">{t('Product Model')}</th>
                 <th className="text-left px-4 py-2.5">{t('Planned Output')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#0e1e2e]">
+            <tbody className="divide-y divide-[var(--c-0e1e2e)]">
               {incompleteWos.map(w => (
-                <tr key={w.wo_no} className="hover:bg-[#0d2035]/50 transition-colors">
+                <tr key={w.wo_no} className="hover:bg-[var(--c-0d2035)]/50 transition-colors">
                   <td className="px-5 py-2.5 font-mono text-slate-300">{w.wo_no}</td>
                   <td className="px-4 py-2.5 text-slate-300">{w.product_code}</td>
                   <td className="px-4 py-2.5 text-slate-400">{w.plan_qty.toLocaleString()} pcs</td>
@@ -260,7 +260,7 @@ function LBRTab({
     <div className="space-y-5">
       {/* Summary */}
       <div className="grid grid-cols-3 gap-3">
-        <div className={cn("bg-[#0a1929] border rounded-xl p-4", Number(lbrPct) < 85 ? "border-amber-500/20" : "border-emerald-500/20")}>
+        <div className={cn("bg-[var(--c-0a1929)] border rounded-xl p-4", Number(lbrPct) < 85 ? "border-amber-500/20" : "border-emerald-500/20")}>
           <div className="text-[11px] text-slate-600 mb-1" title={t('Σ(LBR × station count) / Σ(station count), single-station lines excluded')}>{t('Weighted Average LBR')}</div>
           <div className={cn("text-3xl font-bold", Number(lbrPct) < 85 ? "text-amber-400" : "text-emerald-400")}>{lbrPct}%</div>
           <div className="text-[11px] text-amber-500 mt-1">
@@ -270,12 +270,12 @@ function LBRTab({
             )}
           </div>
         </div>
-        <div className="bg-[#0a1929] border border-[#142235] rounded-xl p-4">
+        <div className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl p-4">
           <div className="text-[11px] text-slate-600 mb-1">{t('Number of Lines')}</div>
           <div className="text-xl font-bold text-blue-400">{lbResults.length}</div>
           <div className="text-[11px] text-slate-600 mt-1">{t('{{count}} operations total', { count: totalOpCount })}</div>
         </div>
-        <div className="bg-[#0a1929] border border-[#142235] rounded-xl p-4">
+        <div className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl p-4">
           <div className="text-[11px] text-slate-600 mb-1">{t('Primary Bottleneck Operation')}</div>
           <div className="text-xl font-bold text-red-400 truncate" title={bottleneckName}>{bottleneckName}</div>
           <div className="text-[11px] text-slate-600 mt-1">CT={bottleneckCt}s, Takt={bottleneckTakt.toFixed(1)}s</div>
@@ -284,7 +284,7 @@ function LBRTab({
 
       {/* 每条线一张 LBR 时序曲线（60s 窗口，y = LBR%、x = 模拟时长 min）*/}
       {lineSeries.length === 0 ? (
-        <div className="bg-[#0a1929] border border-[#142235] rounded-xl p-8 text-center text-xs text-slate-500">
+        <div className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl p-8 text-center text-xs text-slate-500">
           {t('No LBR time-series data (simulation not run or results empty)')}
         </div>
       ) : (
@@ -305,7 +305,7 @@ function LBRTab({
               : 0;
 
             return (
-              <div key={s.line_id} className="bg-[#0a1929] border border-[#142235] rounded-xl p-4">
+              <div key={s.line_id} className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-xs font-semibold text-slate-300 truncate" title={`${s.line_code} · ${s.line_name}`}>
                     {s.line_code} · {s.line_name}
@@ -329,16 +329,16 @@ function LBRTab({
                 </div>
                 <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#142235" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-142235)" />
                     <XAxis dataKey="t_min" type="number" domain={[0, 'dataMax']}
-                      tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false}
-                      label={{ value: t('Simulation Time (min)'), position: 'insideBottom', offset: -2, fill: '#475569', fontSize: 10 }} />
-                    <YAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false}
-                      label={{ value: 'LBR %', angle: -90, position: 'insideLeft', fill: '#475569', fontSize: 10 }} />
+                      tick={{ fill: 'var(--c-64748b)', fontSize: 10 }} axisLine={false} tickLine={false}
+                      label={{ value: t('Simulation Time (min)'), position: 'insideBottom', offset: -2, fill: 'var(--c-475569)', fontSize: 10 }} />
+                    <YAxis domain={[0, 100]} tick={{ fill: 'var(--c-64748b)', fontSize: 10 }} axisLine={false} tickLine={false}
+                      label={{ value: 'LBR %', angle: -90, position: 'insideLeft', fill: 'var(--c-475569)', fontSize: 10 }} />
                     <Tooltip
                       formatter={(v: number | null) => [v === null ? t('Idle') : `${v}%`, 'LBR']}
                       labelFormatter={(tv: number) => `t = ${tv} min`}
-                      contentStyle={{ background: '#0b1d30', border: '1px solid #1e3a55', borderRadius: 8, fontSize: 11 }}
+                      contentStyle={{ background: 'var(--c-0b1d30)', border: '1px solid var(--c-1e3a55)', borderRadius: 8, fontSize: 11 }}
                     />
                     <ReferenceLine y={85} stroke="#ef4444" strokeDasharray="4 4"
                       label={{ value: t('Target 85%'), fill: '#ef4444', fontSize: 9, position: 'right' }} />
@@ -360,7 +360,7 @@ function DeviceTab() {
   const { t } = useTranslation();
   return (
     <div className="space-y-5">
-      <div className="bg-[#0a1929] border border-[#142235] rounded-xl p-5">
+      <div className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-slate-300">{t('Equipment Utilization Overview')}</h3>
           <div className="flex items-center gap-4 text-[11px]">
@@ -371,14 +371,14 @@ function DeviceTab() {
         </div>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={deviceUtilizationData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#142235" />
-            <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--c-142235)" />
+            <XAxis dataKey="name" tick={{ fill: 'var(--c-64748b)', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <YAxis domain={[0, 100]} tick={{ fill: 'var(--c-64748b)', fontSize: 11 }} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomTooltip />} />
             <ReferenceLine y={85} stroke="#ef4444" strokeDasharray="3 3" />
             <Bar dataKey="util" radius={[3, 3, 0, 0]} name={t('Utilization %')}>
               {deviceUtilizationData.map((d, i) => (
-                <Cell key={i} fill={d.util > 85 ? '#ef4444' : d.util >= 60 ? '#10b981' : '#475569'} />
+                <Cell key={i} fill={d.util > 85 ? '#ef4444' : d.util >= 60 ? '#10b981' : 'var(--c-475569)'} />
               ))}
             </Bar>
           </BarChart>
@@ -386,13 +386,13 @@ function DeviceTab() {
       </div>
 
       {/* OEE Table */}
-      <div className="bg-[#0a1929] border border-[#142235] rounded-xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-[#142235]">
+      <div className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-[var(--c-142235)]">
           <h3 className="text-sm font-semibold text-slate-300">{t('OEE Breakdown Details')}</h3>
         </div>
         <table className="w-full text-xs">
-          <thead className="text-[11px] text-slate-600 bg-[#060e18]">
-            <tr className="border-b border-[#0e1e2e]">
+          <thead className="text-[11px] text-slate-600 bg-[var(--c-060e18)]">
+            <tr className="border-b border-[var(--c-0e1e2e)]">
               <th className="text-left px-5 py-2.5">{t('Equipment')}</th>
               <th className="text-left px-4 py-2.5">{t('Overall Utilization')}</th>
               <th className="text-left px-4 py-2.5">{t('Availability')}</th>
@@ -401,7 +401,7 @@ function DeviceTab() {
               <th className="text-left px-4 py-2.5">OEE</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#0e1e2e]">
+          <tbody className="divide-y divide-[var(--c-0e1e2e)]">
             {[
               ['SPI-L01', '91%', '93%', '96%', '98.5%', '88.0%', 'overload'],
               ['SMT-L01-01', '88%', '95%', '91%', '99.8%', '86.4%', 'overload'],
@@ -409,7 +409,7 @@ function DeviceTab() {
               ['REFLOW-L01', '76%', '97%', '77%', '99.9%', '74.6%', 'normal'],
               ['AOI-L01', '55%', '98%', '55%', '100%', '53.9%', 'idle'],
             ].map(([name, util, avail, perf, qual, oee, status]) => (
-              <tr key={name} className="hover:bg-[#0d2035]/50 transition-colors">
+              <tr key={name} className="hover:bg-[var(--c-0d2035)]/50 transition-colors">
                 <td className="px-5 py-2.5 text-slate-300 font-medium">{name}</td>
                 <td className="px-4 py-2.5">
                   <span className={cn(
@@ -435,45 +435,45 @@ function MaterialTab() {
   const { t } = useTranslation();
   return (
     <div className="space-y-5">
-      <div className="bg-[#0a1929] border border-[#142235] rounded-xl p-5">
+      <div className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl p-5">
         <h3 className="text-sm font-semibold text-slate-300 mb-4">{t('Key Material Inventory Curve')}</h3>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={materialStockData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#142235" />
-            <XAxis dataKey="time" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--c-142235)" />
+            <XAxis dataKey="time" tick={{ fill: 'var(--c-64748b)', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: 'var(--c-64748b)', fontSize: 11 }} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomTooltip />} />
             <Line type="monotone" dataKey="Main IC" name={t('Main IC')} stroke="#3b82f6" strokeWidth={2} dot={false} />
             <Line type="monotone" dataKey="Capacitor 0402" name={t('Capacitor 0402')} stroke="#06b6d4" strokeWidth={2} dot={false} />
             <Line type="monotone" dataKey="Connector" name={t('Connector')} stroke="#8b5cf6" strokeWidth={2} dot={false} />
-            <Legend wrapperStyle={{ fontSize: 11, color: '#64748b' }} />
+            <Legend wrapperStyle={{ fontSize: 11, color: 'var(--c-64748b)' }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Material Shortage Events */}
-      <div className="bg-[#0a1929] border border-[#142235] rounded-xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-[#142235]">
+      <div className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-[var(--c-142235)]">
           <h3 className="text-sm font-semibold text-amber-400 flex items-center gap-2">
             <AlertTriangle size={13} /> {t('Material Shortage Events (3 times)')}
           </h3>
         </div>
         <table className="w-full text-xs">
           <thead className="text-[11px] text-slate-600">
-            <tr className="border-b border-[#0e1e2e]">
+            <tr className="border-b border-[var(--c-0e1e2e)]">
               <th className="text-left px-5 py-2.5">{t('Material')}</th>
               <th className="text-left px-4 py-2.5">{t('Shortage Start')}</th>
               <th className="text-left px-4 py-2.5">{t('Duration')}</th>
               <th className="text-left px-4 py-2.5">{t('Affected Work Orders')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#0e1e2e]">
+          <tbody className="divide-y divide-[var(--c-0e1e2e)]">
             {[
               ['IC Controller (IC-12345)', 'T+04:30', '45 min', '3 items'],
               ['Capacitor 0402', 'T+07:15', '20 min', '1 item'],
               ['Connector', 'T+09:00', '90 min', '5 items'],
             ].map(([mat, start, dur, count]) => (
-              <tr key={mat} className="hover:bg-[#0d2035]/50 transition-colors">
+              <tr key={mat} className="hover:bg-[var(--c-0d2035)]/50 transition-colors">
                 <td className="px-5 py-2.5 text-slate-300">{t(mat)}</td>
                 <td className="px-4 py-2.5 font-mono text-slate-400">{start}</td>
                 <td className="px-4 py-2.5 text-amber-400">{t(dur)}</td>
@@ -503,7 +503,7 @@ function EventLogTab() {
             onClick={() => setFilter(ty)}
             className={cn(
               'px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all',
-              filter === ty ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'text-slate-500 border-transparent hover:bg-[#0b1d30]',
+              filter === ty ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'text-slate-500 border-transparent hover:bg-[var(--c-0b1d30)]',
             )}
           >
             {t(ty)}
@@ -513,10 +513,10 @@ function EventLogTab() {
         <Button size="xs" variant="outline"><Download size={11} /> {t('Export CSV')}</Button>
       </div>
 
-      <div className="bg-[#0a1929] border border-[#142235] rounded-xl overflow-hidden">
+      <div className="bg-[var(--c-0a1929)] border border-[var(--c-142235)] rounded-xl overflow-hidden">
         <table className="w-full text-xs">
-          <thead className="text-[11px] text-slate-600 bg-[#060e18]">
-            <tr className="border-b border-[#0e1e2e]">
+          <thead className="text-[11px] text-slate-600 bg-[var(--c-060e18)]">
+            <tr className="border-b border-[var(--c-0e1e2e)]">
               <th className="text-left px-5 py-3">{t('Simulation Time')}</th>
               <th className="text-left px-4 py-3">{t('Event Type')}</th>
               <th className="text-left px-4 py-3">{t('Level')}</th>
@@ -524,12 +524,12 @@ function EventLogTab() {
               <th className="text-left px-4 py-3">{t('Event Details')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#0e1e2e]">
+          <tbody className="divide-y divide-[var(--c-0e1e2e)]">
             {filtered.map((evt, i) => (
-              <tr key={i} className="hover:bg-[#0d2035]/50 transition-colors">
+              <tr key={i} className="hover:bg-[var(--c-0d2035)]/50 transition-colors">
                 <td className="px-5 py-2.5 font-mono text-slate-500">{evt.time}</td>
                 <td className="px-4 py-2.5">
-                  <span className="text-[11px] bg-[#0b1d30] border border-[#1e3a55] px-2 py-0.5 rounded text-slate-400">{t(evt.type)}</span>
+                  <span className="text-[11px] bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] px-2 py-0.5 rounded text-slate-400">{t(evt.type)}</span>
                 </td>
                 <td className="px-4 py-2.5">
                   <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded',
@@ -576,7 +576,7 @@ export function ResultAnalysisPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-4 px-6 py-4 border-b border-[#142235] flex-shrink-0">
+      <div className="flex items-center gap-4 px-6 py-4 border-b border-[var(--c-142235)] flex-shrink-0">
         <button onClick={() => navigate('/simulation')} className="text-slate-600 hover:text-slate-300 transition-colors">
           <ChevronLeft size={18} />
         </button>
@@ -608,7 +608,7 @@ export function ResultAnalysisPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-[#142235] px-6 flex-shrink-0">
+      <div className="flex border-b border-[var(--c-142235)] px-6 flex-shrink-0">
         {RESULT_TABS.map(tab => (
           <button
             key={tab.id}
@@ -625,17 +625,6 @@ export function ResultAnalysisPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        {/* Alert Banner */}
-        {activeTab === 'output' && result && Number(result.overall_lbr ?? 0) * 100 < 85 && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 flex items-start gap-2 mb-5">
-            <AlertTriangle size={14} className="text-amber-400 flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-amber-300">
-              <span className="font-semibold">{t('Key Finding: ')}</span>
-              {t('Line LBR={{lbr}}% (below target 85%). It is recommended to review the "AI Optimization Suggestions".', { lbr: (Number(result.overall_lbr) * 100).toFixed(1) })}
-            </div>
-          </div>
-        )}
-
         {loading && (
           <div className="flex items-center justify-center py-20 text-slate-500">
             <Loader2 size={20} className="animate-spin mr-2" /> {t('Loading results...')}

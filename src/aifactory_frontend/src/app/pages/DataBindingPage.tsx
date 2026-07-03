@@ -138,7 +138,7 @@ function TreeNode({
         className={`flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none group transition-colors ${
           selectedId === node.id
             ? 'bg-blue-600/20 text-blue-300'
-            : 'hover:bg-[#0e243a] text-slate-400 hover:text-slate-200'
+            : 'hover:bg-[var(--c-0e243a)] text-slate-400 hover:text-slate-200'
         }`}
         style={{ paddingLeft: `${8 + depth * 14}px` }}
       >
@@ -206,7 +206,7 @@ function RuleRow({ rule }: { rule: BindingRule }) {
   const st = STATUS_CONFIG[rule.status];
   const statusLabelKey = STATUS_LABEL[rule.status];
   return (
-    <tr className="border-b border-[#142235] hover:bg-[#0e243a]/50 group transition-colors">
+    <tr className="border-b border-[var(--c-142235)] hover:bg-[var(--c-0e243a)]/50 group transition-colors">
       <td className="px-4 py-2.5">
         <div className="text-[11px] font-medium text-slate-200">{rule.targetField}</div>
         <div className="text-[10px] text-slate-600 font-mono mt-0.5">{rule.nodeName}</div>
@@ -248,8 +248,8 @@ function AddRuleModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[480px] shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235]">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[480px] shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)]">
           <span className="text-sm font-semibold text-slate-100">{t("binding.newRule")}</span>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-200 transition-colors">
             <XCircle size={15} />
@@ -264,7 +264,7 @@ function AddRuleModal({ onClose }: { onClose: () => void }) {
                   key={id}
                   onClick={() => setType(id)}
                   className={`border rounded-md p-2.5 text-left transition-colors ${
-                    type === id ? 'border-blue-500/60 bg-blue-600/10' : 'border-[#1e3a55] hover:border-[#2a4a6a]'
+                    type === id ? 'border-blue-500/60 bg-blue-600/10' : 'border-[var(--c-1e3a55)] hover:border-[var(--c-2a4a6a)]'
                   }`}
                 >
                   <div className={`flex items-center gap-1 text-xs font-semibold mb-0.5 ${cfg.color}`}>
@@ -281,12 +281,12 @@ function AddRuleModal({ onClose }: { onClose: () => void }) {
                 value={field}
                 onChange={(e) => setField(e.target.value)}
                 placeholder={t("binding.placeholder.targetField")}
-                className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
             <div>
               <label className="block text-[11px] text-slate-400 mb-1.5">{t("binding.dataSource")}</label>
-              <select className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+              <select className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
                 <option>{t("home.integration.platform")}</option>
                 <option>{t("home.integration.erp")}</option>
                 <option>{t("home.integration.mes")}</option>
@@ -300,12 +300,12 @@ function AddRuleModal({ onClose }: { onClose: () => void }) {
               value={source}
               onChange={(e) => setSource(e.target.value)}
               placeholder={t("binding.placeholder.sourceFieldPath")}
-              className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 font-mono focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 font-mono focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
         </div>
         <div className="flex items-center justify-end gap-3 px-5 pb-5">
-          <button onClick={onClose} className="px-4 py-2 text-xs text-slate-400 border border-[#1e3a55] rounded hover:border-[#2a4a6a] transition-colors">{t("common.cancel")}</button>
+          <button onClick={onClose} className="px-4 py-2 text-xs text-slate-400 border border-[var(--c-1e3a55)] rounded hover:border-[var(--c-2a4a6a)] transition-colors">{t("common.cancel")}</button>
           <button
             disabled={!field.trim()}
             onClick={onClose}
@@ -355,7 +355,7 @@ export function DataBindingPage() {
   const conflicts = mockBindingRules.filter((r) => r.status === 'conflict').length;
 
   return (
-    <div className="flex h-screen bg-[#07111e] text-slate-100 overflow-hidden">
+    <div className="flex h-screen bg-[var(--c-07111e)] text-slate-100 overflow-hidden">
       <NavSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -368,7 +368,7 @@ export function DataBindingPage() {
         />
 
         {/* ── Project Sub Navigation ── */}
-        <div className="h-8 bg-[#050f1a] border-b border-[#142235] flex items-end px-4 flex-shrink-0">
+        <div className="h-8 bg-[var(--c-050f1a)] border-b border-[var(--c-142235)] flex items-end px-4 flex-shrink-0">
           {([
             { id: 'editor',   labelKey: 'editor.3dEditor',   icon: <Layers3 size={10} />,   path: `/factory/${projectId}` },
             { id: 'binding',  labelKey: 'binding.title',      icon: <Link2 size={10} />,     path: `/factory/${projectId}/data-binding` },
@@ -392,8 +392,8 @@ export function DataBindingPage() {
         <div className="flex flex-1 overflow-hidden">
 
           {/* ── Left: Factory tree ── */}
-          <aside className="w-56 bg-[#040d18] border-r border-[#142235] flex flex-col overflow-hidden flex-shrink-0">
-            <div className="px-3 py-3 border-b border-[#142235]">
+          <aside className="w-56 bg-[var(--c-040d18)] border-r border-[var(--c-142235)] flex flex-col overflow-hidden flex-shrink-0">
+            <div className="px-3 py-3 border-b border-[var(--c-142235)]">
               <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{t("binding.factoryNodeTree")}</div>
             </div>
             <div className="flex-1 overflow-y-auto py-2">
@@ -413,7 +413,7 @@ export function DataBindingPage() {
           {/* ── Center: Binding rules ── */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Center header */}
-            <div className="h-11 border-b border-[#142235] flex items-center px-5 gap-4 flex-shrink-0 bg-[#071526]">
+            <div className="h-11 border-b border-[var(--c-142235)] flex items-center px-5 gap-4 flex-shrink-0 bg-[var(--c-071526)]">
               {selectedNode ? (
                 <>
                   <span className={`text-[11px] font-medium ${NODE_TYPE_COLORS[selectedNode.type]}`}>
@@ -436,7 +436,7 @@ export function DataBindingPage() {
             </div>
 
             {/* Binding type tabs */}
-            <div className="flex gap-0 border-b border-[#142235] bg-[#071526] px-5 flex-shrink-0">
+            <div className="flex gap-0 border-b border-[var(--c-142235)] bg-[var(--c-071526)] px-5 flex-shrink-0">
               {(Object.entries(BINDING_TYPE_CONFIG) as [BindingType, typeof BINDING_TYPE_CONFIG[BindingType]][]).map(([id, cfg]) => {
                 const count = mockBindingRules.filter((r) => r.bindingType === id).length;
                 return (
@@ -452,7 +452,7 @@ export function DataBindingPage() {
                     <span className={cfg.color}>{cfg.icon}</span>
                     {t(BINDING_TYPE_LABEL[id])}
                     {count > 0 && (
-                      <span className="text-[9px] bg-[#142235] text-slate-500 rounded px-1">{count}</span>
+                      <span className="text-[9px] bg-[var(--c-142235)] text-slate-500 rounded px-1">{count}</span>
                     )}
                   </button>
                 );
@@ -474,8 +474,8 @@ export function DataBindingPage() {
                 </div>
               ) : (
                 <table className="w-full">
-                  <thead className="sticky top-0 bg-[#071526] z-10">
-                    <tr className="text-left border-b border-[#142235]">
+                  <thead className="sticky top-0 bg-[var(--c-071526)] z-10">
+                    <tr className="text-left border-b border-[var(--c-142235)]">
                       <th className="px-4 py-2.5 text-[10px] font-medium text-slate-500 uppercase tracking-wider">{t("binding.targetField")}</th>
                       <th className="px-3 py-2.5 text-[10px] font-medium text-slate-500 uppercase tracking-wider">{t("binding.bindingMethod")}</th>
                       <th className="px-3 py-2.5 text-[10px] font-medium text-slate-500 uppercase tracking-wider">{t("binding.sourceField")}</th>
@@ -495,9 +495,9 @@ export function DataBindingPage() {
           </div>
 
           {/* ── Right: Status panel ── */}
-          <aside className="w-60 bg-[#071526] border-l border-[#142235] flex flex-col overflow-hidden flex-shrink-0">
+          <aside className="w-60 bg-[var(--c-071526)] border-l border-[var(--c-142235)] flex flex-col overflow-hidden flex-shrink-0">
             {/* Summary cards */}
-            <div className="p-4 border-b border-[#142235] space-y-2">
+            <div className="p-4 border-b border-[var(--c-142235)] space-y-2">
               <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">{t("binding.bindingOverview")}</div>
               <StatCard label={t("binding.totalRules")} value={totalRules} icon={<Link2 size={12} />} color="text-blue-400" />
               <StatCard label={t("binding.activeRules")} value={activeRules} icon={<CheckCircle2 size={12} />} color="text-emerald-400" />
@@ -507,7 +507,7 @@ export function DataBindingPage() {
 
             {/* Conflict list */}
             {conflicts > 0 && (
-              <div className="p-4 border-b border-[#142235]">
+              <div className="p-4 border-b border-[var(--c-142235)]">
                 <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">{t("binding.conflictList")}</div>
                 <div className="space-y-2">
                   {mockBindingRules.filter((r) => r.status === 'conflict').map((r) => (
@@ -526,7 +526,7 @@ export function DataBindingPage() {
             )}
 
             {/* Sync action */}
-            <div className="p-4 border-b border-[#142235]">
+            <div className="p-4 border-b border-[var(--c-142235)]">
               <button className="w-full flex items-center justify-center gap-1.5 text-xs bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 px-3 py-2 rounded transition-colors">
                 <RefreshCw size={11} /> {t("binding.syncNow")}
               </button>
@@ -539,7 +539,7 @@ export function DataBindingPage() {
               </div>
               <div className="space-y-2">
                 {SYNC_LOGS.map((log, i) => (
-                  <div key={i} className="border-l-2 pl-2.5 py-0.5 border-[#1e3a55]">
+                  <div key={i} className="border-l-2 pl-2.5 py-0.5 border-[var(--c-1e3a55)]">
                     <div className={`text-[10px] leading-tight ${
                       log.status === 'error' ? 'text-red-400' :
                       log.status === 'warn' ? 'text-amber-400' : 'text-slate-400'

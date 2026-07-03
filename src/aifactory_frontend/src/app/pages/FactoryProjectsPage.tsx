@@ -103,8 +103,8 @@ function RenameModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[400px] shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#142235]">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[400px] shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-142235)]">
           <span className="text-sm font-semibold text-slate-100">
             {t("project.renameProject")}
           </span>
@@ -127,13 +127,13 @@ function RenameModal({
               if (e.key === "Enter") onConfirm(value.trim());
               if (e.key === "Escape") onClose();
             }}
-            className="w-full bg-[#071526] border border-[#1e3a55] rounded px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
         <div className="flex justify-end gap-3 px-5 pb-5">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs text-slate-400 border border-[#1e3a55] rounded hover:border-[#2a4a6a] transition-colors"
+            className="px-4 py-2 text-xs text-slate-400 border border-[var(--c-1e3a55)] rounded hover:border-[var(--c-2a4a6a)] transition-colors"
           >
             {t("common.cancel")}
           </button>
@@ -162,8 +162,8 @@ function DeleteModal({
 }) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[400px] shadow-2xl">
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-[#142235]">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[400px] shadow-2xl">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--c-142235)]">
           <AlertTriangle size={16} className="text-red-400 flex-shrink-0" />
           <span className="text-sm font-semibold text-slate-100">
             {t("project.deleteProject")}
@@ -180,7 +180,7 @@ function DeleteModal({
         <div className="flex justify-end gap-3 px-5 pb-5">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs text-slate-400 border border-[#1e3a55] rounded hover:border-[#2a4a6a] transition-colors"
+            className="px-4 py-2 text-xs text-slate-400 border border-[var(--c-1e3a55)] rounded hover:border-[var(--c-2a4a6a)] transition-colors"
           >
             {t("common.cancel")}
           </button>
@@ -235,7 +235,7 @@ function ContextMenu({
   return (
     <div
       ref={menuRef}
-      className="absolute right-0 top-full mt-1 w-44 bg-[#0b1d30] border border-[#1e3a55] rounded-lg shadow-xl z-30 py-1 overflow-hidden"
+      className="absolute right-0 top-full mt-1 w-44 bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-lg shadow-xl z-30 py-1 overflow-hidden"
     >
       {!isArchived && (
         <MenuItem
@@ -274,7 +274,7 @@ function ContextMenu({
           }}
         />
       )}
-      <div className="my-1 border-t border-[#142235]" />
+      <div className="my-1 border-t border-[var(--c-142235)]" />
       <MenuItem
         icon={<Trash2 size={11} />}
         label={t("common.delete")}
@@ -305,7 +305,7 @@ function MenuItem({
       className={`w-full flex items-center gap-2.5 px-3 py-2 text-[11px] transition-colors ${
         danger
           ? "text-red-400 hover:bg-red-500/10"
-          : "text-slate-300 hover:bg-[#0e243a]"
+          : "text-slate-300 hover:bg-[var(--c-0e243a)]"
       }`}
     >
       {icon} {label}
@@ -342,10 +342,10 @@ function ProjectCard({
 
   return (
     <div
-      className={`bg-[#0b1d30] border rounded-lg overflow-hidden relative transition-all group ${
+      className={`bg-[var(--c-0b1d30)] border rounded-lg overflow-hidden relative transition-all group ${
         isArchived
-          ? "border-[#142235] opacity-60"
-          : "border-[#142235] hover:border-blue-500/50 cursor-pointer"
+          ? "border-[var(--c-142235)] opacity-60"
+          : "border-[var(--c-142235)] hover:border-blue-500/50 cursor-pointer"
       }`}
     >
       {/* Thumbnail */}
@@ -363,11 +363,11 @@ function ProjectCard({
             }`}
           />
         ) : (
-          <div className="w-full h-full bg-[#040d18] flex items-center justify-center">
+          <div className="w-full h-full bg-[var(--c-040d18)] flex items-center justify-center">
             <Layers3 size={32} className="text-slate-700" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b1d30] via-[#0b1d30]/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--c-0b1d30)] via-[var(--c-0b1d30)]/20 to-transparent" />
 
         {/* Update thumbnail button (hover) */}
         {!isArchived && (
@@ -447,7 +447,7 @@ function ProjectCard({
             e.stopPropagation();
             setMenuOpen((v) => !v);
           }}
-          className="w-6 h-6 rounded bg-[#0b1d30]/80 border border-[#1e3a55] flex items-center justify-center text-slate-500 hover:text-slate-200 opacity-0 group-hover:opacity-100 transition-all"
+          className="w-6 h-6 rounded bg-[var(--c-0b1d30)]/80 border border-[var(--c-1e3a55)] flex items-center justify-center text-slate-500 hover:text-slate-200 opacity-0 group-hover:opacity-100 transition-all"
         >
           <MoreHorizontal size={12} />
         </button>
@@ -496,14 +496,14 @@ function ProjectRow({
 
   return (
     <tr
-      className={`border-b border-[#142235] transition-colors group ${
-        isArchived ? "opacity-60" : "hover:bg-[#0b1d30] cursor-pointer"
+      className={`border-b border-[var(--c-142235)] transition-colors group ${
+        isArchived ? "opacity-60" : "hover:bg-[var(--c-0b1d30)] cursor-pointer"
       }`}
       onClick={!isArchived ? onOpen : undefined}
     >
       <td className="py-3 pl-5 pr-3">
         <div
-          className="w-10 h-8 rounded overflow-hidden flex-shrink-0 bg-[#040d18] flex items-center justify-center relative group/thumb cursor-pointer"
+          className="w-10 h-8 rounded overflow-hidden flex-shrink-0 bg-[var(--c-040d18)] flex items-center justify-center relative group/thumb cursor-pointer"
           onClick={(e) => {
             if (!isArchived) {
               e.stopPropagation();
@@ -576,7 +576,7 @@ function ProjectRow({
               e.stopPropagation();
               setMenuOpen((v) => !v);
             }}
-            className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:text-slate-200 hover:bg-[#142235] opacity-0 group-hover:opacity-100 transition-all"
+            className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:text-slate-200 hover:bg-[var(--c-142235)] opacity-0 group-hover:opacity-100 transition-all"
           >
             <MoreHorizontal size={13} />
           </button>
@@ -796,7 +796,7 @@ export function FactoryProjectsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#07111e] text-slate-100 overflow-hidden select-none">
+    <div className="flex h-screen bg-[var(--c-07111e)] text-slate-100 overflow-hidden select-none">
       <NavSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -813,7 +813,7 @@ export function FactoryProjectsPage() {
         />
 
         {/* ── Toolbar ── */}
-        <div className="flex items-center gap-3 px-6 py-3 border-b border-[#142235] flex-shrink-0 bg-[#07111e]">
+        <div className="flex items-center gap-3 px-6 py-3 border-b border-[var(--c-142235)] flex-shrink-0 bg-[var(--c-07111e)]">
           {/* Status filters */}
           <div className="flex gap-1">
             {STATUS_FILTER_KEYS.map((f) => {
@@ -826,7 +826,7 @@ export function FactoryProjectsPage() {
                   className={`px-3 py-1 text-[11px] rounded-full border transition-colors ${
                     statusFilter === f.key
                       ? "border-blue-500/60 bg-blue-600/15 text-blue-400"
-                      : "border-[#1e3a55] text-slate-500 hover:border-[#2a4a6a] hover:text-slate-300"
+                      : "border-[var(--c-1e3a55)] text-slate-500 hover:border-[var(--c-2a4a6a)] hover:text-slate-300"
                   }`}
                 >
                   {t(f.labelKey)}
@@ -846,7 +846,7 @@ export function FactoryProjectsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("project.searchProjects")}
-              className="w-52 bg-[#0b1d30] border border-[#1e3a55] rounded pl-7 pr-3 py-1.5 text-[11px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-52 bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded pl-7 pr-3 py-1.5 text-[11px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
             />
             {search && (
               <button
@@ -859,7 +859,7 @@ export function FactoryProjectsPage() {
           </div>
 
           {/* View toggle */}
-          <div className="flex bg-[#0b1d30] border border-[#1e3a55] rounded overflow-hidden">
+          <div className="flex bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded overflow-hidden">
             <button
               onClick={() => setViewMode("card")}
               className={`px-2.5 py-1.5 transition-colors ${viewMode === "card" ? "bg-blue-600/30 text-blue-400" : "text-slate-500 hover:text-slate-200"}`}
@@ -901,9 +901,9 @@ export function FactoryProjectsPage() {
               {/* New project card */}
               <div
                 onClick={() => setShowNewModal(true)}
-                className="bg-[#0b1d30] border border-dashed border-[#1e3a55] rounded-lg h-[220px] flex flex-col items-center justify-center cursor-pointer hover:border-blue-500/60 hover:bg-[#0e243a] transition-all group"
+                className="bg-[var(--c-0b1d30)] border border-dashed border-[var(--c-1e3a55)] rounded-lg h-[220px] flex flex-col items-center justify-center cursor-pointer hover:border-blue-500/60 hover:bg-[var(--c-0e243a)] transition-all group"
               >
-                <div className="w-10 h-10 rounded-full border border-dashed border-[#2a4a6a] group-hover:border-blue-500 flex items-center justify-center mb-3 transition-colors">
+                <div className="w-10 h-10 rounded-full border border-dashed border-[var(--c-2a4a6a)] group-hover:border-blue-500 flex items-center justify-center mb-3 transition-colors">
                   <Plus
                     size={18}
                     className="text-slate-500 group-hover:text-blue-400 transition-colors"
@@ -931,10 +931,10 @@ export function FactoryProjectsPage() {
               ))}
             </div>
           ) : (
-            <div className="bg-[#0b1d30] border border-[#142235] rounded-lg overflow-hidden">
+            <div className="bg-[var(--c-0b1d30)] border border-[var(--c-142235)] rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[#142235] bg-[#071526]">
+                  <tr className="border-b border-[var(--c-142235)] bg-[var(--c-071526)]">
                     <th className="w-14 py-3 pl-5 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider"></th>
                     <th className="py-3 pr-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                       {t("common.name")}

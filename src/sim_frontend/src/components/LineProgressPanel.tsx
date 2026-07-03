@@ -59,8 +59,8 @@ function LineProgressPanelInner({
     .sort((a, b) => a.sortKey - b.sortKey || a.name.localeCompare(b.name));
 
   return (
-    <div className="w-80 h-full bg-[#0b1d30]/95 border border-[#1e3a55] rounded-xl shadow-2xl backdrop-blur-sm overflow-hidden flex flex-col">
-      <div className="px-4 py-2 border-b border-[#142235] flex items-center justify-between flex-shrink-0">
+    <div className="w-80 h-full bg-[var(--c-0b1d30)]/95 border border-[var(--c-1e3a55)] rounded-xl shadow-2xl backdrop-blur-sm overflow-hidden flex flex-col">
+      <div className="px-4 py-2 border-b border-[var(--c-142235)] flex items-center justify-between flex-shrink-0">
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{t('Line Progress')}</span>
         <span className="text-[9px] text-slate-600">{t('Real-time LBR · Completed')}</span>
       </div>
@@ -80,7 +80,7 @@ function LineProgressPanelInner({
             : currentLbr >= 0.85 ? 'text-emerald-400'
             : currentLbr >= 0.7 ? 'text-amber-400' : 'text-red-400';
           return (
-            <div key={line.line_id} className="px-3 py-2 border-b border-[#0e1e2e]/60 last:border-b-0">
+            <div key={line.line_id} className="px-3 py-2 border-b border-[var(--c-0e1e2e)]/60 last:border-b-0">
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-[11px] text-slate-200 font-medium truncate flex-1" title={line.name}>
                   {line.name}
@@ -96,7 +96,7 @@ function LineProgressPanelInner({
                   {series.length > 0 ? (
                     <MiniLbrChart points={series} tMin={tMin} />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[9px] text-slate-600 bg-[#040d16] rounded border border-[#142235]/50">
+                    <div className="w-full h-full flex items-center justify-center text-[9px] text-slate-600 bg-[var(--c-040d16)] rounded border border-[var(--c-142235)]/50">
                       {t('No LBR data')}
                     </div>
                   )}
@@ -106,7 +106,7 @@ function LineProgressPanelInner({
                   <div className="text-[11px] font-mono text-slate-200 tabular-nums truncate">
                     {done}<span className="text-slate-600"> / {total || '—'}</span>
                   </div>
-                  <div className="mt-1 h-1.5 bg-[#040d16] rounded-full overflow-hidden">
+                  <div className="mt-1 h-1.5 bg-[var(--c-040d16)] rounded-full overflow-hidden">
                     <div
                       className={cn('h-full transition-all', pct >= 1 ? 'bg-emerald-500' : 'bg-blue-500')}
                       style={{ width: `${pct * 100}%` }}
@@ -139,7 +139,7 @@ function MiniLbrChart({
         <XAxis dataKey="t_min" type="number" domain={['dataMin', 'dataMax']} hide />
         <YAxis domain={[0, 100]} hide />
         <Tooltip
-          contentStyle={{ background: '#040d16', border: '1px solid #1e3a55', fontSize: 10, padding: '2px 6px' }}
+          contentStyle={{ background: 'var(--c-040d16)', border: '1px solid var(--c-1e3a55)', fontSize: 10, padding: '2px 6px' }}
           labelFormatter={(v) => t('T+{{min}}min', { min: Number(v).toFixed(1) })}
           formatter={(v: number) => [`${v?.toFixed?.(1) ?? '—'}%`, 'LBR']}
         />

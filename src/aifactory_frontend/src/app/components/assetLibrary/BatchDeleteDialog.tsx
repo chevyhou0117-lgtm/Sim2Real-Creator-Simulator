@@ -12,8 +12,8 @@ interface BatchDeleteDialogProps {
 export function BatchDeleteDialog({ deleteIds, blockedIds, onConfirm, onCancel }: BatchDeleteDialogProps) {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#0b1d30] border border-[#1e3a55] rounded-xl w-[440px] shadow-2xl">
-        <div className="px-5 py-4 border-b border-[#142235]">
+      <div className="bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded-xl w-[440px] shadow-2xl">
+        <div className="px-5 py-4 border-b border-[var(--c-142235)]">
           <span className="text-sm font-semibold text-slate-100">{t("asset.batchDeleteDialog.title")}</span>
         </div>
         <div className="px-5 py-4 space-y-3">
@@ -46,10 +46,10 @@ export function BatchDeleteDialog({ deleteIds, blockedIds, onConfirm, onCancel }
             </div>
           )}
         </div>
-        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[#142235]">
+        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[var(--c-142235)]">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-xs text-slate-400 border border-[#1e3a55] rounded-md hover:border-[#2a4a6a] transition-colors"
+            className="px-4 py-2 text-xs text-slate-400 border border-[var(--c-1e3a55)] rounded-md hover:border-[var(--c-2a4a6a)] transition-colors"
           >
             {t("common.cancel")}
           </button>
