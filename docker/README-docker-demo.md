@@ -46,7 +46,7 @@ docker compose -f docker/docker-compose.demo.yml logs -f sim-backend
 ## 3. 验证 3D 串流（本机，用 P9）
 
 1. 确认 **Kit App 已在宿主机跑起来**（sim 前端用的 Kit 在 `:8233` 控制 + `:12333/:12334` WebRTC 在监听；aifactory 前端用的 Kit 在 `:8011`，两者分开）。sim 前端现在**直连 WebRTC**，不用再起 `:5183` 串流页。
-2. 确认 `md_creator_project.creator_url` 指向的全厂 USD 在**本机真实存在**——它是绝对路径，由 `seed_data/creator_project.csv` 灌入。路径不符就改该 CSV 后 `down -v` 重灌，或直接改库里的 `creator_url`。
+2. 确认 `md_creator_project.creator_url` 指向的全厂 USD 对 Kit 可见——它是 **Kit 容器内**的绝对路径（默认 `/storage/Data/P9_animations/Houston_F_NV/demo520.usd`，对应 Kit 容器 `-v <宿主资产库>:/storage` 的挂载），由 `seed_data/creator_project.csv` 灌入。挂载目标或 USD 位置不同才需要改该 CSV，改后 `down -v` 重灌，或直接改库里的 `creator_url`。
 3. 浏览器开 http://localhost:8080 → 进「运营模拟」→ 选/建一个 P9 方案 → 关联 Creator 项目 → 跑模拟 → 进 3D 回放页：
    - **2D 图表正常但 3D 黑屏** → 多半是串流/Kit URL 或 `load-from-backend` 拉不到事件，对照 §4。
    - 视口出画面且设备按事件变色 → 闭链通。

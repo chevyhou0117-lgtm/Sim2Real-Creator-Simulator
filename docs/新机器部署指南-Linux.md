@@ -32,7 +32,7 @@ SimReal组件和Kit App可以部署在同一内网的不同机器上。
 
 1.kit镜像：fii-houyiming_streaming.tar.gz（约2GB） 
 
-2.样例资产库（约31GB）
+2.样例（约105GB，Creator的样例约31GB,其余为Simulation的样例）
 ```bash
 # Sim2Real组建仓库
 git clone https://github.com/chevyhou0117-lgtm/Sim2Real-Creator-Simulation
@@ -44,9 +44,21 @@ gunzip -c fii-houyiming_streaming.tar.gz | docker load
 sudo mkdir -p /opt/sim2real/storage
 ```
 
-资产目录顶层应包含：`thumbnails/ Library/ Line_Library/ `。
+资产目录顶层应包含：`thumbnails/ Library/ Line_Library/ Data/`（`Data/` 内含全厂场景 USD，如 `Data/P9_animations/Houston_F_NV/demo520.usd`）。
 本指南用 **`<STORAGE>`** 代指它。
 
+
+### 3.0 前置：安装 NVIDIA Container Toolkit
+Kit 容器要用 `--gpus all` 拿 GPU，宿主机需先装好 NVIDIA 驱动（`nvidia-smi` 能出结果），再装 NVIDIA Container Toolkit 并注册到 Docker：
+```bash
+sudo apt-get install -y nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+
+# 验证：容器内能看到 GPU 即可
+docker run --rm --gpus all ubuntu nvidia-smi
+```
+> 没装它时 `docker run --gpus all` 会报 `could not select device driver "" with capabilities: [[gpu]]`。
 
 ### 3.1 启动 Kit 容器并指向资产库
 Kit 已容器化，直接 `docker run`：`-v` 把宿主资产库挂进容器，`-e AIFACTORY_USD_ROOT` 告诉 Kit 从哪读 USD（填【容器内】路径，即 `-v` 的挂载目标）：
@@ -61,26 +73,6 @@ docker run -d --name sim2real --gpus all --restart unless-stopped \
 > `AIFACTORY_USD_ROOT=/storage` 必须等于 `-v` 右侧的容器内目标；宿主资产库在哪由 `-v` 左侧（`/opt/sim2real/storage`）决定，换位置只改左侧，无需 rebuild。
 
 起来后监听 Kit 的 /ov + /kit/playback 控制端口 —— **sim 前端用 `:8233`、aifactory 前端用 `:8011`（两者分开）** —— 以及 `:12333`（media）、`:12334`（signal）。`docker logs -f sim2real` 看启动日志。
-
-### 3.2 Kit 卡死自愈（帧看门狗）
-
-Kit 进程内置了**主循环卡死看门狗**（`fastapi.service.setup/frame_watchdog.py`）：一个独立 OS 线程靠 update 帧心跳判活，连续 `STALL_SEC` 秒无帧推进即判定主循环 wedged，直接 `os._exit(70)` 杀掉 Kit。Kit 是容器主进程，进程一退 → 容器退出 → 上面 `--restart unless-stopped` 自动拉起一个全新 Kit。**这就是「检测到卡死自动重启」的闭环，无需 docker.sock、无需外挂 autoheal。**
-
-可用环境变量调（都可选，加在 `docker run` 的 `-e` 里）：
-
-| 变量 | 默认 | 含义 |
-|---|---|---|
-| `KIT_WATCHDOG_ENABLED` | `true` | 设 `false` 只告警不退出（本地调试用） |
-| `KIT_WATCHDOG_STALL_SEC` | `30` | 连续多少秒无帧判定卡死。需 > 冷加载大场景的最长同步阻塞，否则误杀 |
-| `KIT_WATCHDOG_GRACE_SEC` | `60` | 启动宽限期，避免冷启动 + 打开大 USD 时首帧迟到被误杀 |
-| `KIT_WATCHDOG_CHECK_SEC` | `3` | 看门狗线程检查周期 |
-
-**可观测（可选）**：Kit 同时暴露 `GET :8233/healthz`，`last_tick_age_s` 超 `STALL_SEC` 返回 503，否则 200。给 `docker run` 加下面这组让 `docker ps` 显示 healthy/unhealthy（**仅展示状态，真正触发重启的是看门狗 `os._exit`，不是这个健康检查**）：
-```bash
-  --health-cmd='/app/kit/python/bin/python3 -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8233/healthz\", timeout=3)"' \
-  --health-interval=15s --health-timeout=5s --health-retries=3 --health-start-period=90s \
-```
-> 改了 `frame_watchdog.py` 等 Kit 侧源码后需 **rebuild Kit 镜像**（`repo package_container`）才生效；阈值类只改 `-e` 环境变量则无需 rebuild。
 
 ---
 
@@ -97,18 +89,19 @@ kit如果和sim2real服务在同一台机器，则127.0.0.1，在内网的不同
 KIT_HOST_IP=127.0.0.1/192.168....
 ```
 
-### 4.2 对齐全厂场景 USD 的绝对路径（首次灌库前）
-`md_creator_project.creator_url` 是**绝对路径**，由 `源码/sim_backend/seed_data/creator_project.csv` 灌入，默认是别的机器的路径。改成本机 Linux 绝对路径：
+### 4.2 确认全厂场景 USD 路径（首次灌库前）
+`md_creator_project.creator_url` 由 `src/sim_backend/seed_data/creator_project.csv` 灌入，是 **Kit 容器内**的绝对路径，默认值：
 ```
-creator_url 改为：  /opt/sim2real/storage/Data/P9_animations/Houston_F_NV/demo520.usd
+/storage/Data/P9_animations/Houston_F_NV/demo520.usd
 ```
+它对应 §3.1 的挂载 `-v <STORAGE>:/storage`（即 `AIFACTORY_USD_ROOT`），**照默认方式挂载则无需修改**。只有当你把 `-v` 右侧容器内目标改成别的路径、或 USD 文件位置不同（资产库须含 `Data/` 目录，见 §1）时才需要改 CSV。
 > 已灌过库再改的话，`down -v` 清库重灌，或直接改库里的 `creator_url`。
 
 ### 4.3 构建 + 启动
 ```bash
-docker compose -f docker/docker-compose.demo.yml build      # 首次较慢（拉依赖 + 前端 npm ci）
+docker compose -f docker/docker-compose.demo.yml build
 docker compose -f docker/docker-compose.demo.yml up -d
-docker compose -f docker/docker-compose.demo.yml logs -f sim-backend   # 看迁移 + 灌 P9 种子
+docker compose -f docker/docker-compose.demo.yml logs -f sim-backend 
 ```
 启动链：`sim-postgres` 健康 → `sim-backend`（alembic 迁移 + 首次灌 P9 种子，含 aifactory 的 creator_tables）→ `aifactory-backend`（纯消费）+ 两个前端。
 
