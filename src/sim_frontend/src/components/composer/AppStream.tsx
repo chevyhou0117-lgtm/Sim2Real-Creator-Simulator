@@ -55,6 +55,9 @@ export default class AppStream extends Component<
   AppStreamState
 > {
   private _requested: boolean;
+  private _fitObserver: ResizeObserver | null = null;
+  private _fitTimer: ReturnType<typeof setTimeout> | null = null;
+  private _lastSent = { width: 0, height: 0 };
 
   static defaultProps = {
     style: {},
@@ -68,6 +71,58 @@ export default class AppStream extends Component<
       streamReady: false,
       activeButton: null,
     };
+  }
+
+  // 贴合方案（对齐 NVIDIA web-viewer-sample 官方模式，不用 fitStreamResolution）：
+  // 按 <video> 元素当前【宽高比】计算 Kit 渲染尺寸——长边固定 3840（4K 级），
+  // 宽高各向下取整到 16 的倍数（NVENC H.264 硬约束，非 16 倍数时 Kit 动态 resize
+  // 会失败并回落到上一个合法分辨率 → 之前"全屏后退回锁定比例"的根因）。
+  // 比例贴合元素 → 无黑边不变形；源头流仍是 4K 级，浏览器端下采样显示。
+  private _streamDims(): { width: number; height: number } {
+    const el = document.getElementById("remote-video");
+    const r = el?.getBoundingClientRect();
+    const w0 = r?.width ?? 0;
+    const h0 = r?.height ?? 0;
+    if (w0 <= 0 || h0 <= 0) {
+      return { width: StreamConfig.local.streamWidth, height: StreamConfig.local.streamHeight };
+    }
+    const dpr = window.devicePixelRatio || 1;
+    let w = w0;
+    let h = h0;
+    const MAX_LONG = 3840; // 库硬上限 4096；留在 4K 级即可
+    const long = Math.max(w, h);
+    if (long > MAX_LONG) {
+      const s = MAX_LONG / long;
+      w *= s;
+      h *= s;
+    }
+    const round16 = (n: number) => Math.max(256, Math.floor(n / 16) * 16);
+    return { width: round16(w), height: round16(h) };
+  }
+
+  // 盯 <video> 元素尺寸（覆盖全屏/收侧栏/拖窗口等一切布局变化），防抖后按新比例
+  // 重新计算并手动 AppStreamer.resize（尺寸没变则跳过）。
+  private _watchFitResolution() {
+    const el = document.getElementById("remote-video");
+    if (!el || typeof ResizeObserver === "undefined") return;
+    this._fitObserver = new ResizeObserver(() => {
+      if (this._fitTimer != null) clearTimeout(this._fitTimer);
+      this._fitTimer = setTimeout(() => {
+        const { width, height } = this._streamDims();
+        if (width === this._lastSent.width && height === this._lastSent.height) return;
+        this._lastSent = { width, height };
+        AppStreamer.resize(width, height).catch((err: unknown) =>
+          console.warn("[AppStream] resize failed", err),
+        );
+      }, 300);
+    });
+    this._fitObserver.observe(el);
+  }
+
+  componentWillUnmount() {
+    this._fitObserver?.disconnect();
+    this._fitObserver = null;
+    if (this._fitTimer != null) clearTimeout(this._fitTimer);
   }
 
   componentDidMount() {
@@ -92,6 +147,7 @@ export default class AppStream extends Component<
         };
       } else if (StreamConfig.source === "local") {
         streamSource = StreamType.DIRECT;
+        this._lastSent = this._streamDims(); // 初始尺寸入账，观察器首触发不重复发送
         streamConfig = {
           videoElementId: "remote-video",
           audioElementId: "remote-audio",
@@ -109,11 +165,12 @@ export default class AppStream extends Component<
           // 不设时直连模式可能只转发部分鼠标事件，右键导航失效。
           cursor: "free",
           nativeTouchEvents: true,
-          // 固定请求 stream.config.json 的 streamWidth/streamHeight（3840×2720），与 aifactory 前端一致。
-          // 不用 fitStreamResolution：它会把流分辨率贴合 <video> 元素的实际像素尺寸，而 sim 视口被图表
-          // 面板挤小 → Kit 按小尺寸渲染 → 画面糊/分辨率很小。固定 4K 后由 CSS（width/height:100%）缩放贴合。
-          width: StreamConfig.local.streamWidth,
-          height: StreamConfig.local.streamHeight,
+          // 初始分辨率 = 按 video 元素当前比例算出的 4K 级 16 倍数尺寸（见 _streamDims）；
+          // 后续布局变化由 ResizeObserver + AppStreamer.resize 跟随（官方 sample 模式）。
+          // 不用 fitStreamResolution：它开着时 AppStreamer.resize() 会抛错，且其内部
+          // resize 请求不做 16 倍数对齐，Kit 动态 resize 失败 → 退回锁定比例。
+          width: this._lastSent.width,
+          height: this._lastSent.height,
           fps: 60,
           onUpdate: (message: StreamEvent) => this._onUpdate(message),
           onStart: (message: StreamEvent) => this._onStart(message),
@@ -191,6 +248,10 @@ export default class AppStream extends Component<
         player.playsInline = true;
         player.muted = true;
         player.play();
+      }
+      // 流就绪后开始盯 video 元素尺寸，全屏/布局变化时重新贴合流分辨率
+      if (StreamConfig.source === "local") {
+        this._watchFitResolution();
       }
     }
   }

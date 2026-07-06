@@ -384,8 +384,16 @@ products_router = APIRouter(prefix="/products", tags=["Master Data"])
 
 
 @products_router.get("", response_model=list[ProductOut])
-def list_products(db: Session = Depends(get_db)):
-    return db.query(Product).filter(Product.status == "ACTIVE").all()
+def list_products(plan_id: str | None = None, db: Session = Depends(get_db)):
+    """产品字典。缺省只回全局主数据行（plan_id IS NULL）——此前不过滤会把每个方案的
+    克隆副本全吐出来（N 个方案 = N+1 个同名 PG548，前端下拉重复）。传 plan_id 时
+    额外带上该方案的专属副本（RunningPage 需要 scoped product_id → name 映射）。"""
+    q = db.query(Product).filter(Product.status == "ACTIVE")
+    if plan_id:
+        q = q.filter((Product.plan_id == plan_id) | (Product.plan_id.is_(None)))
+    else:
+        q = q.filter(Product.plan_id.is_(None))
+    return q.all()
 
 
 creator_projects_router = APIRouter(prefix="/creator-projects", tags=["Master Data"])

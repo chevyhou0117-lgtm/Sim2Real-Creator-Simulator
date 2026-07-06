@@ -231,7 +231,7 @@ export function SimulationRunningPage() {
         const plan = await planApi.get(planId);
         const [eqCfg, products, tasks, lbrRows, simResult, stages] = await Promise.all([
           masterApi.equipmentConfig(plan.factory_id, planId).catch(() => null),
-          masterApi.products().catch(() => []),
+          masterApi.products(planId).catch(() => []),  // 带 plan_id：补上本方案克隆副本的 product_id → name 映射
           planApi.tasks(planId).catch(() => []),
           planApi.lineBalance(planId).catch(() => []),
           planApi.result(planId).catch(() => null),

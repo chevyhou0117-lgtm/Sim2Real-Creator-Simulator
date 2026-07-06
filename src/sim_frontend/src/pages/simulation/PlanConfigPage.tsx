@@ -5,7 +5,7 @@ import {
   ChevronLeft, Save, CheckCircle2, AlertCircle, Upload, RefreshCw,
   ChevronDown, ChevronRight, Database, Cpu, Truck, Package, Layers,
   Sliders, Building2, Plus, Info, X, BookOpen, Play,
-  Loader2,
+  Loader2, Maximize2, Minimize2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input, Select } from '@/components/ui/Input';
@@ -27,7 +27,7 @@ import type { TreeNode as TreeNodeV2 } from './plan-config/types';
 // ── Types ──────────────────────────────────────────────────────────────────────
 type NodeType = 'group' | 'line' | 'operation' | 'equipment' | 'agv' | 'material' | 'factory';
 type NodeStatus = 'normal' | 'bottleneck' | 'idle' | 'warning';
-type RibbonTab = 'input' | 'params' | 'constraints' | 'bop-2d';
+type RibbonTab = 'input' | 'params' | 'constraints';
 
 interface TreeNode {
   id: string;
@@ -1783,7 +1783,6 @@ function Ribbon({
     { id: 'input',       label: 'Input Data' },
     { id: 'params',      label: 'Parameter Configuration' },
     { id: 'constraints', label: 'Constraint Settings' },
-    { id: 'bop-2d',      label: 'BoP 2D Overhead' },
   ];
 
   return (
@@ -2015,6 +2014,23 @@ export function PlanConfigPage() {
   }, [planId, planTasks]);  // tasks 变化时重新算 input_pct
 
   const [ribbonTab, setRibbonTab]       = useState<RibbonTab>('input');
+  // 参数配置视口：3D（Kit 场景）/ 2D（BoP 拓扑俯视）。原顶层「BoP 2D 俯视」tab 并入此处。
+  const [paramView, setParamView]       = useState<'2d' | '3d'>('3d');
+  // 视口全屏：requestFullscreen 作用在视口容器上（资产树/参数面板/切换钮都是它的
+  // absolute 子元素 → 全屏后左侧资产结构等 UI 保留）。Esc 或再点按钮退出。
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const [viewportFs, setViewportFs] = useState(false);
+  useEffect(() => {
+    const onFsChange = () => setViewportFs(document.fullscreenElement === viewportRef.current && !!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
+  const toggleViewportFs = () => {
+    const el = viewportRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    else void el.requestFullscreen().catch(() => {});
+  };
   const [selectedId, setSelectedId]     = useState<string | null>('factory');
   const [expandedIds, setExpandedIds]   = useState<string[]>(['factory', 'lines']);
   const [planStatus, setPlanStatus]     = useState<'DRAFT' | 'READY' | 'COMPLETED'>('DRAFT');
@@ -2257,8 +2273,50 @@ export function PlanConfigPage() {
 
         {/* ── Params tab: viewport with floating panels ── */}
         {showViewport && (
-          <div className="flex-1 overflow-hidden relative">
-            <FactoryViewport selectedId={selectedId} onSelect={handleSelect} creatorUrl={viewportUsdUrl} />
+          <div ref={viewportRef} className="flex-1 overflow-hidden relative bg-[var(--c-07111e)]">
+            {paramView === '3d' ? (
+              <FactoryViewport selectedId={selectedId} onSelect={handleSelect} creatorUrl={viewportUsdUrl} />
+            ) : (
+              <div className="absolute inset-0 flex flex-col" style={{ background: 'var(--c-070f1a)' }}>
+                <BopSchematicView
+                  planId={planId}
+                  factoryId={plan?.factory_id}
+                  embedded
+                  lineFilter={selectedNode?.line_id ?? null}
+                  selectedOpId={
+                    selectedNode?.type === 'operation'
+                      ? selectedNode.id
+                      : selectedNode?.type === 'equipment' && selectedNode.line_id && selectedNode.operation_id
+                        ? `${selectedNode.line_id}::${selectedNode.operation_id}`
+                        : null
+                  }
+                />
+              </div>
+            )}
+            {/* 2D/3D 视口切换（顶部居中；左资产树 z-20、右参数面板 z-20，此处 z-30 保持可点） */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex rounded-lg border border-[var(--c-1e3a55)] bg-[var(--c-07111e)]/90 backdrop-blur overflow-hidden shadow-lg">
+              {(['2d', '3d'] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setParamView(v)}
+                  title={v === '2d' ? t('BoP 2D topology') : t('3D scene')}
+                  className={`px-3 py-1 text-[11px] font-semibold transition-colors ${
+                    paramView === v
+                      ? 'bg-blue-600/80 text-white'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {v.toUpperCase()}
+                </button>
+              ))}
+              <button
+                onClick={toggleViewportFs}
+                title={viewportFs ? t('Exit fullscreen') : t('Fullscreen')}
+                className="px-2 py-1 text-slate-400 hover:text-slate-200 border-l border-[var(--c-1e3a55)] transition-colors"
+              >
+                {viewportFs ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+              </button>
+            </div>
             <AssetSidebar
               tree={assetTreeV2}
               selectedId={selectedId}
@@ -2302,11 +2360,6 @@ export function PlanConfigPage() {
           </div>
         )}
 
-        {ribbonTab === 'bop-2d' && (
-          <div className="flex-1 overflow-hidden flex flex-col min-w-0">
-            <BopSchematicView planId={planId} factoryId={plan?.factory_id} />
-          </div>
-        )}
       </div>
 
       {/* ── Constraint Version Manager Modal ── */}

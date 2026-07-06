@@ -1,10 +1,10 @@
 stage_code,stage_name,sequence,stage_type,status
-SMT,Surface Mount Technology,1,,ACTIVE
-PTH,Through-Hole Assembly,2,,ACTIVE
-ModuleAssy,Auto Module Assembly,3,,ACTIVE
-MainAssy,Auto Main Assembly,4,,ACTIVE
-TrayAssy,Tray Assembly,5,,ACTIVE
-FT,Final Test,6,,ACTIVE
-TrayDisAssy,Tray Disassembly (incl. Sorting),7,,ACTIVE
-CPDisAssy,Cold Plate Disassembly,8,,ACTIVE
-Packing,Packing,9,,ACTIVE
+SMT,SMT 表面贴装,1,,ACTIVE
+PTH,PTH 插件组装,2,,ACTIVE
+ModuleAssy,模组自动组装,3,,ACTIVE
+MainAssy,自动总装,4,,ACTIVE
+TrayAssy,托盘组装,5,,ACTIVE
+FT,功能测试,6,,ACTIVE
+TrayDisAssy,托盘拆解（含分选）,7,,ACTIVE
+CPDisAssy,冷板拆解,8,,ACTIVE
+Packing,包装,9,,ACTIVE

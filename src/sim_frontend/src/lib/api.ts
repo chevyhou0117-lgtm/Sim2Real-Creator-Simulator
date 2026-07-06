@@ -281,7 +281,8 @@ export const masterApi = {
     api<LineEquipmentConfigOut>(`/factories/${factoryId}/equipment-config${planId ? `?plan_id=${planId}` : ''}`),
   workCalendar: (factoryId: string, planId?: string) =>
     api<WorkCalendarOut>(`/factories/${factoryId}/work-calendar${planId ? `?plan_id=${planId}` : ''}`),
-  products: () => api<ProductOut[]>('/products'),
+  // plan_id 可选：缺省只回全局主数据产品；传入则额外含该方案克隆副本（scoped product_id → name 映射用）
+  products: (planId?: string) => api<ProductOut[]>(`/products${planId ? `?plan_id=${planId}` : ''}`),
   creatorProjects: (status?: string, factoryId?: string) => {
     const qs = new URLSearchParams();
     if (status) qs.set('status', status);

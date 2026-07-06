@@ -384,7 +384,7 @@ function buildEdges(lines: SchematicLine[], stageTransitions: StageEdge[], bufSt
   return out;
 }
 
-export default function FactorySchematic({ lines, stageTransitions = [], mode = "config", opStates, bufStates, onSelectOp }: Props) {
+export default function FactorySchematic({ lines, stageTransitions = [], mode = "config", opStates, bufStates, selectedOpId, onSelectOp }: Props) {
   const { t } = useTranslation();
   const stateLabel = (s: string) =>
     ({ IDLE: t("Idle"), BUSY: t("Running"), BLOCKED: t("Backpressure"), STARVED: t("Starved"), SHORTAGE: t("Material shortage"), FAILURE: t("Failure") } as Record<string, string>)[s] || s;
@@ -395,7 +395,13 @@ export default function FactorySchematic({ lines, stageTransitions = [], mode = 
     return m;
   }, [lines]);
 
-  const baseNodes = useMemo(() => buildNodes(lines, mode), [lines, mode]);
+  // selectedOpId：外部（资产树）选中的工序，复合 id 与节点 id 同构（`${line_id}::${operation_id}`）。
+  // 标成 React Flow 的 selected → 复用 OperationNode 现有的选中描边。
+  const baseNodes = useMemo(() => {
+    const built = buildNodes(lines, mode);
+    if (!selectedOpId) return built;
+    return built.map((n) => (n.type === "operation" && n.id === selectedOpId ? { ...n, selected: true } : n));
+  }, [lines, mode, selectedOpId]);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   useEffect(() => {
     setNodes(baseNodes);

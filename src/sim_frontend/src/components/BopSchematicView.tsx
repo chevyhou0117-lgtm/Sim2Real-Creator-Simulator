@@ -16,9 +16,18 @@ import type { SchematicLine, StageEdge } from "./FactorySchematic";
 export default function BopSchematicView({
   planId,
   factoryId,
+  lineFilter,
+  selectedOpId,
+  embedded,
 }: {
   planId?: string;
   factoryId?: string;
+  /** 只显示这条产线的 BoP 拓扑（资产树选中产线/工序/设备时联动）；空 = 全厂。 */
+  lineFilter?: string | null;
+  /** 高亮的工序（复合 id `${line_id}::${operation_id}`，与资产树工序节点 id 同构）。 */
+  selectedOpId?: string | null;
+  /** 嵌在参数配置视口时：左侧留出浮动资产树的空间，头部收紧。 */
+  embedded?: boolean;
 }) {
   const { t } = useTranslation();
   const [products, setProducts] = useState<string[]>([]);
@@ -37,8 +46,9 @@ export default function BopSchematicView({
         const tasks = await planApi.tasks(planId);
         let codes = Array.from(new Set(tasks.map((tk) => tk.product_code).filter(Boolean)));
         if (codes.length === 0) {
+          // 去重：全局行 + 方案克隆副本 code 相同（多方案下曾出现 N 个重复 PG548）
           const prods = await masterApi.products();
-          codes = prods.map((p) => p.product_code);
+          codes = Array.from(new Set(prods.map((p) => p.product_code)));
         }
         if (!cancelled) {
           setProducts(codes);
@@ -134,13 +144,21 @@ export default function BopSchematicView({
     };
   }, [planId, factoryId, product]);
 
+  // 资产树联动：选中产线（或其下工序/设备）→ 只画该线；未选/选工厂·制程 → 全厂
+  const visibleLines = lineFilter ? lines.filter((l) => l.line_id === lineFilter) : lines;
+  // 单线视图不画跨制程接续（对端节点不在画布上，buildEdges 会自动跳过，这里显式清掉更干净）
+  const visibleEdges = lineFilter ? [] : edges;
+
   return (
-    <div className="flex-1 min-h-0 flex flex-col p-3 gap-2">
+    <div className={`flex-1 min-h-0 flex flex-col gap-2 ${embedded ? "p-2" : "p-3"}`}
+         style={embedded ? { paddingLeft: 304 } : undefined}>
       <div className="flex-shrink-0 flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-slate-200">{t("BoP 2D Overhead View")}</h3>
+          {!embedded && <h3 className="text-sm font-semibold text-slate-200">{t("BoP 2D Overhead View")}</h3>}
           <p className="text-[11px] text-slate-500 mt-0.5">
-            {t("Process chain per line with line-side buffers (∞ = unbounded, number = capacity).")}
+            {lineFilter && visibleLines.length
+              ? t("Showing BoP of {{line}} only — clear tree selection to view the whole factory", { line: visibleLines[0].line_name || visibleLines[0].line_code })
+              : t("Process chain per line with line-side buffers (∞ = unbounded, number = capacity).")}
           </p>
         </div>
         {products.length > 0 && (
@@ -162,12 +180,13 @@ export default function BopSchematicView({
       </div>
       {loading && <div className="text-xs text-slate-500 py-10 text-center">{t("Loading…")}</div>}
       {err && <div className="text-xs text-red-400 py-10 text-center">{err}</div>}
-      {!loading && !err && lines.length === 0 && (
+      {!loading && !err && visibleLines.length === 0 && (
         <div className="text-xs text-slate-500 py-10 text-center">{t("No BoP configured.")}</div>
       )}
-      {!loading && lines.length > 0 && (
+      {!loading && visibleLines.length > 0 && (
         <div className="flex-1 min-h-0">
-          <FactorySchematic lines={lines} stageTransitions={edges} mode="config" />
+          {/* key 按过滤维度变化 → 重挂载让 fitView 重新对焦（React Flow fitView 仅初次生效） */}
+          <FactorySchematic key={lineFilter ?? 'all'} lines={visibleLines} stageTransitions={visibleEdges} mode="config" selectedOpId={selectedOpId} />
         </div>
       )}
     </div>
