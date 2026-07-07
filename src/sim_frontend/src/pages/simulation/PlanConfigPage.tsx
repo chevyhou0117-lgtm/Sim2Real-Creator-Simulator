@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { planApi, masterApi, planMdApi, simulatorsToFrontend, simulatorsToBackend, parseReadyError, resolveCreatorUrl } from '@/lib/api';
-import { kitSelectPrim, kitSelectMany, kitFocusPerspective, kitFocusPerspectiveMany, kitEnsureStage, kitSetFullscreen, subscribeOpenedStageResult } from '@/lib/kit';
+import { kitSelectPrim, kitSelectMany, kitFocusPerspective, kitFocusPerspectiveMany, kitEnsureStage, kitSetFullscreen, subscribeOpenedStageResult, subscribeKitSelection } from '@/lib/kit';
 import { playbackStop } from '@/lib/playback';
 import type { PlanOut, BopOut, BopProcessOut, ProductOut, StageOut, LineOut, TaskOut, CreatorProjectOut, ReadinessOut, ReadyValidationError } from '@/types/api';
 
@@ -2095,6 +2095,25 @@ export function PlanConfigPage() {
     }
   };
 
+  // 3D 视口里点选设备（SSE 回推 prim_path）→ 反向同步资产树选中，进而联动 2D 高亮/单线过滤。
+  useEffect(() => {
+    const unsub = subscribeKitSelection((primPath) => {
+      const findByPrim = (nodes: TreeNodeV2[]): TreeNodeV2 | null => {
+        for (const n of nodes) {
+          if (n.type === 'equipment' && n.prim_path === primPath) return n;
+          if (n.children) {
+            const hit = findByPrim(n.children);
+            if (hit) return hit;
+          }
+        }
+        return null;
+      };
+      const hit = findByPrim(assetTreeV2);
+      if (hit) setSelectedId(hit.id);
+    });
+    return () => unsub();
+  }, [assetTreeV2]);
+
   // 选中节点（给 ParamTable 用）— 当前选中是 equipment 时，传它对应的 line 节点作为聚合上下文
   const selectedNode = selectedId ? findNodeV2(assetTreeV2, selectedId) : null;
   // 该 selectedNode 所在线的当前产品（用于 effective-params 的 product_code 过滤）
@@ -2290,6 +2309,14 @@ export function PlanConfigPage() {
                         ? `${selectedNode.line_id}::${selectedNode.operation_id}`
                         : null
                   }
+                  // 2D↔3D 关联：单击=资产树选中 + Kit 选中高亮（走 handleSelect 同一条链路）；
+                  // 双击=切 3D 视图 + 运镜聚焦该工序设备的合并 BBox（Kit HTTP 与串流独立，
+                  // 切换期间指令照常生效，串流重连后即为定位好的视角）。
+                  onSelectOp={(op, line) => handleSelect(`${line.line_id}::${op.operation_id}`)}
+                  onDoubleSelectOp={(op, line) => {
+                    setParamView('3d');
+                    handleDoubleSelect(`${line.line_id}::${op.operation_id}`);
+                  }}
                 />
               </div>
             )}

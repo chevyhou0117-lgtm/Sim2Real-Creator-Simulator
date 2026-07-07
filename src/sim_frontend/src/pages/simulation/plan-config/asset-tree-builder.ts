@@ -5,6 +5,7 @@
  * 此处用 `selectedProductByLine` 决定每条线显示哪个产品的 BoP（默认每条线第一个激活 BoP）。 */
 
 import { masterApi } from '@/lib/api';
+import { mdName } from '@/lib/mdName';
 import type {
   BopProcessOut,
   EquipmentOut,
@@ -115,8 +116,8 @@ export async function buildAssetTree(opts: {
           // 永远只返回第一份 → 点 SMT2 工序高亮的是 SMT1 设备。改复合 id 唯一化；
           // 真正的 operation_id 仍存在 .operation_id 字段（按 op 匹配的地方走它）。
           id: `${line.line_id}::${op.operation_id}`,
-          // 优先用中文名；为空 / 后端未提供时 fallback 用 operation_name（多为英文）
-          label: op.operation_name_cn || op.operation_name,
+          // 按界面语言选列：zh → operation_name_cn 优先，en → operation_name 优先
+          label: mdName(op.operation_name, op.operation_name_cn),
           sublabel: op.operation_code,
           type: 'operation' as const,
           status: 'normal' as NodeStatus,
@@ -132,7 +133,7 @@ export async function buildAssetTree(opts: {
 
       lineNodes.push({
         id: line.line_id,
-        label: line.line_name,
+        label: mdName(line.line_name, line.line_name_cn),
         sublabel: line.line_code,
         type: 'line' as const,
         status: 'normal',
@@ -145,14 +146,14 @@ export async function buildAssetTree(opts: {
 
       viewport.push({
         id: line.line_id,
-        label: line.line_name,
+        label: mdName(line.line_name, line.line_name_cn),
         machines: machinesForViewport.slice(0, 8),
       });
     }
 
     stageNodes.push({
       id: stage.stage_id,
-      label: stage.stage_name,
+      label: mdName(stage.stage_name, stage.stage_name_cn),
       sublabel: stage.stage_code,
       type: 'stage' as const,
       status: 'normal',

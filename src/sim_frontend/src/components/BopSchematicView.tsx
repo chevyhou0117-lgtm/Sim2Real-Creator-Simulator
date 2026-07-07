@@ -9,9 +9,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { masterApi, planApi } from "@/lib/api";
+import { mdName } from "@/lib/mdName";
 import FactorySchematic from "./FactorySchematic";
 // rolldown(Vite 8) 对类型用 import type，否则报 MISSING_EXPORT（同 AppStream.tsx）。
-import type { SchematicLine, StageEdge } from "./FactorySchematic";
+import type { SchematicLine, SchematicOp, StageEdge } from "./FactorySchematic";
 
 export default function BopSchematicView({
   planId,
@@ -19,6 +20,8 @@ export default function BopSchematicView({
   lineFilter,
   selectedOpId,
   embedded,
+  onSelectOp,
+  onDoubleSelectOp,
 }: {
   planId?: string;
   factoryId?: string;
@@ -28,6 +31,10 @@ export default function BopSchematicView({
   selectedOpId?: string | null;
   /** 嵌在参数配置视口时：左侧留出浮动资产树的空间，头部收紧。 */
   embedded?: boolean;
+  /** 单击工序节点（联动资产树选中 + 3D 选中高亮）。 */
+  onSelectOp?: (op: SchematicOp, line: SchematicLine) => void;
+  /** 双击工序节点（切 3D 并运镜定位到该工序设备）。 */
+  onDoubleSelectOp?: (op: SchematicOp, line: SchematicLine) => void;
 }) {
   const { t } = useTranslation();
   const [products, setProducts] = useState<string[]>([]);
@@ -99,7 +106,7 @@ export default function BopSchematicView({
             out.push({
               line_id: ln.line_id,
               line_code: ln.line_code,
-              line_name: ln.line_name,
+              line_name: mdName(ln.line_name, ln.line_name_cn),
               stage_id: stage.stage_id,
               stage_seq: stage.sequence,
               ops: procs.map((p) => {
@@ -107,7 +114,7 @@ export default function BopSchematicView({
                 return {
                   operation_id: p.operation_id,
                   code: o?.operation_code ?? p.operation_id.slice(0, 6),
-                  name: o?.operation_name_cn || o?.operation_name,
+                  name: mdName(o?.operation_name, o?.operation_name_cn),
                   ct: Number(p.standard_ct),
                   seq: p.sequence,
                   yieldRate: p.yield_rate != null ? Number(p.yield_rate) : null,
@@ -186,7 +193,7 @@ export default function BopSchematicView({
       {!loading && visibleLines.length > 0 && (
         <div className="flex-1 min-h-0">
           {/* key 按过滤维度变化 → 重挂载让 fitView 重新对焦（React Flow fitView 仅初次生效） */}
-          <FactorySchematic key={lineFilter ?? 'all'} lines={visibleLines} stageTransitions={visibleEdges} mode="config" selectedOpId={selectedOpId} />
+          <FactorySchematic key={lineFilter ?? 'all'} lines={visibleLines} stageTransitions={visibleEdges} mode="config" selectedOpId={selectedOpId} onSelectOp={onSelectOp} onDoubleSelectOp={onDoubleSelectOp} />
         </div>
       )}
     </div>

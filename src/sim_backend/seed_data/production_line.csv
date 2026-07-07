@@ -1,11 +1,11 @@
-line_code,stage_code,line_name,status,sort_order
-SMT01,SMT,SMT 一线,ACTIVE,1
-SMT02,SMT,SMT 二线,ACTIVE,2
-PTH01,PTH,PTH 插件线,ACTIVE,1
-ModuleAssy01,ModuleAssy,模组组装线,ACTIVE,1
-MainAssy01,MainAssy,总装线,ACTIVE,1
-TrayAssy01,TrayAssy,托盘组装线,ACTIVE,1
-FT01,FT,功能测试线,ACTIVE,1
-TrayDisAssy01,TrayDisAssy,托盘拆解线（分选）,ACTIVE,1
-CPDisAssy01,CPDisAssy,冷板拆解线,ACTIVE,1
-Packing01,Packing,包装线,ACTIVE,1
+line_code,stage_code,line_name,line_name_cn,status,sort_order
+SMT01,SMT,SMT Line 01,SMT 一线,ACTIVE,1
+SMT02,SMT,SMT Line 02,SMT 二线,ACTIVE,2
+PTH01,PTH,PTH Line,PTH 插件线,ACTIVE,1
+ModuleAssy01,ModuleAssy,Module Assembly Line,模组组装线,ACTIVE,1
+MainAssy01,MainAssy,Main Assembly Line,总装线,ACTIVE,1
+TrayAssy01,TrayAssy,Tray Assembly Line,托盘组装线,ACTIVE,1
+FT01,FT,Final Test Line,功能测试线,ACTIVE,1
+TrayDisAssy01,TrayDisAssy,Tray Disassembly Line (Sorting),托盘拆解线（分选）,ACTIVE,1
+CPDisAssy01,CPDisAssy,Cold Plate Disassembly Line,冷板拆解线,ACTIVE,1
+Packing01,Packing,Packing Line,包装线,ACTIVE,1

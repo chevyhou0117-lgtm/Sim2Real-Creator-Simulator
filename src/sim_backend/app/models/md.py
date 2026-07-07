@@ -84,6 +84,8 @@ class Stage(Base):
     factory_id = Column(String(36), ForeignKey("md_factory.factory_id"), nullable=False)
     stage_code = Column(String(50), nullable=False)
     stage_name = Column(String(200), nullable=False)
+    # 中文显示名（英文原名保留在 stage_name；前端按界面语言选列显示）
+    stage_name_cn = Column(String(200))
     sequence = Column(Integer, nullable=False)
     stage_type = Column(String(50), nullable=False)
     line_count = Column(Integer)
@@ -110,6 +112,8 @@ class ProductionLine(Base):
     stage_id = Column(String(36), ForeignKey("md_stage.stage_id"), nullable=False)
     line_code = Column(String(50), nullable=False)
     line_name = Column(String(200), nullable=False)
+    # 中文显示名（英文原名保留在 line_name；前端按界面语言选列显示）
+    line_name_cn = Column(String(200))
     smt_pph = Column(Numeric(10, 2))
     operation_count = Column(Integer)
     status = Column(String(20), nullable=False, default="ACTIVE")
@@ -122,6 +126,7 @@ class ProductionLine(Base):
 
     stage = relationship("Stage", back_populates="production_lines")
     wip_buffers = relationship("WIPBuffer", back_populates="production_line")
+
     bops = relationship("BOP", back_populates="production_line")
 
 

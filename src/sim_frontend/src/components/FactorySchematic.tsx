@@ -82,6 +82,8 @@ interface Props {
   bufStates?: Record<string, BufState>;
   selectedOpId?: string | null;
   onSelectOp?: (op: SchematicOp, line: SchematicLine) => void;
+  /** 双击工序节点（用于 2D→3D 联动：切 3D 视图并运镜定位到该工序设备）。 */
+  onDoubleSelectOp?: (op: SchematicOp, line: SchematicLine) => void;
 }
 
 // 半成品物料编码（SF-{product}-{op}）→ 去掉前缀只留工序段，便于在小角标里显示
@@ -384,7 +386,7 @@ function buildEdges(lines: SchematicLine[], stageTransitions: StageEdge[], bufSt
   return out;
 }
 
-export default function FactorySchematic({ lines, stageTransitions = [], mode = "config", opStates, bufStates, selectedOpId, onSelectOp }: Props) {
+export default function FactorySchematic({ lines, stageTransitions = [], mode = "config", opStates, bufStates, selectedOpId, onSelectOp, onDoubleSelectOp }: Props) {
   const { t } = useTranslation();
   const stateLabel = (s: string) =>
     ({ IDLE: t("Idle"), BUSY: t("Running"), BLOCKED: t("Backpressure"), STARVED: t("Starved"), SHORTAGE: t("Material shortage"), FAILURE: t("Failure") } as Record<string, string>)[s] || s;
@@ -433,6 +435,15 @@ export default function FactorySchematic({ lines, stageTransitions = [], mode = 
     [opLine, onSelectOp],
   );
 
+  const onNodeDoubleClick = useCallback(
+    (_: unknown, node: Node) => {
+      if (node.type !== "operation") return;
+      const hit = opLine.get(node.id);
+      if (hit) onDoubleSelectOp?.(hit.op, hit.line);
+    },
+    [opLine, onDoubleSelectOp],
+  );
+
   return (
     <div className="w-full h-full" style={{ background: "var(--c-070f1a)" }}>
       <ReactFlow
@@ -441,6 +452,8 @@ export default function FactorySchematic({ lines, stageTransitions = [], mode = 
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={onNodeDoubleClick}
+        zoomOnDoubleClick={false}
         fitView
         minZoom={0.08}
         maxZoom={2}

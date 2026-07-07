@@ -17,6 +17,7 @@ export interface StageOut {
   factory_id: string;
   stage_code: string;
   stage_name: string;
+  stage_name_cn?: string | null;
   sequence: number;
   stage_type: string;
   status: string;
@@ -29,6 +30,7 @@ export interface LineOut {
   stage_id: string;
   line_code: string;
   line_name: string;
+  line_name_cn?: string | null;
   smt_pph: number | null;
   operation_count: number | null;
   status: string;

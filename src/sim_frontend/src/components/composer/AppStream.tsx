@@ -74,28 +74,30 @@ export default class AppStream extends Component<
   }
 
   // 贴合方案（对齐 NVIDIA web-viewer-sample 官方模式，不用 fitStreamResolution）：
-  // 按 <video> 元素当前【宽高比】计算 Kit 渲染尺寸——长边固定 3840（4K 级），
-  // 宽高各向下取整到 16 的倍数（NVENC H.264 硬约束，非 16 倍数时 Kit 动态 resize
-  // 会失败并回落到上一个合法分辨率 → 之前"全屏后退回锁定比例"的根因）。
-  // 比例贴合元素 → 无黑边不变形；源头流仍是 4K 级，浏览器端下采样显示。
+  // Kit 渲染尺寸 = <video> 元素物理像素（CSS × devicePixelRatio），等比压进
+  // config 上限（streamWidth/Height，当前 3840×2160）后取 16 倍数。三个要点：
+  // ① 16 倍数是 NVENC H.264 硬约束，非 16 倍数的动态 resize 会失败并静默回落；
+  // ② 库把 connect 时传入的 width/height 当作后续 resize 的【硬上限】，超过直接报错
+  //    "greater than the maximum width/height" → connect 必须传上限值，而非元素初始尺寸
+  //    （否则天花板被钉死在首次布局，之后全屏/换档位都升不上去）；
+  // ③ macOS HiDPI 各档位 DPR 恒为 2，「看起来像 2K」时 CSS×DPR=5120×2880 超过
+  //    4K 面板真实像素（系统超采后缩屏输出）——超出部分纯浪费，等比压回上限即可。
   private _streamDims(): { width: number; height: number } {
+    const MAX_W = StreamConfig.local.streamWidth;
+    const MAX_H = StreamConfig.local.streamHeight;
     const el = document.getElementById("remote-video");
     const r = el?.getBoundingClientRect();
     const w0 = r?.width ?? 0;
     const h0 = r?.height ?? 0;
     if (w0 <= 0 || h0 <= 0) {
-      return { width: StreamConfig.local.streamWidth, height: StreamConfig.local.streamHeight };
+      return { width: MAX_W, height: MAX_H };
     }
     const dpr = window.devicePixelRatio || 1;
-    let w = w0;
-    let h = h0;
-    const MAX_LONG = 3840; // 库硬上限 4096；留在 4K 级即可
-    const long = Math.max(w, h);
-    if (long > MAX_LONG) {
-      const s = MAX_LONG / long;
-      w *= s;
-      h *= s;
-    }
+    let w = w0 * dpr;
+    let h = h0 * dpr;
+    const s = Math.min(1, MAX_W / w, MAX_H / h);
+    w *= s;
+    h *= s;
     const round16 = (n: number) => Math.max(256, Math.floor(n / 16) * 16);
     return { width: round16(w), height: round16(h) };
   }
@@ -147,7 +149,12 @@ export default class AppStream extends Component<
         };
       } else if (StreamConfig.source === "local") {
         streamSource = StreamType.DIRECT;
-        this._lastSent = this._streamDims(); // 初始尺寸入账，观察器首触发不重复发送
+        // 连接尺寸 = config 上限（3840×2160）：库把它当后续 resize 的硬上限（见 _streamDims 注②）。
+        // streamReady 后 ResizeObserver 首触发会立刻按元素实际物理像素 resize 下来（≤ 上限恒合法）。
+        this._lastSent = {
+          width: StreamConfig.local.streamWidth,
+          height: StreamConfig.local.streamHeight,
+        };
         streamConfig = {
           videoElementId: "remote-video",
           audioElementId: "remote-audio",
@@ -165,8 +172,7 @@ export default class AppStream extends Component<
           // 不设时直连模式可能只转发部分鼠标事件，右键导航失效。
           cursor: "free",
           nativeTouchEvents: true,
-          // 初始分辨率 = 按 video 元素当前比例算出的 4K 级 16 倍数尺寸（见 _streamDims）；
-          // 后续布局变化由 ResizeObserver + AppStreamer.resize 跟随（官方 sample 模式）。
+          // 初始分辨率 = 上限（同时被库记为 resize 硬上限）；就绪后 ResizeObserver 立即贴合。
           // 不用 fitStreamResolution：它开着时 AppStreamer.resize() 会抛错，且其内部
           // resize 请求不做 16 倍数对齐，Kit 动态 resize 失败 → 退回锁定比例。
           width: this._lastSent.width,

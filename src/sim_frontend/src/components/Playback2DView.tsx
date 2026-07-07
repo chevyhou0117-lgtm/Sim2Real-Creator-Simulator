@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { masterApi, planApi } from "@/lib/api";
+import { mdName } from "@/lib/mdName";
 import FactorySchematic from "./FactorySchematic";
 import type { SchematicLine, OpState, BufState, StageEdge } from "./FactorySchematic";
 
@@ -52,7 +53,7 @@ export default function Playback2DView({ planId, tMs }: { planId?: string; tMs: 
             out.push({
               line_id: ln.line_id,
               line_code: ln.line_code,
-              line_name: ln.line_name,
+              line_name: mdName(ln.line_name, ln.line_name_cn),
               stage_id: stage.stage_id,
               stage_seq: stage.sequence,
               ops: procs.map((p) => {
@@ -60,7 +61,7 @@ export default function Playback2DView({ planId, tMs }: { planId?: string; tMs: 
                 return {
                   operation_id: p.operation_id,
                   code: o?.operation_code ?? p.operation_id.slice(0, 6),
-                  name: o?.operation_name_cn || o?.operation_name,
+                  name: mdName(o?.operation_name, o?.operation_name_cn),
                   ct: Number(p.standard_ct),
                   seq: p.sequence,
                   yieldRate: p.yield_rate != null ? Number(p.yield_rate) : null,

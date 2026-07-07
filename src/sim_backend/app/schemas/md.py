@@ -23,6 +23,7 @@ class StageOut(BaseModel):
     factory_id: str
     stage_code: str
     stage_name: str
+    stage_name_cn: str | None = None
     sequence: int
     stage_type: str
     line_count: int | None = None
@@ -38,6 +39,7 @@ class ProductionLineOut(BaseModel):
     stage_id: str
     line_code: str
     line_name: str
+    line_name_cn: str | None = None
     smt_pph: Decimal | None = None
     operation_count: int | None = None
     status: str

@@ -136,6 +136,7 @@ def load_master_data(db) -> dict:
             db, Stage,
             {"factory_id": fac.factory_id, "stage_code": s["stage_code"]}, {
                 "stage_name": s["stage_name"], "sequence": int(s["sequence"]),
+                "stage_name_cn": (s.get("stage_name_cn") or None),
                 "stage_type": s["stage_type"], "status": s["status"],
             })
 
@@ -157,6 +158,7 @@ def load_master_data(db) -> dict:
         line_by_code[ln["line_code"]] = _upsert(
             db, ProductionLine, {"line_code": ln["line_code"]}, {
                 "stage_id": st.stage_id, "line_name": ln["line_name"],
+                "line_name_cn": (ln.get("line_name_cn") or None),
                 "status": ln["status"], "sort_order": int(ln["sort_order"]),
             })
 
