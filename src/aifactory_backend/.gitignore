@@ -7,8 +7,10 @@ venv/
 # 本地环境 / 密钥（用 .env.example 作为模板）
 .env
 
-# 临时检查脚本
+# 临时检查脚本（注意：_*.py 会误伤 __init__.py，必须显式豁免——
+# models/entity/__init__.py 曾因此漏提交，导致部署机 FK 解析报错）
 _*.py
+!__init__.py
 
 # 旧的 BIGSERIAL DDL（Phase 1 改用 ORM create_all；Phase 2 由 sim_backend creator_tables.sql 统一拥有）
 # 保留 sql/ 供参考但不再执行

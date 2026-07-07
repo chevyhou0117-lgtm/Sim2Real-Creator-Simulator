@@ -84,9 +84,15 @@ services:
       DB_NAME: aifactory_simulation
       AIFACTORY_CREATE_ALL: "false"        # 不自己建表，依赖 sim_backend 的 creator_tables.sql
       AIFACTORY_STORAGE_ROOT: /data/storage
-      # 宿主存储绝对路径（= 下方挂载源 AIFACTORY_STORAGE_HOST）。后端据此给新建工厂项目的 root_usd_path
-      # 生成【绝对路径】，让 Kit（宿主原生）能直接打开（绕开 Kit USD_ROOT，兼容后端文件落在不同盘）。
-      AIFACTORY_USD_HOST_ROOT: ${AIFACTORY_STORAGE_HOST:-/data/storage}
+      # ★ 两个概念已【解耦】，各管一头（历史上共用 AIFACTORY_STORAGE_HOST 一个变量，
+      #   只在“存储恰好放在仓库 storage/ 目录”时碰巧成立，跨机部署必踩坑）：
+      #   - AIFACTORY_STORAGE_HOST（见下方 volumes）：文件实际【写到宿主哪个目录】，
+      #     必须 = Kit 挂载/读取的同一目录。
+      #   - AIFACTORY_USD_DB_PREFIX（本行）：新建工厂项目写进数据库 root_usd_path 的【路径前缀形式】。
+      #     Kit 会把它拼到自己的 USD_ROOT（容器内 /storage）下再归一化，默认 ../storage 拼完
+      #     正好落回 /storage/...，与存储实际放在宿主哪里无关——一般【不要改】。
+      #     （若曾用错误前缀建过项目，DB 里的旧 root_usd_path 不会自愈，需删掉重建。）
+      AIFACTORY_USD_HOST_ROOT: ${AIFACTORY_USD_DB_PREFIX:-../storage}
     # 不覆盖 command：用镜像内置 CMD（uvicorn main:app --port 8128 --workers 2）。
     # 覆盖健康检查：镜像默认查 /api/v1 与 /health 都会 404 → 永远 unhealthy；改查 /docs（200）。
     healthcheck:
@@ -98,8 +104,12 @@ services:
     ports:
       - "8129:8128"          # 宿主 8129 → 容器 8128，对齐部署文档/前端对 aifactory :8129 的预期
     volumes:
-      # 资产/缩略图/USD 库根目录。默认指向 docker/storage-data（空目录也能启动，main.py 会 makedirs）。
-      # 有真实 31GB 资产库时：在 docker/.env 把 AIFACTORY_STORAGE_HOST 指到宿主实际目录（如 d:/Sim2Real/storage）。
+      # 资产/缩略图/USD 库根目录（仅管【挂载源】，DB 路径前缀见上方 AIFACTORY_USD_DB_PREFIX）。
+      # 默认指向 docker/storage-data（空目录也能启动，main.py 会 makedirs）。
+      # 有真实 31GB 资产库时：在 docker/.env 把 AIFACTORY_STORAGE_HOST 指到宿主实际目录
+      # （必须 = Kit 读取的同一目录，如 /data/kitapp/storage）。
+      # ⚠️ 目录属主需为 UID 1000（容器内 appuser），否则写文件报 Permission denied：
+      #    sudo chown -R 1000:1000 <该目录>
       - ${AIFACTORY_STORAGE_HOST:-./storage-data}:/data/storage
     restart: unless-stopped
 
