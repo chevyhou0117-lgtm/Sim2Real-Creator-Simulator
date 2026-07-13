@@ -249,6 +249,7 @@ export interface LineEquipmentConfigItem {
   operation_id: string;
   operation_code: string;
   operation_name: string;
+  operation_name_cn?: string | null;
   operation_sequence: number;
   line_id: string;
   line_code: string;

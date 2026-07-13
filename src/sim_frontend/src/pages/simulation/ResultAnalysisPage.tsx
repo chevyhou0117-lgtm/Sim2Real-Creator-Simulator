@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, FileBarChart, Brain, Box, Download, AlertTriangle, TrendingUp, TrendingDown, Loader2, Settings2 } from 'lucide-react';
+import { ChevronLeft, Brain, Box, Download, AlertTriangle, TrendingUp, Loader2, Settings2 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, ComposedChart, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, Cell, ReferenceLine, PieChart, Pie,
@@ -336,7 +336,7 @@ function LBRTab({
                     <YAxis domain={[0, 100]} tick={{ fill: 'var(--c-64748b)', fontSize: 10 }} axisLine={false} tickLine={false}
                       label={{ value: 'LBR %', angle: -90, position: 'insideLeft', fill: 'var(--c-475569)', fontSize: 10 }} />
                     <Tooltip
-                      formatter={(v: number | null) => [v === null ? t('Idle') : `${v}%`, 'LBR']}
+                      formatter={(v) => [v == null ? t('Idle') : `${Number(v)}%`, 'LBR']}
                       labelFormatter={(tv: number) => `t = ${tv} min`}
                       contentStyle={{ background: 'var(--c-0b1d30)', border: '1px solid var(--c-1e3a55)', borderRadius: 8, fontSize: 11 }}
                     />

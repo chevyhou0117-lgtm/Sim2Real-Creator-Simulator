@@ -21,7 +21,7 @@ import { planApi, masterApi } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { EffectiveParam, OverrideParamKey, OverrideScope } from '@/types/api';
 
-import { PARAM_COLUMNS, PARAM_KEY_TO_COL, sourceLabel, inheritanceStatus, type ParamColumn, type TreeNode } from './types';
+import { PARAM_KEY_TO_COL, sourceLabel, inheritanceStatus, type ParamColumn, type TreeNode } from './types';
 import { findNode } from './asset-tree-builder';
 
 // 工序参数面板：线体/工序级只展示 CT，其余（yield_rate/efficiency/mtbf/mttr）暂不显示
@@ -316,7 +316,7 @@ export function OperationParamTable({
           </div>
         ) : (
           <table className="w-full text-[11px] table-fixed">
-            <thead className="sticky top-0 z-10 bg-[var(--c-07111e)]/95 backdrop-blur">
+            <thead className="sticky top-0 z-10 bg-[var(--c-07111e)]/85 backdrop-blur">
               <tr className="border-b border-[var(--c-142235)] text-slate-500 text-[10px]">
                 <th className="text-left px-3 py-1.5 w-[40%]">{t('Operation')}</th>
                 {OP_PARAM_COLUMNS.map((c) => (

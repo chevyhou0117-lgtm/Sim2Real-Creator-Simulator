@@ -3,21 +3,23 @@ import { useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
   ChevronLeft, Save, CheckCircle2, AlertCircle, Upload, RefreshCw,
-  ChevronDown, ChevronRight, Database, Cpu, Truck, Package, Layers,
-  Sliders, Building2, Plus, Info, X, BookOpen, Play,
+  ChevronDown, ChevronRight, Building2, Info, X, BookOpen, Play,
   Loader2, Maximize2, Minimize2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Input, Select } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { planApi, masterApi, planMdApi, simulatorsToFrontend, simulatorsToBackend, parseReadyError, resolveCreatorUrl } from '@/lib/api';
 import { kitSelectPrim, kitSelectMany, kitFocusPerspective, kitFocusPerspectiveMany, kitEnsureStage, kitSetFullscreen, subscribeOpenedStageResult, subscribeKitSelection } from '@/lib/kit';
 import { playbackStop } from '@/lib/playback';
-import type { PlanOut, BopOut, BopProcessOut, ProductOut, StageOut, LineOut, TaskOut, CreatorProjectOut, ReadinessOut, ReadyValidationError } from '@/types/api';
+import { mdName } from '@/lib/mdName';
+import type { PlanOut, OverrideOut, TaskOut, CreatorProjectOut, ReadinessOut, ReadyValidationError } from '@/types/api';
 
 // ── PlanConfig 重做：5 级资产树 + 参数继承表 + Creator 项目下拉 + readiness chip ──
 import { KitViewport } from '@/components/KitViewport';
 import BopSchematicView from '@/components/BopSchematicView';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { AssetSidebar } from './plan-config/AssetSidebar';
 import { ImportDataModal, type ImportSectionDef } from './plan-config/ImportDataModal';
 import { ReadyValidationModal } from './plan-config/ReadyValidationModal';
@@ -25,66 +27,11 @@ import { buildAssetTree, findNode as findNodeV2, collectEquipmentPrimPaths } fro
 import type { TreeNode as TreeNodeV2 } from './plan-config/types';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-type NodeType = 'group' | 'line' | 'operation' | 'equipment' | 'agv' | 'material' | 'factory';
 type NodeStatus = 'normal' | 'bottleneck' | 'idle' | 'warning';
 type RibbonTab = 'input' | 'params' | 'constraints';
 
-interface TreeNode {
-  id: string;
-  label: string;
-  sublabel?: string;
-  type: NodeType;
-  status?: NodeStatus;
-  ct?: number;
-  yieldRate?: number;
-  faultRate?: number;
-  mttr?: number;
-  // 仅 equipment 节点有以下字段（用于 Kit 视角调用 + 反查所属 op/line + BoP 工序给参数面板）
-  prim_path?: string;
-  operation_id?: string;
-  line_id?: string;
-  bop_process_id?: string;     // 该设备所属激活 BoP 上对应工序的 id（per line × product × operation）
-  children?: TreeNode[];
-}
 
 // ── Data ───────────────────────────────────────────────────────────────────────
-let ASSET_TREE: TreeNode[] = [
-  {
-    id: 'factory', label: '富士康烟台', type: 'factory',
-    children: [
-  {
-    id: 'lines', label: 'Participating Lines', type: 'group',
-    children: [
-      {
-        id: 'L01', label: 'SMT Line L01', type: 'line', status: 'warning',
-        children: [
-          { id: 'L01-SPI',    label: 'Solder Paste Printing', sublabel: 'SPI-L01',      type: 'operation', status: 'normal',     ct: 32, yieldRate: 98.5, faultRate: 3.2, mttr: 30 },
-          { id: 'L01-SMT1',   label: 'SMT (Front)', sublabel: 'SMT-L01-01',   type: 'operation', status: 'bottleneck', ct: 48, yieldRate: 99.8, faultRate: 2.1, mttr: 45 },
-          { id: 'L01-SMT2',   label: 'SMT (Back)', sublabel: 'SMT-L01-02',   type: 'operation', status: 'bottleneck', ct: 45, yieldRate: 99.6, faultRate: 2.3, mttr: 42 },
-          { id: 'L01-REFLOW', label: 'Reflow Soldering',   sublabel: 'REFLOW-L01',   type: 'operation', status: 'normal',     ct: 38, yieldRate: 99.9, faultRate: 1.5, mttr: 60 },
-          { id: 'L01-AOI',    label: 'AOI Inspection',  sublabel: 'AOI-L01',      type: 'operation', status: 'idle',       ct: 28, faultRate: 0.8, mttr: 20 },
-        ],
-      },
-      {
-        id: 'L02', label: 'SMT Line L02', type: 'line', status: 'normal',
-        children: [
-          { id: 'L02-SPI',  label: 'Solder Paste Printing', sublabel: 'SPI-L02',    type: 'operation', status: 'normal', ct: 30, yieldRate: 98.0, faultRate: 2.8, mttr: 30 },
-          { id: 'L02-SMT1', label: 'SMT',     sublabel: 'SMT-L02-01', type: 'operation', status: 'normal', ct: 50, yieldRate: 99.5, faultRate: 2.5, mttr: 45 },
-          { id: 'L02-AOI',  label: 'AOI Inspection',  sublabel: 'AOI-L02',    type: 'operation', status: 'normal', ct: 25, faultRate: 1.0, mttr: 20 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'agv-group', label: 'AGV Assets', type: 'group',
-    children: [
-      { id: 'AGV-001', label: 'AGV-001', sublabel: 'Material Handling', type: 'agv', status: 'normal' },
-      { id: 'AGV-002', label: 'AGV-002', sublabel: 'Material Handling', type: 'agv', status: 'normal' },
-    ],
-  },
-    ],  // end factory.children
-  },    // end factory node
-];
 
 let VIEWPORT_LINES: Array<{ id: string; label: string; machines: Array<{ id: string; label: string; ct: string; status: NodeStatus }> }> = [
   {
@@ -129,14 +76,6 @@ const CONSTRAINTS_DATA: ConstraintDef[] = [
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-function findNode(nodes: TreeNode[], id: string): TreeNode | null {
-  for (const n of nodes) {
-    if (n.id === id) return n;
-    if (n.children) { const f = findNode(n.children, id); if (f) return f; }
-  }
-  return null;
-}
-
 function machineStyle(status: NodeStatus | undefined, selected: boolean) {
   if (selected)                return { border: '#3b82f6', bg: '#0d2035ee', text: '#93c5fd', dot: '#3b82f6', glow: true };
   if (status === 'bottleneck') return { border: '#ef4444', bg: '#1a0808ee', text: '#f87171', dot: '#ef4444', glow: false };
@@ -145,213 +84,27 @@ function machineStyle(status: NodeStatus | undefined, selected: boolean) {
 }
 
 
-// ── Simulation Timeline ────────────────────────────────────────────────────────
-const DURATION_OPTIONS = [
-  { label: '8h',  hours: 8  },
-  { label: '12h', hours: 12 },
-  { label: '24h', hours: 24 },
-  { label: '2d',  hours: 48 },
-  { label: '3d',  hours: 72 },
-];
-
-const TIMELINE_EVENTS = [
-  { hourOffset: 0.08,  label: 'Production Start',    color: '#3b82f6' },
-  { hourOffset: 1.37,  label: 'Material Alert', color: '#f59e0b' },
-  { hourOffset: 3.25,  label: 'Equipment Failure', color: '#ef4444' },
-  { hourOffset: 5.0,   label: 'Changeover',    color: '#8b5cf6' },
-  { hourOffset: 5.83,  label: 'Completed',    color: '#10b981' },
-];
-
-function formatSimTime(totalMinutes: number): string {
-  const h = Math.floor(totalMinutes / 60);
-  const m = Math.floor(totalMinutes % 60);
-  const s = Math.floor((totalMinutes * 60) % 60);
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-}
-
-function SimTimeline({
-  durationHours, onDurationChange,
-}: {
-  durationHours: number;
-  onDurationChange: (h: number) => void;
-}) {
-  const { t } = useTranslation();
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [playheadPct, setPlayheadPct] = useState(0);
-  const dragging = useRef(false);
-
-  const pctFromEvent = (e: React.MouseEvent | MouseEvent) => {
-    if (!trackRef.current) return 0;
-    const rect = trackRef.current.getBoundingClientRect();
-    return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  };
-
-  const onTrackMouseDown = useCallback((e: React.MouseEvent) => {
-    dragging.current = true;
-    setPlayheadPct(pctFromEvent(e));
-    const onMove = (ev: MouseEvent) => { if (dragging.current) setPlayheadPct(pctFromEvent(ev)); };
-    const onUp   = () => { dragging.current = false; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-  }, []);
-
-  const durationMin = durationHours * 60;
-  const currentMin  = playheadPct * durationMin;
-
-  // Wall-clock label for playhead
-  const wallLabel = (() => {
-    const base = new Date('2026-04-10T08:00:00');
-    base.setMinutes(base.getMinutes() + Math.round(currentMin));
-    const mm = base.getMonth() + 1;
-    const dd = base.getDate();
-    const hh = String(base.getHours()).padStart(2, '0');
-    const mi = String(base.getMinutes()).padStart(2, '0');
-    return `${mm}/${dd} ${hh}:${mi}`;
-  })();
-
-  const endLabel = (() => {
-    const e = new Date('2026-04-10T08:00:00');
-    e.setHours(e.getHours() + durationHours);
-    return `${e.getMonth()+1}/${e.getDate()} ${String(e.getHours()).padStart(2,'0')}:00`;
-  })();
-
-  // Ticks
-  const tickInterval = durationHours <= 12 ? 1 : durationHours <= 24 ? 2 : durationHours <= 48 ? 6 : 12;
-  const ticks: number[] = [];
-  for (let h = 0; h <= durationHours; h += tickInterval) ticks.push(h);
-
-  // Shift zones
-  const shiftZones: Array<{ start: number; end: number }> = [];
-  for (let d = 0; d * 24 < durationHours; d++) {
-    shiftZones.push({ start: d * 24 + 8, end: Math.min(d * 24 + 20, durationHours) });
-  }
-
-  return (
-    <div className="absolute bottom-0 left-0 right-0 z-10 bg-[var(--c-020a12)]/96 border-t border-[var(--c-1e3a55)]/60 backdrop-blur-sm select-none">
-      {/* ── Ruler row ── */}
-      <div className="relative h-5 mx-4 mt-1.5" ref={trackRef} onMouseDown={onTrackMouseDown}>
-        {/* Track bg */}
-        <div className="absolute inset-y-0 left-0 right-0 rounded-sm bg-[var(--c-07111e)] border border-[var(--c-142235)]" />
-
-        {/* Shift zones */}
-        {shiftZones.map((z, i) => {
-          const left = (z.start / durationHours) * 100;
-          const width = ((z.end - z.start) / durationHours) * 100;
-          return (
-            <div key={i} className="absolute inset-y-0 bg-blue-500/10"
-              style={{ left: `${left}%`, width: `${width}%` }} />
-          );
-        })}
-
-        {/* Elapsed fill */}
-        <div className="absolute inset-y-0 left-0 bg-blue-600/20 rounded-l-sm"
-          style={{ width: `${playheadPct * 100}%` }} />
-
-        {/* Tick marks + labels */}
-        {ticks.map(h => {
-          const pct = (h / durationHours) * 100;
-          if (pct > 100.1) return null;
-          const isMajor = h % (tickInterval * 2) === 0 || durationHours <= 12;
-          const wallH = (8 + h) % 24;
-          const label = h > 0 && h % 24 === 0 ? `+${h/24}d` : `${String(wallH).padStart(2,'0')}:00`;
-          return (
-            <div key={h} className="absolute top-0 bottom-0 flex flex-col justify-start items-start"
-              style={{ left: `${pct}%` }}>
-              <div className={cn('w-px', isMajor ? 'h-2 bg-[var(--c-2a4a6a)]' : 'h-1.5 bg-[var(--c-1a2e42)]')} />
-              {isMajor && (
-                <span className="text-[8px] font-mono text-slate-500 whitespace-nowrap" style={{ marginLeft: 2 }}>
-                  {label}
-                </span>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Event diamonds */}
-        {TIMELINE_EVENTS.map(ev => {
-          const pct = (ev.hourOffset / durationHours) * 100;
-          if (pct > 100) return null;
-          return (
-            <div key={ev.label} className="absolute top-0 bottom-0 flex items-center group cursor-default"
-              style={{ left: `${pct}%` }}>
-              <div className="w-2 h-2 rotate-45 border flex-shrink-0 -translate-x-1/2"
-                style={{ background: ev.color + '33', borderColor: ev.color }} />
-              <div className="hidden group-hover:flex absolute bottom-full mb-1.5 -translate-x-1/2 bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] rounded px-2 py-1 flex-col items-center z-20 pointer-events-none"
-                style={{ minWidth: 56 }}>
-                <span className="text-[9px] font-medium whitespace-nowrap" style={{ color: ev.color }}>{t(ev.label)}</span>
-                <span className="text-[8px] font-mono text-slate-500">{formatSimTime(ev.hourOffset * 60)}</span>
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Playhead */}
-        <div className="absolute top-0 bottom-0 flex flex-col items-center cursor-ew-resize z-10"
-          style={{ left: `${playheadPct * 100}%` }}>
-          {/* Needle */}
-          <div className="w-px flex-1 bg-white/80" />
-          {/* Head triangle */}
-          <div className="w-0 h-0 flex-shrink-0"
-            style={{ borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '6px solid rgba(255,255,255,0.85)' }} />
-        </div>
-      </div>
-
-      {/* ── Controls row ── */}
-      <div className="flex items-center gap-3 px-4 py-1.5">
-        {/* Timecode display */}
-        <div className="flex items-center gap-1.5 bg-[var(--c-040d16)] border border-[var(--c-142235)] rounded px-2.5 py-1 flex-shrink-0">
-          <span className="text-[11px] font-mono text-slate-300 tracking-widest">{formatSimTime(currentMin)}</span>
-          <span className="text-[9px] text-slate-700 mx-1">/</span>
-          <span className="text-[9px] font-mono text-slate-600">{formatSimTime(durationMin)}</span>
-        </div>
-
-        {/* Wall clock */}
-        <span className="text-[10px] font-mono text-slate-500 flex-shrink-0">{wallLabel}</span>
-
-        <div className="flex-1" />
-
-        {/* Duration selector */}
-        <span className="text-[9px] text-slate-600 flex-shrink-0">{t('Duration')}</span>
-        <div className="flex items-center gap-0.5">
-          {DURATION_OPTIONS.map(opt => (
-            <button
-              key={opt.hours}
-              onClick={() => onDurationChange(opt.hours)}
-              className={cn(
-                'px-2 py-0.5 rounded text-[9px] font-mono transition-all',
-                durationHours === opt.hours
-                  ? 'bg-blue-600/25 text-blue-300 border border-blue-500/40'
-                  : 'text-slate-500 hover:text-slate-300 border border-transparent hover:border-[var(--c-1e3a55)]',
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-
-        <span className="text-[9px] font-mono text-slate-600 flex-shrink-0 ml-2">→ {endLabel}</span>
-      </div>
-    </div>
-  );
-}
-
 // ── Factory Viewport ───────────────────────────────────────────────────────────
 // Kit 串流页面 URL（WebRTC viewer）；未配置时降级到 2D mock
 const KIT_STREAM_URL = (import.meta.env.VITE_KIT_STREAM_URL ?? '').trim();
 
 function FactoryViewport({
-  selectedId, onSelect, creatorUrl,
+  selectedId, onSelect, creatorUrl, showMasks = true,
 }: {
   selectedId: string | null;
   onSelect: (id: string) => void;
   creatorUrl: string | null;
+  /** 加载/报错遮罩是否显示：串流常驻后只在参数配置页签显示，避免挡住输入/约束页签的编辑 */
+  showMasks?: boolean;
 }) {
   const { t } = useTranslation();
-  const [durationHours, setDurationHours] = useState(12);
   const hasStream = KIT_STREAM_URL.length > 0;
   // USD 场景加载态：打开后、加载完成前显示「加载中」遮罩
   const [stageLoading, setStageLoading] = useState(false);
   const [stageError, setStageError] = useState<string>('');
+  // 重试计数：组件现在整页常驻不再随页签切换重挂，Kit 冷启动期加载失败后
+  // ensure-stage effect 不会自然重跑，报错遮罩上给「重试」按钮显式重跑
+  const [retryKey, setRetryKey] = useState(0);
 
   // 串流可见且方案关联了 Creator 工厂项目时，让 Kit 打开对应 USD。
   // kitEnsureStage 内部先查 current_stage，已是该 USD 则跳过（Kit 端亦有兜底幂等），
@@ -394,34 +147,54 @@ function FactoryViewport({
       catch (err) { console.warn('[Kit] playback-stop failed', err); }
     })();
     return () => { cancelled = true; unsub(); };
-  }, [hasStream, creatorUrl]);
+  }, [hasStream, creatorUrl, retryKey]);
+
+  // 离开参数页时退出 Kit 全屏（hideUi=false，恢复菜单栏/停靠面板）——其它模块需要完整编辑器 UI。
+  // 独立 effect：上面的 effect 随 creatorUrl 变化重跑（换方案重开 stage），不应闪一次 UI；
+  // 这里只在组件真正卸载时恢复。
+  useEffect(() => {
+    if (!hasStream) return;
+    return () => {
+      void kitSetFullscreen(false).catch((err) => console.warn('[Kit] exit-fullscreen failed', err));
+    };
+  }, [hasStream]);
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-[var(--c-07111e)]">
-      {/* Background: Kit WebRTC stream (iframe) — viewer 内部自动按 window 尺寸调用 AppStreamer.resize()
-          将 Kit 渲染分辨率/比例匹配到当前 iframe 显示区域，不再固定 16:9。
-          铺满整个 viewport 容器（AssetSidebar / 参数面板都是 absolute 浮层，会盖在 iframe 上）。*/}
+      {/* Background: Kit WebRTC stream — viewer 内部按元素尺寸调用 AppStreamer.resize()。
+          沉浸式：fixed inset-0 铺满整个浏览器窗口（不只内容区），页头/Ribbon/应用侧边栏
+          都是半透明玻璃条（z-30）浮在串流上；面板类 absolute 浮层（z-20/30）仍相对内容区定位。
+          fixed 不被 overflow-hidden 祖先裁剪；浏览器全屏（viewportRef）时 fixed 定位到全屏视口，几何不变。 */}
       {hasStream && (
-        <div className="absolute inset-0">
+        <div className="fixed inset-0">
           {/* 直连 Kit WebRTC（替代原 5183 iframe 页）。开 USD / 选中等控制面仍走 HTTP /ov。 */}
           <KitViewport className="w-full h-full" />
         </div>
       )}
 
-      {/* USD 场景加载遮罩（z-20 盖在 iframe 和 z-10 浮层之上）：加载中转圈 / 失败显示错误 */}
-      {hasStream && stageLoading && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      {/* USD 场景加载遮罩（z-20 盖在串流和 z-10 浮层之上）：加载中转圈 / 失败显示错误。
+          串流是全窗口 fixed，遮罩同样 fixed 全窗口，避免玻璃 chrome 后露出未遮罩的画面。 */}
+      {/* 遮罩底是主题无关的 bg-black/60，内容也必须用主题无关色（white / 500 档强调色不随
+          html.light 翻转）——slate-200/blue-400 等浅档在浅色主题会翻成深色，黑纱上看不见。 */}
+      {showMasks && hasStream && stageLoading && (
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
-            <Loader2 size={40} className="text-blue-400 animate-spin" />
-            <div className="text-sm font-semibold text-slate-200">{t('Loading…')}</div>
+            <Loader2 size={40} className="text-blue-500 animate-spin" />
+            <div className="text-sm font-semibold text-white/90">{t('Loading…')}</div>
           </div>
         </div>
       )}
-      {hasStream && !stageLoading && stageError && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-2 max-w-md text-center px-4">
-            <span className="text-sm font-semibold text-red-400">{t('Failed to load scene')}</span>
-            <span className="text-[11px] text-slate-400 break-words">{stageError}</span>
+      {showMasks && hasStream && !stageLoading && stageError && (
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3 max-w-md text-center px-4">
+            <span className="text-sm font-semibold text-red-500">{t('Failed to load scene')}</span>
+            <span className="text-[11px] text-white/70 break-words">{stageError}</span>
+            <button
+              onClick={() => setRetryKey((k) => k + 1)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
+            >
+              <RefreshCw size={12} />{t('Retry')}
+            </button>
           </div>
         </div>
       )}
@@ -522,73 +295,6 @@ function FactoryViewport({
     </div>
   );
 }
-
-// ── Right Params Panel ─────────────────────────────────────────────────────────
-// ── Time-range override component (shared across all param levels) ─────────────
-interface TimeOverrideRow { id: string; startH: string; endH: string; param: string; value: string; }
-
-function TimeRangeOverrides({ availableParams }: { availableParams: Array<{ value: string; label: string }> }) {
-  const { t } = useTranslation();
-  const [rows, setRows] = useState<TimeOverrideRow[]>([]);
-  const addRow = () => setRows(prev => [...prev, { id: Math.random().toString(36).slice(2), startH: '2', endH: '4', param: availableParams[0].value, value: '' }]);
-  const remove = (id: string) => setRows(prev => prev.filter(r => r.id !== id));
-  const update = (id: string, key: keyof TimeOverrideRow, val: string) =>
-    setRows(prev => prev.map(r => r.id === id ? { ...r, [key]: val } : r));
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <div>
-          <span className="text-[11px] text-slate-400 font-medium">{t('Time-range Parameter Override')}</span>
-          <span className="text-[10px] text-slate-600 ml-2">{t('Applies only to the current plan, does not override master data')}</span>
-        </div>
-        <button onClick={addRow} className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-0.5 transition-colors">
-          <Plus size={10} />{t('Add Time Range')}
-        </button>
-      </div>
-      {rows.length === 0 ? (
-        <div className="text-[11px] text-slate-700 bg-[var(--c-040d16)] rounded-lg px-3 py-2.5 text-center border border-[var(--c-0e1e2e)]">
-          {t('Not configured · Click "Add Time Range" to set phased parameter changes (e.g. +20% CT during hours 2–4)')}
-        </div>
-      ) : (
-        <div className="space-y-1.5">
-          {rows.map(row => (
-            <div key={row.id} className="bg-[var(--c-040d16)] border border-[var(--c-0e1e2e)] rounded-lg px-2.5 py-2 flex items-center gap-1.5">
-              <span className="text-[10px] text-slate-600 flex-shrink-0">T+</span>
-              <input type="number" min="0" value={row.startH} onChange={e => update(row.id, 'startH', e.target.value)}
-                className="w-10 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-1.5 py-1 text-[11px] font-mono text-slate-200 outline-none focus:border-blue-500/60 text-center" />
-              <span className="text-[10px] text-slate-600">h →</span>
-              <span className="text-[10px] text-slate-600 flex-shrink-0">T+</span>
-              <input type="number" min="0" value={row.endH} onChange={e => update(row.id, 'endH', e.target.value)}
-                className="w-10 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-1.5 py-1 text-[11px] font-mono text-slate-200 outline-none focus:border-blue-500/60 text-center" />
-              <span className="text-[10px] text-slate-600 flex-shrink-0">h</span>
-              <select value={row.param} onChange={e => update(row.id, 'param', e.target.value)}
-                className="flex-1 min-w-0 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-1.5 py-1 text-[10px] text-slate-300 outline-none focus:border-blue-500/60">
-                {availableParams.map(p => <option key={p.value} value={p.value}>{t(p.label)}</option>)}
-              </select>
-              <input type="text" value={row.value} onChange={e => update(row.id, 'value', e.target.value)}
-                placeholder={t('Value/±%')}
-                className="w-14 bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded px-1.5 py-1 text-[11px] font-mono text-slate-200 outline-none focus:border-blue-500/60 text-center" />
-              <button onClick={() => remove(row.id)} className="text-slate-700 hover:text-red-400 transition-colors flex-shrink-0">
-                <X size={11} />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Params section label helper ────────────────────────────────────────────────
-function PSection({ label }: { label: string }) {
-  const { t } = useTranslation();
-  return <div className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold mt-1 mb-2 pt-3 border-t border-[var(--c-142235)]">{t(label)}</div>;
-}
-
-// ── Shared input style ─────────────────────────────────────────────────────────
-const inputCls = 'bg-[var(--c-07111e)] border border-[var(--c-1e3a55)] rounded-lg px-3 py-2 text-sm font-mono text-slate-200 outline-none focus:border-blue-500/60 transition-colors w-full';
-const labelCls = 'text-[11px] text-slate-500 font-medium';
 
 // ── Data Table Panel (center area in "input" mode) ─────────────────────────────
 
@@ -879,9 +585,16 @@ function DataTablePanel({ planId, factoryId, reloadKey, onImportClick }: {
 
   // Wire BOP + operation-transitions + equipment-failure-params — iterate lines
   useEffect(() => {
-    if (!factoryId) return;
+    if (!factoryId || !planId) return;
     (async () => {
       try {
+        // 产品型号列显示编码而非 UUID；传 plan_id 以便命中方案克隆副本的 product_id
+        const productCodeById = new Map<string, string>();
+        try {
+          const products = await masterApi.products(planId);
+          products.forEach(p => productCodeById.set(p.product_id, p.product_code));
+        } catch { /* ignore */ }
+
         const stages = await masterApi.stages(factoryId);
         const bopRows: string[][] = [];
         const transitionRows: string[][] = [];
@@ -893,7 +606,7 @@ function DataTablePanel({ planId, factoryId, reloadKey, onImportClick }: {
             const opById = new Map<string, string>();
             try {
               const ops = await masterApi.operations(line.line_id);
-              ops.forEach(o => opById.set(o.operation_id, o.operation_name));
+              ops.forEach(o => opById.set(o.operation_id, mdName(o.operation_name, o.operation_name_cn)));
             } catch { /* ignore */ }
 
             try {
@@ -901,7 +614,7 @@ function DataTablePanel({ planId, factoryId, reloadKey, onImportClick }: {
               if (bop) {
                 bopRows.push([
                   bop.bop_id.slice(0, 8),
-                  bop.product_id.slice(0, 8),
+                  productCodeById.get(bop.product_id) ?? bop.product_id.slice(0, 8),
                   line.line_name,
                   t('{{count}} ops', { count: bop.processes.length }),
                   bop.is_active ? t('Active') : t('Disabled'),
@@ -987,7 +700,7 @@ function DataTablePanel({ planId, factoryId, reloadKey, onImportClick }: {
     masterApi.equipmentConfig(factoryId, planId).then(cfg => {
       const rows = cfg.items.map(it => [
         it.equipment_code,
-        it.operation_name,
+        mdName(it.operation_name, it.operation_name_cn),
         it.line_name,
         it.equipment_type,
         it.standard_ct != null ? String(Number(it.standard_ct)) : '—',
@@ -1731,107 +1444,6 @@ function ConstraintsPanel({ plan, planId, onOpenVersionManager }: {
   );
 }
 
-// ── Ribbon Toolbar ─────────────────────────────────────────────────────────────
-interface RibbonBtnProps {
-  icon: React.ReactNode;
-  label: string;
-  onClick?: () => void;
-  active?: boolean;
-  variant?: 'default' | 'primary' | 'danger';
-  disabled?: boolean;
-}
-
-function RBtn({ icon, label, onClick, active, variant = 'default', disabled }: RibbonBtnProps) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        'flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-lg transition-all min-w-[46px] disabled:opacity-40 disabled:cursor-not-allowed',
-        variant === 'primary' ? 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-500/20' :
-        variant === 'danger'  ? 'text-red-400 hover:bg-red-900/20 border border-transparent' :
-        active                ? 'bg-[var(--c-0d2035)] text-blue-400 border border-blue-500/15' :
-        'text-slate-400 hover:bg-[var(--c-0d2035)] hover:text-slate-200 border border-transparent',
-      )}
-    >
-      {icon}
-      <span className="text-[10px] whitespace-nowrap leading-none">{label}</span>
-    </button>
-  );
-}
-
-function RGroup({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center">
-      <div className="flex items-center gap-0.5 pb-1">{children}</div>
-      <div className="text-[9px] text-slate-700 uppercase tracking-wider">{title}</div>
-    </div>
-  );
-}
-
-function Ribbon({
-  activeTab, onTabChange, onOpenVersionManager, onResync, resyncing,
-}: {
-  activeTab: RibbonTab;
-  onTabChange: (t: RibbonTab) => void;
-  onOpenVersionManager: () => void;
-  onResync: () => void;
-  resyncing: boolean;
-}) {
-  const { t } = useTranslation();
-  const tabs: Array<{ id: RibbonTab; label: string }> = [
-    { id: 'input',       label: 'Input Data' },
-    { id: 'params',      label: 'Parameter Configuration' },
-    { id: 'constraints', label: 'Constraint Settings' },
-  ];
-
-  return (
-    <div className="border-b border-[var(--c-142235)] bg-[var(--c-07111e)] flex-shrink-0">
-      {/* Tab row */}
-      <div className="flex items-center px-4 gap-0 border-b border-[var(--c-0e1e2e)]">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={cn(
-              'px-4 py-2 text-xs font-medium transition-all border-b-2 -mb-px',
-              activeTab === tab.id
-                ? 'text-blue-400 border-blue-500'
-                : 'text-slate-500 border-transparent hover:text-slate-300',
-            )}
-          >
-            {t(tab.label)}
-          </button>
-        ))}
-      </div>
-
-      {/* Button row */}
-      <div className="flex items-center gap-1.5 px-4 py-1.5 overflow-x-auto">
-        {activeTab === 'input' && (
-          <>
-            <RGroup title={t('Batch Operations')}>
-              <RBtn
-                icon={<RefreshCw size={13} className={cn(resyncing && 'animate-spin')} />}
-                label={resyncing ? t('Syncing…') : t('Full Sync')}
-                onClick={onResync}
-                disabled={resyncing}
-              />
-              <RBtn icon={<CheckCircle2 size={13} />} label={t('Integrity Check')} />
-            </RGroup>
-          </>
-        )}
-
-        {activeTab === 'constraints' && (
-          <RGroup title={t('Versions')}>
-            <RBtn icon={<BookOpen size={13} />} label={t('Version Management')} onClick={onOpenVersionManager} />
-            <RBtn icon={<Save size={13} />} label={t('Save As Version')} onClick={onOpenVersionManager} />
-          </RGroup>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // ── Main Component ─────────────────────────────────────────────────────────────
 export function PlanConfigPage() {
   const { t } = useTranslation();
@@ -1841,6 +1453,7 @@ export function PlanConfigPage() {
   // 5 级真层级资产树（factory → stage → line → operation → equipment），由 buildAssetTree 构造
   const [assetTreeV2, setAssetTreeV2] = useState<TreeNodeV2[]>([]);
   const [viewportLines, setViewportLines] = useState(VIEWPORT_LINES);
+  void viewportLines;   // 2D mock 数据迁移后暂无读处；setter 仍被结果回填使用
 
   // Creator 项目 + 就绪度（新顶部栏）
   const [creatorProjects, setCreatorProjects] = useState<CreatorProjectOut[]>([]);
@@ -1863,6 +1476,7 @@ export function PlanConfigPage() {
   // BOP_PROCESS 级 overrides 缓存：bop_process_id → param_key → param_value
   // BOP_PROCESS = per (line × product × operation)，每条 BoP 上的一道工序唯一一份覆盖。
   const [overridesByBopProcess, setOverridesByBopProcess] = useState<Map<string, Map<string, string>>>(new Map());
+  void overridesByBopProcess;   // 参数面板改走 effective-params 后暂无读处；加载 effect 仍写入
 
   // 当前 plan 的 task 列表 → 推导出 line × product 的实际投产组合（树和参数面板都依赖）
   const [planTasks, setPlanTasks] = useState<TaskOut[]>([]);
@@ -1896,14 +1510,6 @@ export function PlanConfigPage() {
     });
   }, [lineProductsByLine]);
 
-  const setProductForLine = useCallback((lineId: string, productCode: string) => {
-    setSelectedProductByLine(prev => {
-      const next = new Map(prev);
-      next.set(lineId, productCode);
-      return next;
-    });
-  }, []);
-
   useEffect(() => {
     if (!planId) return;
     planApi.overrides(planId).then((rows: OverrideOut[]) => {
@@ -1916,28 +1522,6 @@ export function PlanConfigPage() {
       }
       setOverridesByBopProcess(m);
     }).catch(() => {});
-  }, [planId]);
-
-  const upsertBopProcessOverride = useCallback(async (bopProcessId: string, paramKey: string, paramValue: string) => {
-    if (!planId) return;
-    try {
-      await planApi.upsertOverride(planId, {
-        scope_type: 'BOP_PROCESS',
-        scope_id: bopProcessId,
-        param_key: paramKey as 'ct' | 'efficiency' | 'yield_rate',
-        param_value: paramValue,
-      });
-      setOverridesByBopProcess(prev => {
-        const next = new Map(prev);
-        const m = new Map(next.get(bopProcessId) ?? []);
-        if (paramValue.trim()) m.set(paramKey, paramValue);
-        else m.delete(paramKey);
-        next.set(bopProcessId, m);
-        return next;
-      });
-    } catch (err) {
-      console.error('upsert override failed', err);
-    }
   }, [planId]);
 
   // Load plan + tasks
@@ -2013,7 +1597,8 @@ export function PlanConfigPage() {
     planApi.readiness(planId).then(setReadiness).catch(() => {});
   }, [planId, planTasks]);  // tasks 变化时重新算 input_pct
 
-  const [ribbonTab, setRibbonTab]       = useState<RibbonTab>('input');
+  // 默认落在参数配置页签：进入方案即看到串流 3D 场景
+  const [ribbonTab, setRibbonTab]       = useState<RibbonTab>('params');
   // 参数配置视口：3D（Kit 场景）/ 2D（BoP 拓扑俯视）。原顶层「BoP 2D 俯视」tab 并入此处。
   const [paramView, setParamView]       = useState<'2d' | '3d'>('3d');
   // 视口全屏：requestFullscreen 作用在视口容器上（资产树/参数面板/切换钮都是它的
@@ -2190,18 +1775,23 @@ export function PlanConfigPage() {
 
   return (
     <div className="flex flex-col h-full bg-[var(--c-07111e)]">
-      {/* ── Slim header ── */}
-      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--c-142235)] flex-shrink-0 bg-[var(--c-07111e)]">
+      {/* ── 单行顶栏（沉浸式：给全窗口串流腾出纵向空间）──
+          原页头 + Creator 栏 + Ribbon 三条压成一条玻璃条（z-30 浮在 fixed 串流上）：
+          返回/方案名 · 页签 · 页签工具 · Creator 项目 · 完整度 · 唯一主按钮 · 主题/语言/头像。
+          应用级顶栏在本页由 SimulationLayout 按路由隐藏（主题/语言/头像已并入此栏）。 */}
+      <div className="relative z-30 flex items-center gap-2.5 px-3 h-12 border-b border-[var(--c-142235)]/70 flex-shrink-0 bg-[var(--c-07111e)]/70 backdrop-blur-md shadow-md overflow-x-auto overflow-y-hidden">
         <button
           onClick={() => navigate('/simulation')}
-          className="text-slate-600 hover:text-slate-300 transition-colors"
+          className="text-slate-600 hover:text-slate-300 transition-colors flex-shrink-0"
         >
           <ChevronLeft size={16} />
         </button>
-        <div className="flex items-center gap-2 flex-1">
-          <span className="text-sm font-semibold text-slate-200">{plan?.plan_name ?? planId}</span>
+        <div className="flex items-center gap-2 min-w-0 flex-shrink">
+          <span className="text-sm font-semibold text-slate-200 truncate max-w-44" title={`${plan?.plan_name ?? ''} · ${planId}`}>
+            {plan?.plan_name ?? planId}
+          </span>
           <span className={cn(
-            'text-[10px] px-2 py-0.5 rounded-full border',
+            'text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0',
             isCompleted
               ? 'bg-sky-500/20 text-sky-400 border-sky-500/30'
               : isReady
@@ -2210,17 +1800,100 @@ export function PlanConfigPage() {
           )}>
             {isCompleted ? t('Completed') : isReady ? t('Ready') : t('Draft')}
           </span>
-          <span className="text-slate-700 text-xs">·</span>
-          <span className="text-[11px] text-slate-600 font-mono">{planId}</span>
         </div>
-        {/* Completeness indicators — backed by GET /plans/{id}/readiness */}
-        <div className="flex items-center gap-3 text-[10px] text-slate-500">
+
+        {/* 页签（分段控件） */}
+        <div className="flex rounded-lg border border-[var(--c-1e3a55)]/70 overflow-hidden flex-shrink-0">
+          {([
+            { id: 'input',       label: 'Input Data' },
+            { id: 'params',      label: 'Parameter Configuration' },
+            { id: 'constraints', label: 'Constraint Settings' },
+          ] as Array<{ id: RibbonTab; label: string }>).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={cn(
+                'px-3 py-1.5 text-[11px] font-semibold transition-colors whitespace-nowrap',
+                ribbonTab === tab.id ? 'bg-blue-600/80 text-white' : 'text-slate-400 hover:text-slate-200',
+              )}
+            >
+              {t(tab.label)}
+            </button>
+          ))}
+        </div>
+
+        {/* 页签工具（紧凑内联，原 Ribbon 按钮行） */}
+        {ribbonTab === 'input' && (
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={handleGlobalResync}
+              disabled={resyncing}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-slate-400 hover:text-slate-200 hover:bg-[var(--c-0d2035)]/60 border border-[var(--c-1e3a55)]/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={11} className={cn(resyncing && 'animate-spin')} />
+              {resyncing ? t('Syncing…') : t('Full Sync')}
+            </button>
+            <button className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-slate-400 hover:text-slate-200 hover:bg-[var(--c-0d2035)]/60 border border-[var(--c-1e3a55)]/50 transition-colors">
+              <CheckCircle2 size={11} />{t('Integrity Check')}
+            </button>
+          </div>
+        )}
+        {ribbonTab === 'constraints' && (
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={handleRibbonVersionManager}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-slate-400 hover:text-slate-200 hover:bg-[var(--c-0d2035)]/60 border border-[var(--c-1e3a55)]/50 transition-colors"
+            >
+              <BookOpen size={11} />{t('Version Management')}
+            </button>
+          </div>
+        )}
+
+        {/* Creator 项目（仅 DRAFT 可编辑） */}
+        <div className="flex items-center gap-1.5 min-w-0 flex-shrink" title={t('Linked Creator Plant Project')}>
+          <Building2 size={13} className="text-slate-400 shrink-0" />
+          {plan?.status === 'DRAFT' ? (
+            <Select
+              className="w-56"
+              value={plan?.creator_project_id ?? ''}
+              onChange={(e) => {
+                const next = e.target.value || null;
+                if (!planId) return;
+                planApi.update(planId, { creator_project_id: next }).then(setPlan).catch(() => {});
+              }}
+            >
+              <option value="">{t('Not selected (optional)')}</option>
+              {creatorProjects.length === 0 ? (
+                <option value="" disabled>{t('No published plant projects')}</option>
+              ) : (
+                creatorProjects.map((p) => (
+                  <option key={p.creator_project_id} value={p.creator_project_id}>
+                    {p.project_name} ({p.project_version ?? '—'})
+                  </option>
+                ))
+              )}
+            </Select>
+          ) : (
+            <span className={cn('text-[11px] truncate max-w-48', plan?.creator_project_id ? 'text-slate-300' : 'text-slate-500')}>
+              {creatorProjects.find((p) => p.creator_project_id === plan?.creator_project_id)?.project_name ?? (plan?.creator_project_id ? t('Linked (project not in list)') : t('Not linked'))}
+            </span>
+          )}
+          {plan?.creator_project_id && !creatorProjects.find((p) => p.creator_project_id === plan?.creator_project_id) && (
+            <span className="text-amber-500 flex-shrink-0" title={t('The linked plant project is no longer available or not in PUBLISHED status')}>
+              <AlertCircle size={12} />
+            </span>
+          )}
+        </div>
+
+        <div className="flex-1" />
+
+        {/* 完整度：数据输入 / 参数设置 — backed by GET /plans/{id}/readiness */}
+        <div className="flex items-center gap-3 text-[10px] text-slate-500 flex-shrink-0">
           {[
             { label: 'Input', pct: readiness?.input_pct ?? 0 },
             { label: 'Parameters', pct: readiness?.params_pct ?? 0 },
-            { label: 'Constraints', pct: readiness?.constraints_pct ?? 0 },
           ].map(({ label, pct }) => (
-            <div key={label} className="flex items-center gap-1.5" title={(readiness?.sections.filter(s => s.section_id.startsWith(label === 'Constraints' ? 'constraints' : label === 'Parameters' ? 'params' : 'input')).map(s => `${s.label}: ${s.pct}%`).join(' · ') ?? '') + (label === 'Constraints' ? t(' (for reference only, does not block readiness)') : '')}>
+            <div key={label} className="flex items-center gap-1.5" title={readiness?.sections.filter(s => s.section_id.startsWith(label === 'Parameters' ? 'params' : 'input')).map(s => `${s.label}: ${s.pct}%`).join(' · ') ?? ''}>
               <span>{t(label)}</span>
               <div className="w-14 h-1 bg-[var(--c-0a1929)] rounded-full overflow-hidden">
                 <div className={cn('h-full rounded-full', pct === 100 ? 'bg-emerald-500' : pct > 0 ? 'bg-blue-500' : 'bg-slate-700')} style={{ width: `${pct}%` }} />
@@ -2229,9 +1902,8 @@ export function PlanConfigPage() {
             </div>
           ))}
         </div>
-        <Button variant="ghost" size="sm">
-          <Save size={12} />{t('Save')}
-        </Button>
+
+        {/* 唯一主按钮（原独立「保存」按钮已合并掉） */}
         {isCompleted ? (
           <Button variant="primary" size="sm" onClick={handleReconfigure} disabled={readyBusy}>
             <RefreshCw size={12} />{readyBusy ? t('Processing…') : t('Reconfigure')}
@@ -2245,58 +1917,25 @@ export function PlanConfigPage() {
             <Play size={12} />{t('Run Simulation')}
           </Button>
         )}
+
+        <ThemeToggle variant="bare" />
+        <LanguageToggle variant="bare" />
+        <div className="w-7 h-7 rounded-full bg-[var(--c-0b1d30)] border border-[var(--c-1e3a55)] flex items-center justify-center text-xs text-slate-400 font-medium cursor-pointer hover:border-blue-500/40 transition-colors flex-shrink-0">
+          L
+        </div>
       </div>
 
-      {/* ── Creator 项目下拉栏（仅 DRAFT 可编辑）── */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-[var(--c-142235)] flex-shrink-0 bg-[var(--c-0a1628)]">
-        <Building2 size={14} className="text-slate-400 shrink-0" />
-        <span className="text-[11px] text-slate-400 whitespace-nowrap">{t('Linked Creator Plant Project')}</span>
-        {plan?.status === 'DRAFT' ? (
-          <Select
-            className="w-80"
-            value={plan?.creator_project_id ?? ''}
-            onChange={(e) => {
-              const next = e.target.value || null;
-              if (!planId) return;
-              planApi.update(planId, { creator_project_id: next }).then(setPlan).catch(() => {});
-            }}
-          >
-            <option value="">{t('Not selected (optional)')}</option>
-            {creatorProjects.length === 0 ? (
-              <option value="" disabled>{t('No published plant projects')}</option>
-            ) : (
-              creatorProjects.map((p) => (
-                <option key={p.creator_project_id} value={p.creator_project_id}>
-                  {p.project_name} ({p.project_version ?? '—'})
-                </option>
-              ))
-            )}
-          </Select>
-        ) : (
-          <span className={cn('text-xs', plan?.creator_project_id ? 'text-slate-300' : 'text-slate-500')}>
-            {creatorProjects.find((p) => p.creator_project_id === plan?.creator_project_id)?.project_name ?? (plan?.creator_project_id ? t('Linked (project not in list)') : t('Not linked'))}
-          </span>
-        )}
-        {plan?.creator_project_id && !creatorProjects.find((p) => p.creator_project_id === plan?.creator_project_id) && (
-          <span className="text-amber-500" title={t('The linked plant project is no longer available or not in PUBLISHED status')}>
-            <AlertCircle size={12} />
-          </span>
-        )}
-      </div>
-
-      {/* ── Ribbon ── */}
-      <Ribbon activeTab={ribbonTab} onTabChange={handleTabChange} onOpenVersionManager={handleRibbonVersionManager} onResync={handleGlobalResync} resyncing={resyncing} />
-
-      {/* ── Main area ── */}
+      {/* ── Main area ──
+          串流常驻：FactoryViewport（含 fixed 全窗口 KitViewport）从进入方案页起一直挂载，
+          切页签/切 2D 只是盖浮层，WebRTC 不断流、USD 不重开。 */}
       <div className="flex flex-1 overflow-hidden">
+        <div ref={viewportRef} className="flex-1 overflow-hidden relative bg-[var(--c-07111e)]">
+          {/* 遮罩仅在参数页签 + 3D 视图显示：masks 是 fixed z-20，会盖住 z-10 的 2D BoP/输入/约束浮层 */}
+          <FactoryViewport selectedId={selectedId} onSelect={handleSelect} creatorUrl={viewportUsdUrl} showMasks={showViewport && paramView === '3d'} />
 
-        {/* ── Params tab: viewport with floating panels ── */}
-        {showViewport && (
-          <div ref={viewportRef} className="flex-1 overflow-hidden relative bg-[var(--c-07111e)]">
-            {paramView === '3d' ? (
-              <FactoryViewport selectedId={selectedId} onSelect={handleSelect} creatorUrl={viewportUsdUrl} />
-            ) : (
-              <div className="absolute inset-0 flex flex-col" style={{ background: 'var(--c-070f1a)' }}>
+          {/* ── Params tab: 2D BoP 视图浮层（盖在串流上，串流保持连接）── */}
+          {showViewport && paramView === '2d' && (
+              <div className="absolute inset-0 z-10 flex flex-col" style={{ background: 'var(--c-070f1a)' }}>
                 <BopSchematicView
                   planId={planId}
                   factoryId={plan?.factory_id}
@@ -2320,8 +1959,11 @@ export function PlanConfigPage() {
                 />
               </div>
             )}
+
+          {/* ── Params tab: 2D/3D 切换 + 资产树浮层 ── */}
+          {showViewport && (<>
             {/* 2D/3D 视口切换（顶部居中；左资产树 z-20、右参数面板 z-20，此处 z-30 保持可点） */}
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex rounded-lg border border-[var(--c-1e3a55)] bg-[var(--c-07111e)]/90 backdrop-blur overflow-hidden shadow-lg">
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex rounded-lg border border-[var(--c-1e3a55)]/70 bg-[var(--c-07111e)]/75 backdrop-blur-md overflow-hidden shadow-lg">
               {(['2d', '3d'] as const).map((v) => (
                 <button
                   key={v}
@@ -2366,27 +2008,26 @@ export function PlanConfigPage() {
                 if (planId) planApi.readiness(planId).then(setReadiness).catch(() => {});
               }}
             />
-          </div>
-        )}
+          </>)}
 
-        {/* ── Input / Constraints tab: 3-column panel layout ── */}
-        {ribbonTab === 'input' && (
-          <div className="flex-1 overflow-hidden flex flex-col min-w-0">
-            <DataTablePanel
-              planId={planId}
-              factoryId={plan?.factory_id}
-              reloadKey={reloadTrigger}
-              onImportClick={(section) => setImportingSection(section)}
-            />
-          </div>
-        )}
+          {/* ── Input / Constraints tab：玻璃浮层盖在常驻串流上（串流透出一点，保持沉浸）── */}
+          {ribbonTab === 'input' && (
+            <div className="absolute inset-0 z-10 flex flex-col bg-[var(--c-07111e)]/90 backdrop-blur-md">
+              <DataTablePanel
+                planId={planId}
+                factoryId={plan?.factory_id}
+                reloadKey={reloadTrigger}
+                onImportClick={(section) => setImportingSection(section)}
+              />
+            </div>
+          )}
 
-        {ribbonTab === 'constraints' && (
-          <div className="flex-1 overflow-hidden flex flex-col min-w-0">
-            <ConstraintsPanel plan={plan} planId={planId} onOpenVersionManager={handleOpenVersionManager} />
-          </div>
-        )}
-
+          {ribbonTab === 'constraints' && (
+            <div className="absolute inset-0 z-10 flex flex-col bg-[var(--c-07111e)]/90 backdrop-blur-md">
+              <ConstraintsPanel plan={plan} planId={planId} onOpenVersionManager={handleOpenVersionManager} />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Constraint Version Manager Modal ── */}

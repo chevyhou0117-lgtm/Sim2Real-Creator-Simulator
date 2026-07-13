@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, FlaskConical, GitCompare, Database,
   FileText, ChevronLeft, ChevronRight, Settings,
-  Factory, Home, LogOut,
+  Factory, Home,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -28,11 +28,17 @@ export function SimulationLayout() {
     return location.pathname.startsWith(path);
   };
 
+  // 方案配置页：主题/语言/头像已并入页面自己的单行顶栏，应用级顶栏隐藏，给串流腾纵向空间
+  const hideHeader = /^\/simulation\/plan\/[^/]+\/config/.test(location.pathname);
+
   return (
     <div className="flex h-screen bg-[var(--c-07111e)] overflow-hidden">
-      {/* Sidebar */}
+      {/* Sidebar
+          沉浸式：串流页（PlanConfig/Running 3D）把 Kit 串流放成全窗口 fixed 层，侧边栏/顶栏
+          用半透明玻璃 + z-30 浮在其上（串流延伸到玻璃后面）；非串流页玻璃底色与页面底色
+          同色，视觉与原不透明一致，故无需按路由区分。 */}
       <aside className={cn(
-        'flex flex-col bg-[var(--c-07111e)] border-r border-[var(--c-142235)] transition-all duration-200 flex-shrink-0',
+        'relative z-30 flex flex-col bg-[var(--c-07111e)]/70 backdrop-blur-md border-r border-[var(--c-142235)]/70 shadow-md transition-all duration-200 flex-shrink-0',
         collapsed ? 'w-12' : 'w-52',
       )}>
         {/* Logo */}
@@ -109,8 +115,9 @@ export function SimulationLayout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header */}
-        <header className="h-12 bg-[var(--c-07111e)] border-b border-[var(--c-142235)] flex items-center px-6 flex-shrink-0 gap-4">
+        {/* Top Header — 同侧边栏：玻璃条浮在全窗口串流上（方案配置页隐藏，见 hideHeader） */}
+        {!hideHeader && (
+        <header className="relative z-30 h-12 bg-[var(--c-07111e)]/70 backdrop-blur-md border-b border-[var(--c-142235)]/70 shadow-md flex items-center px-6 flex-shrink-0 gap-4">
           <div className="flex items-center gap-2 text-[11px] text-slate-500">
             <Factory size={13} />
             <span>{t('Yantai Plant')}</span>
@@ -128,6 +135,7 @@ export function SimulationLayout() {
             L
           </div>
         </header>
+        )}
 
         {/* Page Content */}
         <div className="flex-1 overflow-y-auto">

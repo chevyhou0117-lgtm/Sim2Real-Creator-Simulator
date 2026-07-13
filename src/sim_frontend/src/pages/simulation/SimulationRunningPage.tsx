@@ -24,7 +24,7 @@ import { AssetSidebar } from './plan-config/AssetSidebar';
 import { buildAssetTree, collectEquipmentPrimPaths, findNode as findNodeV2 } from './plan-config/asset-tree-builder';
 import type { TreeNode as TreeNodeV2 } from './plan-config/types';
 import {
-  loadPlaybackFromBackend, ingestPlayback, getPlaybackState, controlPlayback,
+  loadPlaybackFromBackend, getPlaybackState, controlPlayback,
   playbackPlay, playbackPause, playbackSeek, playbackSpeed,
   type PlaybackState, type PlaybackEvent,
 } from '@/lib/playback';
@@ -160,8 +160,7 @@ export function SimulationRunningPage() {
       // Kit 直连 sim_backend 拉取事件（治本：浏览器不再持有 664k 条事件，避免 tab OOM）
       // 先拿结果摘要获取 duration_ms + 事件总数
       const simResult = await planApi.result(planId);
-      const planDurationMs = simResult.result_summary?.des_duration_ms
-        ?? (Number(simResult.result_summary?.['des_duration_ms'] ?? 0) || 0);
+      const planDurationMs = Number(simResult.result_summary?.des_duration_ms ?? 0) || 0;
       const totalEvents = simResult.result_summary?.des_event_count ?? 0;
       // 从结果摘要补全各步耗时（覆盖「重看已完成方案」这条没走轮询的入口）
       const storedTimings = simResult.result_summary?.phase_timings;
@@ -677,8 +676,8 @@ export function SimulationRunningPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--c-142235)] bg-[var(--c-07111e)] flex-shrink-0">
+      {/* ── Header — 玻璃条浮在全窗口串流上（沉浸式，同 PlanConfig 页头）── */}
+      <div className="relative z-30 flex items-center gap-3 px-4 py-3 border-b border-[var(--c-142235)]/70 bg-[var(--c-07111e)]/70 backdrop-blur-md shadow-md flex-shrink-0">
         <button
           onClick={handleBackToConfig}
           className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 transition-colors border border-[var(--c-1e3a55)] hover:border-[var(--c-2a4a6a)] rounded-lg px-2.5 py-1.5"
@@ -872,12 +871,15 @@ export function SimulationRunningPage() {
               ? 'fixed inset-0 z-50 overflow-hidden bg-[var(--c-07111e)]'
               : 'flex-1 relative overflow-hidden bg-[var(--c-07111e)]'}>
               {viewMode === '2d' ? (
-                <div className="absolute top-0 left-0 right-[2%] bottom-[2%]">
+                /* 2D 俯视图占满内容区（原 2% 右/下内缩是为了和旧版 3D 内缩几何一致；3D 已改全窗口沉浸式，内缩失去意义） */
+                <div className="absolute inset-0">
                   <Playback2DView planId={planId} tMs={playbackState?.t_ms ?? 0} />
                 </div>
               ) : KIT_STREAM_URL ? (
-                <div className={walkActive ? 'absolute inset-0' : 'absolute top-0 left-0 right-[2%] bottom-[2%]'}>
-                  {/* 直连 Kit WebRTC（替代原 5183 iframe 页）。回放控制仍走 HTTP /kit/playback。 */}
+                <div className="fixed inset-0">
+                  {/* 直连 Kit WebRTC（替代原 5183 iframe 页）。回放控制仍走 HTTP /kit/playback。
+                      沉浸式：fixed inset-0 铺满整个浏览器窗口，页头/时间轴/侧边栏是玻璃条浮在其上。
+                      漫游时父容器是 fixed z-50 的层叠上下文，此处 fixed 定位到视口，几何与原 absolute inset-0 一致。 */}
                   <KitViewport className="w-full h-full" />
                 </div>
               ) : (

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, Plus, Trash2, Edit2, AlertTriangle, Package, ToggleLeft } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, Edit2, AlertTriangle, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Input, Select } from '@/components/ui/Input';

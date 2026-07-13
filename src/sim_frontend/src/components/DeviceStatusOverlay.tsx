@@ -39,16 +39,6 @@ function hasEventInHistory(events: PlaybackEvent[], primPath: string): boolean {
   return events.some((e) => e.prim_path === primPath);
 }
 
-/** 该 prim 在事件流里**未来**最早出现的时间戳（用于"还未到时刻"提示）。无则 -1。 */
-function firstFutureEventMs(events: PlaybackEvent[], primPath: string, tMs: number): number {
-  let earliest = -1;
-  for (const e of events) {
-    if (e.prim_path !== primPath) continue;
-    if (e.timestamp_ms <= tMs) continue;
-    if (earliest < 0 || e.timestamp_ms < earliest) earliest = e.timestamp_ms;
-  }
-  return earliest;
-}
 
 function computeDerivedStat(events: PlaybackEvent[], primPath: string, tMs: number): DerivedStat | null {
   const matched = events.filter((e) => e.prim_path === primPath && e.timestamp_ms <= tMs);
@@ -128,7 +118,7 @@ function DeviceStatusOverlayInner({
     }
     // c) 完全不在 events 流 —— 装饰几何
     return (
-      <div className="w-80 bg-[var(--c-0b1d30)]/95 border border-[var(--c-1e3a55)] rounded-xl shadow-2xl backdrop-blur-sm overflow-hidden">
+      <div className="w-80 bg-[var(--c-0b1d30)]/75 border border-[var(--c-1e3a55)]/70 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden">
         <div className="flex items-start justify-between px-4 pt-3 pb-2">
           <div className="text-[10px] uppercase tracking-wider text-slate-500">{t('Non-equipment prim')}</div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-200 ml-2 flex-shrink-0" aria-label={t('Close')}>
@@ -173,7 +163,7 @@ function renderStatPanel(
     : undefined;
 
   return (
-    <div className="w-80 bg-[var(--c-0b1d30)]/95 border border-[var(--c-1e3a55)] rounded-xl shadow-2xl backdrop-blur-sm overflow-hidden">
+    <div className="w-80 bg-[var(--c-0b1d30)]/75 border border-[var(--c-1e3a55)]/70 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden">
       <div className="flex items-start justify-between px-4 pt-3 pb-2">
         <div className="min-w-0">
           <div className="text-[10px] text-slate-500 uppercase tracking-wider">{t('Equipment')}</div>
@@ -201,15 +191,15 @@ function renderStatPanel(
       </div>
 
       <div className="grid grid-cols-3 gap-2 px-4 pb-3">
-        <div className="bg-[var(--c-07111e)] rounded-lg py-2 text-center">
+        <div className="bg-[var(--c-07111e)]/60 rounded-lg py-2 text-center">
           <div className="text-sm font-bold text-slate-200 font-mono">{stat.processingCount}</div>
           <div className="text-[9px] text-slate-500">{t('Completed Count')}</div>
         </div>
-        <div className="bg-[var(--c-07111e)] rounded-lg py-2 text-center">
+        <div className="bg-[var(--c-07111e)]/60 rounded-lg py-2 text-center">
           <div className="text-sm font-bold text-red-300 font-mono">{stat.failureCount}</div>
           <div className="text-[9px] text-slate-500">{t('Failures')}</div>
         </div>
-        <div className="bg-[var(--c-07111e)] rounded-lg py-2 text-center">
+        <div className="bg-[var(--c-07111e)]/60 rounded-lg py-2 text-center">
           <div className="text-sm font-bold text-amber-300 font-mono">{stat.ngCount}</div>
           <div className="text-[9px] text-slate-500">{t('NG Count')}</div>
         </div>

@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
-  Plus, Search, Filter, Download, Archive, Trash2,
-  PlayCircle, Eye, FileBarChart, MoreHorizontal, ChevronDown, RefreshCw,
+  Plus, Search, Download, Archive, Trash2,
+  PlayCircle, Eye, FileBarChart, MoreHorizontal, RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { planApi, masterApi, simulatorsToFrontend } from '@/lib/api';
@@ -115,6 +115,7 @@ export function PlanListPage() {
   const navigate = useNavigate();
   const [plans, setPlans] = useState<SimPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  void loading;
   const [showNewModal, setShowNewModal] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<PlanStatus | 'ALL'>('ALL');

@@ -59,7 +59,7 @@ function LineProgressPanelInner({
     .sort((a, b) => a.sortKey - b.sortKey || a.name.localeCompare(b.name));
 
   return (
-    <div className="w-80 h-full bg-[var(--c-0b1d30)]/95 border border-[var(--c-1e3a55)] rounded-xl shadow-2xl backdrop-blur-sm overflow-hidden flex flex-col">
+    <div className="w-80 h-full bg-[var(--c-0b1d30)]/75 border border-[var(--c-1e3a55)]/70 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden flex flex-col">
       <div className="px-4 py-2 border-b border-[var(--c-142235)] flex items-center justify-between flex-shrink-0">
         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{t('Line Progress')}</span>
         <span className="text-[9px] text-slate-600">{t('Real-time LBR · Completed')}</span>

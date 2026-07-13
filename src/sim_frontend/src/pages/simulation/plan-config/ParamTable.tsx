@@ -313,7 +313,7 @@ export function ParamTable({ planId, productCode, tree, selectedNode, onParamsCh
           <div className="flex items-center justify-center py-6 text-[11px] text-slate-500">{t('No equipment in this scope')}</div>
         ) : (
           <table className="w-full text-[11px]">
-            <thead className="sticky top-0 bg-[var(--c-07111e)] z-10">
+            <thead className="sticky top-0 bg-[var(--c-07111e)]/85 backdrop-blur z-10">
               <tr className="border-b border-[var(--c-1e3a55)]">
                 <th className="px-2 py-2 text-left w-6">
                   <input
@@ -453,7 +453,7 @@ function BatchActionBar({
   };
 
   return (
-    <div className="flex items-center gap-1.5 px-2 py-2 border-t border-[var(--c-142235)] bg-[var(--c-040d16)] flex-shrink-0 flex-wrap">
+    <div className="flex items-center gap-1.5 px-2 py-2 border-t border-[var(--c-142235)] bg-[var(--c-040d16)]/80 backdrop-blur flex-shrink-0 flex-wrap">
       <span className="text-[10px] text-slate-500 mr-1">{t('{{count}} selected', { count: selectedCount })}</span>
       <button
         disabled={selectedCount === 0 || saving}
@@ -565,7 +565,7 @@ export function FloatingParamTablePanel({
 
   return (
     <div
-      className="absolute top-3 right-3 z-20 flex flex-col rounded-xl border border-[var(--c-1e3a55)] bg-[var(--c-07111e)]/95 backdrop-blur shadow-2xl transition-all overflow-hidden"
+      className="absolute top-3 right-3 z-20 flex flex-col rounded-xl border border-[var(--c-1e3a55)]/70 bg-[var(--c-07111e)]/70 backdrop-blur-md shadow-2xl transition-all overflow-hidden"
       style={{ width: collapsed ? 36 : 720, maxHeight: 'calc(100% - 24px)', height: 'calc(100% - 24px)' }}
     >
       <div className="flex items-center gap-2 px-2.5 py-2 border-b border-[var(--c-142235)] flex-shrink-0">

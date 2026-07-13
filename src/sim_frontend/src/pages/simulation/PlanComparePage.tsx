@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { Plus, X, TrendingUp, TrendingDown, Minus, Download } from 'lucide-react';
+import { Plus, X, Download } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
@@ -34,6 +33,7 @@ const PLAN_COLORS = ['#3b82f6', '#06b6d4', '#10b981', '#8b5cf6'];
 const PLAN_LABELS = ['Current Plan', 'Plan B', 'Plan C', 'Plan D'];
 
 function getRelativeDiff(val: number, best: number, unit: '%' | string, higherIsBetter = true, t: TFunction): { diff: string; status: 'good' | 'warn' | 'bad' | 'best' } {
+  void unit;
   if (val === best) return { diff: t('Best'), status: 'best' };
   const diff = ((val - best) / Math.abs(best)) * 100;
   const absDiff = Math.abs(diff);
@@ -46,7 +46,6 @@ function getRelativeDiff(val: number, best: number, unit: '%' | string, higherIs
 
 export function PlanComparePage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [selectedPlans, setSelectedPlans] = useState<string[]>([ARCHIVED_PLANS[0]?.id, ARCHIVED_PLANS[1]?.id].filter(Boolean));
 
   const numPlans = Math.min(selectedPlans.length, 4);

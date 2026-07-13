@@ -123,7 +123,7 @@ function PlaybackTimelineInner({
 
   // ── render ───────────────────────────────────────────────────────────────
   return (
-    <div className={cn('bg-[var(--c-020a12)] border-t border-[var(--c-1e3a55)]/60 select-none flex-shrink-0', className)}>
+    <div className={cn('relative z-30 bg-[var(--c-020a12)]/75 backdrop-blur-md border-t border-[var(--c-1e3a55)]/60 select-none flex-shrink-0', className)}>
       {/* Ruler — 整条可点击 / 拖动 */}
       <div
         ref={railRef}
@@ -133,7 +133,7 @@ function PlaybackTimelineInner({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <div className="absolute inset-y-0 left-0 right-0 rounded-sm bg-[var(--c-07111e)] border border-[var(--c-142235)]" />
+        <div className="absolute inset-y-0 left-0 right-0 rounded-sm bg-[var(--c-07111e)]/80 border border-[var(--c-142235)]/80" />
 
         {/* Elapsed fill */}
         <div className="absolute inset-y-0 left-0 bg-blue-600/20 rounded-l-sm pointer-events-none"
@@ -197,7 +197,7 @@ function PlaybackTimelineInner({
         </button>
 
         {/* Time display */}
-        <div className="flex items-center gap-1.5 bg-[var(--c-040d16)] border border-[var(--c-142235)] rounded px-2.5 py-1 flex-shrink-0">
+        <div className="flex items-center gap-1.5 bg-[var(--c-040d16)]/80 border border-[var(--c-142235)]/80 rounded px-2.5 py-1 flex-shrink-0">
           <span className="text-[11px] font-mono text-slate-300 tracking-widest">{formatHMS(displayMs)}</span>
           <span className="text-[9px] text-slate-500 mx-1">/</span>
           <span className="text-[9px] font-mono text-slate-400">{formatHMS(durationMs)}</span>

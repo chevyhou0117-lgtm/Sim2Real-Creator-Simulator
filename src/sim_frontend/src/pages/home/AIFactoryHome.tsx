@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
   Brain, Database, Monitor, CheckSquare, Box, CalendarClock,
-  BarChart3, Bell, Leaf, Zap, LayoutGrid, Settings, User,
+  BarChart3, Bell, Leaf, Zap, LayoutGrid, Settings,
   ChevronRight, FlaskConical, Cpu, Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

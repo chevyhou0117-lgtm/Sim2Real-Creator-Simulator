@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { RefreshCw, CheckCircle2, AlertCircle, Clock, Database, Factory, Cpu, GitBranch, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
-import { masterDataStats } from '@/mock/data';
 
 const DATA_CATEGORIES = [
   { id: 'factory', icon: <Factory size={15} />, label: 'Factory Info', count: 1, status: 'synced', lastSync: '08:30:00' },

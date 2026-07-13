@@ -49,6 +49,18 @@ export async function kitSelectPrim(primPath: string): Promise<void> {
   }
 }
 
+// ── select-many 回声抑制 ─────────────────────────────────────────────────────
+// 单击产线/工序/工厂节点 → kitSelectMany 让 Kit 组高亮 → Kit 的 selection SSE 会把
+// 选中回推（通常是第一台设备的 prim）。不抑制的话，页面的反向同步会把"产线选中"改写成
+// "第一台设备选中"：PlanConfig 的参数扩展列切成设备工艺参数、回放页弹出设备状态面板。
+// 只抑制组选回声——单选（kitSelectPrim）的回声是回放页"树点设备弹面板"链路的一部分，保留。
+// 窗口：发请求时开 20s（大场景 select-many 本身要数秒），完成后收短到 2s 尾窗；
+// 过期后用户在 3D 视口里真点同一台设备仍正常反向同步。
+let selectManyEcho: { paths: Set<string>; until: number } | null = null;
+const markSelectManyEcho = (paths: string[], ttlMs: number) => {
+  selectManyEcho = { paths: new Set(paths), until: Date.now() + ttlMs };
+};
+
 /** 批量高亮选中多个 prim（不动相机）— 单击产线/工序节点时高亮其下全部设备用。
  *  Kit 端自动跳过场景里不存在的 prim；空列表直接跳过不发请求。fail-soft：调用方静默 catch。
  *  factory 级一次几十~上百 prim，Kit 端遍历 stage 设置 selection 在大场景下超过 5s，这里给 15s 余量
@@ -58,6 +70,7 @@ export async function kitSelectMany(primPaths: string[]): Promise<void> {
   if (paths.length === 0) return;
   const t0 = performance.now();
   console.log(`[Kit] select-many start: ${paths.length} paths`);
+  markSelectManyEcho(paths, 20000);
   try {
     const res = await kitFetch('/ov/select-many', {
       method: 'POST',
@@ -68,9 +81,11 @@ export async function kitSelectMany(primPaths: string[]): Promise<void> {
       throw new Error(`Kit /ov/select-many ${res.status} after ${dt}ms: ${await res.text().catch(() => '')}`);
     }
     console.log(`[Kit] select-many done in ${dt}ms`);
+    markSelectManyEcho(paths, 2000);   // 收短尾窗：完成后回声很快到达
   } catch (err) {
     const dt = (performance.now() - t0).toFixed(0);
     console.warn(`[Kit] select-many threw after ${dt}ms`, err);
+    markSelectManyEcho(paths, 2000);
     throw err;
   }
 }
@@ -145,9 +160,9 @@ export async function kitOpenStage(url: string, timeoutMs: number = OPEN_STAGE_T
  *  fail-soft：失败 throw，调用方按需静默 catch。
  *
  *  - 桌面模式：走 omni.appwindow + carb.windowing，操作真实窗口
- *  - 串流模式 (`--no-window`)：Kit handler 自动回落到
- *    carb.settings `/app/window/fullscreen`，让流出来的画面占满 viewport
- *    （iframe 周边不再有菜单栏黑边）
+ *  - 串流模式 (`--no-window`)：Kit handler 改写 `/app/window/hideUi`
+ *    （F11 的实际机制）——true 隐藏菜单栏/停靠面板让画面占满 viewport，
+ *    false 恢复完整编辑器 UI（布局从进入全屏时的快照还原）
  *
  *  超时给 12s：Kit 刚启动那段 (~30s) 主线程满载，全屏切换会被 settings 监听器
  *  阻塞数秒；启动完成后 ~10ms 返回。给宽松超时避免冷启动期 AbortError。 */
@@ -315,13 +330,17 @@ export function subscribeWalkPose(onPose: (pose: WalkPose2D) => void): () => voi
 // ─── viewport selection SSE 订阅 ─────────────────────────────────────────────
 
 /** 订阅 Kit viewport selection 变化。EventSource 自动重连。
- *  回调拿到的 primPath 可能是空串（表示取消选中）。返回 unsubscribe 函数。 */
+ *  回调拿到的 primPath 可能是空串（表示取消选中）。返回 unsubscribe 函数。
+ *  注意：kitSelectMany（组高亮）自身引起的回声在此被吞掉（见 selectManyEcho）。 */
 export function subscribeKitSelection(onPrim: (primPath: string) => void): () => void {
   const es = new EventSource(`${KIT_BASE}/ov/selection_stream`);
   es.onmessage = (ev) => {
     try {
       const data = JSON.parse(ev.data) as { prim_path?: string };
-      onPrim(data.prim_path ?? '');
+      const prim = data.prim_path ?? '';
+      const echo = selectManyEcho;
+      if (prim && echo && Date.now() < echo.until && echo.paths.has(prim)) return;
+      onPrim(prim);
     } catch (err) {
       console.warn('[Kit] selection_stream parse failed:', err);
     }

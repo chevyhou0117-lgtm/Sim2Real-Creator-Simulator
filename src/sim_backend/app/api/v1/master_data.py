@@ -294,6 +294,7 @@ def get_line_equipment_config(
             operation_id=op.operation_id,
             operation_code=op.operation_code,
             operation_name=op.operation_name,
+            operation_name_cn=op.operation_name_cn,
             operation_sequence=op.sequence,
             line_id=line.line_id,
             line_code=line.line_code,
