@@ -227,16 +227,22 @@ class AssetUploadService:
     ) -> Dict[str, Any]:
 
         if upload_type in (AssetUploadType.FACTORY, AssetUploadType.LINE):
-            return await self._upload_line_asset(file_bytes, db)
+            # factory = 整厂快照，镜像同步（删除包内未出现的线体）；
+            # line    = 单线/部分上传，纯增量（只新增/更新，绝不删除其他线体）。
+            return await self._upload_line_asset(
+                file_bytes, db, full_sync=(upload_type == AssetUploadType.FACTORY)
+            )
         elif upload_type == AssetUploadType.EQUIPMENT_MODEL:
             return await self._upload_equipment_asset(file_bytes, db)
         else:
             raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg=f"不支持的上传类型: {upload_type}")
 
     # 工厂 / 线体模型
-    async def _upload_line_asset(self, file_bytes: bytes, db: AsyncSession) -> Dict[str, Any]:
+    async def _upload_line_asset(
+            self, file_bytes: bytes, db: AsyncSession, *, full_sync: bool
+    ) -> Dict[str, Any]:
         """
-        增量更新处理流程：
+        处理流程：
         阶段1 - 解压 ZIP，获取线体集合（new_set）
         阶段2 - 批量上传到 MinIO（线程池，不阻塞事件循环）
         阶段3 - 查询数据库已有线体集合（old_set），根据 location_path 匹配
@@ -244,7 +250,9 @@ class AssetUploadService:
                   ① 查询 asset_category（name + parent_id），存在则复用，不存在则创建
                   ② 处理 line_model_details：存在则更新，不存在则创建
                   ③ 删除该线体下所有旧关系，根据 ZIP 重新插入新关系
-        阶段5 - 处理已被删除的线体（old_set - new_set）：删除关系表、删除 line_model_details
+        阶段5 - 仅 full_sync=True（type=factory 整厂快照）时执行：
+                  软删除已被移除的线体（old_set - new_set）：删除关系表、删除 line_model_details。
+                  full_sync=False（type=line 增量上传）跳过本阶段，包内未出现的线体一律保留。
         阶段6 - 重新统计 asset_total_count
         阶段7 - 提交事务
         """
@@ -435,8 +443,14 @@ class AssetUploadService:
                     updated_items.append(item_info)
 
             # 阶段5：处理已被删除的线体（old_set - new_set）
-            deleted_set = old_set - new_set
+            # 仅整厂快照（type=factory）执行镜像删除；增量上传（type=line）跳过，
+            # 否则上传单条线体会把库里其他所有线体软删除。
+            deleted_set = (old_set - new_set) if full_sync else set()
             deleted_items: List[Dict] = []
+            if not full_sync and (old_set - new_set):
+                logger.info(
+                    f"增量上传（type=line），跳过镜像删除: 保留包内未出现的 {len(old_set - new_set)} 条线体"
+                )
 
             for line_name in deleted_set:
                 if line_name in old_line_map:

@@ -53,6 +53,9 @@ def get_line_detail_service() -> LineModelDetailService:
     description=(
         "接收 ZIP 压缩包，根据 `type` 字段执行不同解析逻辑：\n\n"
         "**`factory` / `line`（工厂/线体模型）**\n"
+        "- ⚠️ 两者解析流程相同，但删除语义不同：`factory` 为**整厂快照镜像同步**——同一 "
+        "`location_path` 下、ZIP 内未出现的线体会被**软删除**；`line` 为**纯增量**——"
+        "只新增/更新 ZIP 内出现的线体，绝不删除库中其他线体\n"
         "- 解压 ZIP，将**所有文件**（含子文件夹完整结构）上传到 MinIO，保留原始目录结构\n"
         "- `location_path` = ZIP 根目录名\n"
         "- 遍历 `ProdLine/` 下的直属子文件夹，每个子文件夹 = 一条线体模型\n"
