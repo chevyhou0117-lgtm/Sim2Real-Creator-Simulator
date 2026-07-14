@@ -11,7 +11,7 @@ from common.ErrorCode import ErrorCode
 from commonutils.Logs import init_logging
 from commonutils.SnowflakeUtils import generate_snowflake_id
 from exception.ExceptionClass import BusinessException
-from models.constant.DefaultTypeConstant import DEFAULT_LINE_TYPE_ID, DEFAULT_EQUIPMENT_TYPE_ID
+from models.constant.DefaultTypeConstant import DEFAULT_LINE_TYPE_CODE, DEFAULT_EQUIPMENT_TYPE_CODE
 from models.constant.ThumbnailConstant import DEFAULT_LINE_THUMBNAIL, DEFAULT_EQUIPMENT_THUMBNAIL
 from models.entity.AssetCategoryEntity import AssetCategory
 from models.entity.EquipmentModelDetailEntity import EquipmentModelDetail
@@ -264,16 +264,16 @@ class AssetUploadService:
                 raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="上传文件不是合法的 ZIP 压缩包")
 
             with zf_obj as zf:
-                all_names = zf.namelist()
-                root_dir = _get_zip_root_dir(all_names)
+                # 过滤目录条目与 macOS 垃圾/隐藏文件（__MACOSX/、.DS_Store、._AppleDouble），
+                # 否则 .DS_Store 会被当成 ProdLine 下的一条线体、垃圾文件也会污染 storage。
+                valid_names = [n for n in zf.namelist() if _is_valid_zip_entry(n)]
+                root_dir = _get_zip_root_dir(valid_names)
                 location_path = root_dir.rstrip("/")
                 proline_prefix = root_dir + "ProdLine/"
 
-                file_entries: List[Tuple[str, bytes]] = []
-                for name in all_names:
-                    if name.endswith("/"):
-                        continue
-                    file_entries.append((name, zf.read(name)))
+                file_entries: List[Tuple[str, bytes]] = [
+                    (name, zf.read(name)) for name in valid_names
+                ]
 
             all_entry_names = [name for name, _ in file_entries]
             # 获取 ZIP 中的线体名集合（new_set）
@@ -310,8 +310,14 @@ class AssetUploadService:
                         existing_parent_id = cat.parent_id  # 记录已有线体的 parent_id
 
             old_set = set(old_line_map.keys())
-            # 确定新线体的 parent_id：优先使用已有线体的 parent_id，否则使用默认值
-            target_parent_id = existing_parent_id if existing_parent_id is not None else DEFAULT_LINE_TYPE_ID
+            # 确定新线体的 parent_id：优先复用同 location 已有线体的 parent_id；
+            # 否则按 code 运行期反查“默认线体类型”节点的真实 UUID（不能用已失效的整型常量）。
+            if existing_parent_id is not None:
+                target_parent_id = existing_parent_id
+            else:
+                target_parent_id = await _resolve_default_type_category_id(
+                    DEFAULT_LINE_TYPE_CODE, AssetCategoryType.LINE_TYPE.value, db
+                )
             logger.info(f"数据库已有线体集合: old_set={old_set}, target_parent_id={target_parent_id}")
 
             # 阶段4：遍历 new_set 处理每个线体
@@ -516,15 +522,15 @@ class AssetUploadService:
                 raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="上传文件不是合法的 ZIP 压缩包")
 
             with zf_obj as zf:
-                all_names = zf.namelist()
+                # 过滤目录条目与 macOS 垃圾/隐藏文件（__MACOSX/、.DS_Store、._AppleDouble），
+                # 否则会污染 storage 且把 .DS_Store 当成设备文件夹。
+                valid_names = [n for n in zf.namelist() if _is_valid_zip_entry(n)]
                 # 获取 ZIP 根目录（设备文件夹的父目录）
-                root_dir = _get_zip_root_dir(all_names)
+                root_dir = _get_zip_root_dir(valid_names)
                 location_path = (minio_prefix + root_dir).rstrip("/")
-                file_entries: List[Tuple[str, bytes]] = []
-                for name in all_names:
-                    if name.endswith("/"):
-                        continue
-                    file_entries.append((name, zf.read(name)))
+                file_entries: List[Tuple[str, bytes]] = [
+                    (name, zf.read(name)) for name in valid_names
+                ]
 
             logger.info(f"设备模型 ZIP 解压完成: 文件数={len(file_entries)}, root={root_dir}")
 
@@ -539,6 +545,11 @@ class AssetUploadService:
             subfolders = _get_direct_subfolders([name for name, _ in file_entries], root_dir)
             if not subfolders:
                 logger.warning(f"ZIP 内未找到设备子文件夹，root_dir={root_dir}")
+
+            # 按 code 运行期反查“默认设备类型”节点真实 UUID 作为 parent_id（整型常量已失效）。
+            equipment_parent_id = await _resolve_default_type_category_id(
+                DEFAULT_EQUIPMENT_TYPE_CODE, AssetCategoryType.EQUIPMENT_TYPE.value, db
+            )
 
             created_items: List[Dict] = []
             for subfolder in subfolders:
@@ -560,7 +571,7 @@ class AssetUploadService:
                     select(AssetCategory).where(
                         AssetCategory.name == subfolder,
                         AssetCategory.type == AssetCategoryType.EQUIPMENT_MODEL.value,
-                        AssetCategory.parent_id == DEFAULT_EQUIPMENT_TYPE_ID,
+                        AssetCategory.parent_id == equipment_parent_id,
                     ).limit(1)
                 )
                 existing_cat = existing_cat_result.scalar_one_or_none()
@@ -581,7 +592,7 @@ class AssetUploadService:
                     name=subfolder,
                     code=code,
                     type=AssetCategoryType.EQUIPMENT_MODEL.value,
-                    parent_id=DEFAULT_EQUIPMENT_TYPE_ID,
+                    parent_id=equipment_parent_id,
                 )
                 db.add(category)
                 await db.flush()
@@ -601,7 +612,7 @@ class AssetUploadService:
                     "status": "created",
                 })
 
-            await _refresh_category_ancestor_counts(DEFAULT_EQUIPMENT_TYPE_ID, db)
+            await _refresh_category_ancestor_counts(equipment_parent_id, db)
             await db.commit()
             logger.info(f"设备模型入库完成: location_path={location_path}, 创建数={len(created_items)}")
             return {
@@ -637,6 +648,26 @@ def _batch_upload_to_minio(
         logger.debug(f"MinIO 上传: {object_name} ({len(data)} bytes)")
         count += 1
     return count
+
+# macOS 打包 ZIP 会夹带 __MACOSX/ 目录与 .DS_Store / ._AppleDouble 元数据文件。
+_MACOS_SKIP_PREFIXES = ("__MACOSX/", ".DS_Store")
+
+
+def _is_valid_zip_entry(name: str) -> bool:
+    """
+    判断 ZIP 条目是否为需要处理的真实文件。
+    过滤：目录条目、macOS 垃圾文件（__MACOSX/、.DS_Store）、以及任何以 '.' 开头的隐藏文件
+    （含 ._AppleDouble）。与 UsdAssetLibraryService 的过滤规则保持一致。
+    """
+    if name.endswith("/"):
+        return False
+    if any(name.startswith(p) or name == p for p in _MACOS_SKIP_PREFIXES):
+        return False
+    base = name.split("/")[-1]
+    if base.startswith("."):
+        return False
+    return True
+
 
 def _get_zip_root_dir(names: List[str]) -> str:
     """获取 ZIP 内顶级根目录，返回形如 'RootFolder/' 的字符串。"""
@@ -712,6 +743,31 @@ def _extract_model_keyword(instance_name: str) -> str:
     if last_underscore > 0:
         name = name[:last_underscore]
     return name
+
+
+async def _resolve_default_type_category_id(code: str, type_value: str, db: AsyncSession) -> str:
+    """
+    按 code 反查默认类型节点（line_type / equipment_type）的真实 UUID 主键，作为新建
+    线体/设备模型的 parent_id。asset_categories.id 为 String(36) UUID 且随环境 seed 变化，
+    不能硬编码整型 id（旧 2001/2002 常量已失效）。
+    未找到时抛出业务异常，避免静默插入挂在不存在父节点下的孤儿节点。
+    """
+    result = await db.execute(
+        select(AssetCategory.id)
+        .where(
+            AssetCategory.code == code,
+            AssetCategory.type == type_value,
+            AssetCategory.is_deleted == False,
+        )
+        .limit(1)
+    )
+    category_id = result.scalar_one_or_none()
+    if category_id is None:
+        raise BusinessException(
+            ErrorCode.NOT_FOUND_ERROR,
+            extra_msg=f"未找到默认分类节点（code={code}, type={type_value}），无法确定上传归属的父节点",
+        )
+    return category_id
 
 
 async def _refresh_category_ancestor_counts(anchor_id: int, db: AsyncSession) -> None:
