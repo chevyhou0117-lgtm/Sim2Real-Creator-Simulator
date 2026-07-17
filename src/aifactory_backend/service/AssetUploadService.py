@@ -566,18 +566,51 @@ class AssetUploadService:
                     logger.warning(f"未找到设备 USD 文件: {root_dir}{subfolder}/{subfolder}.usd，跳过该设备")
                     continue
 
-                # 检查 DB 中是否已存在同名同父的设备模型节点
+                # 检查 DB 中是否已存在同名同父的设备模型节点。
+                # 不过滤 is_deleted：软删除的同名节点需要被找到并复活；活节点优先匹配。
                 existing_cat_result = await db.execute(
                     select(AssetCategory).where(
                         AssetCategory.name == subfolder,
                         AssetCategory.type == AssetCategoryType.EQUIPMENT_MODEL.value,
                         AssetCategory.parent_id == equipment_parent_id,
-                    ).limit(1)
+                    ).order_by(AssetCategory.is_deleted.asc()).limit(1)
                 )
                 existing_cat = existing_cat_result.scalar_one_or_none()
 
                 if existing_cat is not None:
-                    # 已存在：MinIO 文件已上传覆盖，DB 无需重建
+                    # 已存在：MinIO 文件已上传覆盖，DB 无需重建。
+                    # 复活：若该设备此前被批量删除（软删除），重新上传应使其恢复可见，
+                    # 否则会匹配到 is_deleted=True 的分类而永久隐藏（与线体上传复活语义一致）。
+                    if existing_cat.is_deleted:
+                        existing_cat.is_deleted = False
+                        detail_result = await db.execute(
+                            select(EquipmentModelDetail).where(
+                                EquipmentModelDetail.category_id == existing_cat.id,
+                                EquipmentModelDetail.is_current == True,
+                            ).limit(1)
+                        )
+                        existing_detail = detail_result.scalar_one_or_none()
+                        if existing_detail is not None:
+                            existing_detail.is_deleted = False
+                            existing_detail.root_usd_path = root_usd_path
+                            existing_detail.location_path = location_path
+                        else:
+                            db.add(EquipmentModelDetail(
+                                category_id=existing_cat.id,
+                                bucket_name=minioConfig.bucket_name,
+                                root_usd_path=root_usd_path,
+                                location_path=location_path,
+                                thumbnail_path=THUMBNAIL_EQUIPMENT,
+                            ))
+                        await db.flush()
+                        logger.info(f"复活软删除的设备模型: name={subfolder}, category_id={existing_cat.id}")
+                        created_items.append({
+                            "name": subfolder,
+                            "category_id": str(existing_cat.id),
+                            "root_usd_path": root_usd_path,
+                            "status": "revived",
+                        })
+                        continue
                     logger.info(f"设备模型已存在，跳过 DB 新建，仅追加 MinIO 文件: name={subfolder}")
                     created_items.append({
                         "name": subfolder,
@@ -776,7 +809,9 @@ async def _refresh_category_ancestor_counts(anchor_id: int, db: AsyncSession) ->
     重新统计子树内 line_model / equipment_model 叶子总数，写入 asset_total_count。
     上传接口批量创建模型节点后、commit 之前调用一次即可。
     """
-    all_result = await db.execute(select(AssetCategory))
+    all_result = await db.execute(
+        select(AssetCategory).where(AssetCategory.is_deleted == False)
+    )
     all_nodes: List[AssetCategory] = list(all_result.scalars().all())
     entity_map = {n.id: n for n in all_nodes}
 
@@ -816,12 +851,13 @@ async def _find_equipment_model_id(keyword: str, db: AsyncSession) -> Optional[i
     返回 None 表示未找到匹配记录。
     """
 
-    # 步骤1：模糊查询 asset_categories
+    # 步骤1：模糊查询 asset_categories（排除软删除，避免绑定到已删除的设备模型）
     cat_result = await db.execute(
         select(AssetCategory.id)
         .where(
             AssetCategory.type == AssetCategoryType.EQUIPMENT_MODEL.value,
             AssetCategory.name.ilike(f"%{keyword}%"),
+            AssetCategory.is_deleted == False,
         )
         .limit(1)
     )

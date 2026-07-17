@@ -50,7 +50,10 @@ class AssetCategoryService:
         try:
             result = await db.execute(
                 select(AssetCategory)
-                .where(AssetCategory.type == AssetCategoryType.PROCESS)
+                .where(
+                    AssetCategory.type == AssetCategoryType.PROCESS,
+                    AssetCategory.is_deleted == False,
+                )
                 .order_by(AssetCategory.created_at.asc())
             )
             processes = list(result.scalars().all())
@@ -89,6 +92,7 @@ class AssetCategoryService:
                 .where(
                     and_(
                         AssetCategory.parent_id == process_id,
+                        AssetCategory.is_deleted == False,
                         or_(
                             AssetCategory.type == AssetCategoryType.LINE_TYPE,
                             AssetCategory.type == AssetCategoryType.EQUIPMENT_TYPE,
@@ -135,6 +139,7 @@ class AssetCategoryService:
                 .where(
                     and_(
                         AssetCategory.parent_id == process_id,
+                        AssetCategory.is_deleted == False,
                         or_(
                             AssetCategory.type == AssetCategoryType.LINE_TYPE,
                             AssetCategory.type == AssetCategoryType.EQUIPMENT_TYPE,
@@ -223,9 +228,11 @@ class AssetCategoryService:
         根据主键 ID 获取该节点及其所有后代节点组成的子树（含 detail）。
         一次加载全部节点，BFS 构建，避免 N+1。
         """
-        # 1. 加载全部节点
+        # 1. 加载全部节点（排除软删除）
         all_result = await db.execute(
-            select(AssetCategory).order_by(AssetCategory.created_at.asc())
+            select(AssetCategory)
+            .where(AssetCategory.is_deleted == False)
+            .order_by(AssetCategory.created_at.asc())
         )
         all_nodes: List[AssetCategory] = list(all_result.scalars().all())
         entity_map = {n.id: n for n in all_nodes}
@@ -287,9 +294,11 @@ class AssetCategoryService:
            指定 type 的子节点，返回该子树（含制程节点本身）
         """
         try:
-            # 始终全量加载，保证层级关系完整
+            # 始终全量加载，保证层级关系完整（排除软删除，否则批量删除的节点会残留在前端资产库）
             all_result = await db.execute(
-                select(AssetCategory).order_by(AssetCategory.created_at.asc())
+                select(AssetCategory)
+                .where(AssetCategory.is_deleted == False)
+                .order_by(AssetCategory.created_at.asc())
             )
             all_nodes: List[AssetCategory] = list(all_result.scalars().all())
             entity_map = {n.id: n for n in all_nodes}
@@ -665,7 +674,11 @@ class AssetCategoryService:
         - 返回顶级节点列表，每个节点含递归 children
         """
         try:
-            stmt = select(AssetCategory).order_by(AssetCategory.created_at.asc())
+            stmt = (
+                select(AssetCategory)
+                .where(AssetCategory.is_deleted == False)
+                .order_by(AssetCategory.created_at.asc())
+            )
             if type_filter:
                 stmt = stmt.where(AssetCategory.type == type_filter)
             result = await db.execute(stmt)
@@ -976,7 +989,9 @@ class AssetCategoryService:
         - line_model / equipment_model 节点本身不参与统计，asset_total_count 保持 0
         调用时机：节点增删改执行后、db.commit() 之前（flush 状态下最新数据已可见）。
         """
-        all_result = await db.execute(select(AssetCategory))
+        all_result = await db.execute(
+            select(AssetCategory).where(AssetCategory.is_deleted == False)
+        )
         all_nodes: List[AssetCategory] = list(all_result.scalars().all())
         entity_map = {n.id: n for n in all_nodes}
 
