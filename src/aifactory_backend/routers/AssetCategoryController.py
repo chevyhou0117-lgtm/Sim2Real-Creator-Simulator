@@ -228,7 +228,7 @@ async def move_leaf_node(
 
 @asset_category_router.delete(
     "/delete",
-    response_model=BaseResponse[int],
+    response_model=BaseResponse[str],
     summary="删除资产节点",
     description=(
         "递归删除指定资产分类节点及其所有子孙节点：\n"

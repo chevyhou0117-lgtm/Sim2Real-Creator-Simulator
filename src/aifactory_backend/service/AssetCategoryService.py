@@ -755,9 +755,9 @@ class AssetCategoryService:
 
     async def delete_category(
             self,
-            category_id: int,
+            category_id: str,
             db: AsyncSession,
-    ) -> int:
+    ) -> str:
         """
         删除资产分类节点，分两种情况：
         - line_model / equipment_model：仅删除该节点本身 + 对应详情表记录
