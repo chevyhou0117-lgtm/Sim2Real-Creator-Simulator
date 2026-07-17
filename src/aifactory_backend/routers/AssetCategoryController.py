@@ -256,7 +256,7 @@ async def delete_category(
         "- 对应详情表记录（`line_model_details` / `equipment_model_details`）\n"
         "- 关联表记录（`line_model_equipment_rel`）\n"
         "- MinIO 中的非默认缩略图文件\n\n"
-        "**注意**：列表中任意一个 ID 不是叶子节点类型，或状态非 `INACTIVE`，整批操作将回滚并报错。\n"
+        "**注意**：列表中任意一个 ID 不是叶子节点类型，或状态非 `DRAFT` / `INACTIVE`，整批操作将回滚并报错。\n"
         "返回实际被删除的分类主键 ID 列表。"
     ),
 )

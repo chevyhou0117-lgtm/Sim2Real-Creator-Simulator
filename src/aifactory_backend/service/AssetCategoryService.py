@@ -1242,7 +1242,8 @@ class AssetCategoryService:
             db: AsyncSession,
     ) -> None:
         """
-        校验当前版本状态是否为 INACTIVE，只有 INACTIVE 状态允许删除。
+        校验当前版本状态是否允许删除：DRAFT（草稿）/ INACTIVE（禁用）可删，
+        ACTIVE 须先禁用，ARCHIVED 仅管理员可操作（与前端状态-操作映射一致）。
         非叶子节点在前序 type 校验中已拒绝，此处不做二次校验。
         """
         table = self._get_detail_table(entity.type)
@@ -1256,12 +1257,14 @@ class AssetCategoryService:
                 ErrorCode.NOT_FOUND_ERROR,
                 extra_msg=f"category_id={category_id} 不存在当前版本详情记录",
             )
-        if status != AssetModelStatus.INACTIVE.value:
+        deletable_statuses = {AssetModelStatus.DRAFT.value, AssetModelStatus.INACTIVE.value}
+        if status not in deletable_statuses:
             raise BusinessException(
                 ErrorCode.OPERATION_ERROR,
                 extra_msg=(
                     f"category_id={category_id} 当前资产状态为「{status}」，"
-                    f"仅「{AssetModelStatus.INACTIVE.value}」状态的模型允许删除，请先将模型设为非激活状态"
+                    f"仅「{AssetModelStatus.DRAFT.value} / {AssetModelStatus.INACTIVE.value}」"
+                    f"状态的模型允许删除，请先将模型设为非激活状态"
                 ),
             )
 
@@ -1273,7 +1276,7 @@ class AssetCategoryService:
         """
         批量删除资产模型叶子节点（仅限 line_model / equipment_model）。
         - 逐一校验节点类型，非叶子节点直接报错（整体回滚）
-        - 逐一校验状态，仅 INACTIVE 可删除
+        - 逐一校验状态，仅 DRAFT / INACTIVE 可删除
         - 软删除每个节点的详情表记录、关联表记录及分类节点本身，并清理 MinIO 缩略图
         :return: 实际被删除的分类主键 ID 列表
         """
@@ -1303,7 +1306,7 @@ class AssetCategoryService:
                     ),
                 )
 
-        # 逐一校验状态：仅 INACTIVE 可删除
+        # 逐一校验状态：仅 DRAFT / INACTIVE 可删除
         for cid in category_ids:
             await self._check_deletable_status(cid, entities[cid], db)
 

@@ -37,6 +37,7 @@ import "./AssetLibraryPage.css";
 import {
   getAssetListApi,
   deleteAssetCategoryApi,
+  batchDeleteAssetCategoryApi,
   batchEnableAssetApi,
   batchDisableAssetApi,
   enableAssetApi,
@@ -700,10 +701,46 @@ export function AssetLibraryPage() {
   }
 
   /** Execute batch delete */
-  function executeBatchDelete(ids: string[]) {
-    setCategoryTree((prev) => removeNodesFromTree(prev, new Set(ids)));
-    setSelectedIds(new Set());
+  async function executeBatchDelete(ids: string[]) {
     setBatchConfirm(null);
+    if (ids.length === 0) return;
+    // 后端批删为整批事务：任一节点校验失败即全部回滚，要么全成功要么全失败
+    try {
+      const res = await batchDeleteAssetCategoryApi(ids);
+      if (res.code === 200) {
+        const deletedIds: string[] = Array.isArray(res.data) ? res.data : ids;
+        setCategoryTree((prev) => removeNodesFromTree(prev, new Set(deletedIds)));
+        setSelectedAsset((prev) => (prev && deletedIds.includes(prev.id) ? null : prev));
+        setBatchResult({ type: "delete", success: deletedIds.length, fail: [] });
+      } else {
+        setBatchResult({
+          type: "delete",
+          success: 0,
+          fail: findAssetsByIds(new Set(ids)).map((a) => ({
+            id: a.id,
+            name: a.name,
+            reason: res.message || t("common.unknownError"),
+          })),
+        });
+      }
+    } catch (error: any) {
+      console.error("[AssetLibraryPage] Batch delete error:", error);
+      setBatchResult({
+        type: "delete",
+        success: 0,
+        fail: findAssetsByIds(new Set(ids)).map((a) => ({
+          id: a.id,
+          name: a.name,
+          reason:
+            error?.response?.data?.message ||
+            error?.message ||
+            t("common.networkError"),
+        })),
+      });
+    }
+    setSelectedIds(new Set());
+    // 刷新列表确保数据一致
+    fetchAssetLibraryCategories();
   }
 
   /** Handle upload success */
