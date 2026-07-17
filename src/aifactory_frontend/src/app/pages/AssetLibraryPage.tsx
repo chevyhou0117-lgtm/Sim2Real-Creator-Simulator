@@ -353,7 +353,9 @@ export function AssetLibraryPage() {
 
     const getAllItemsFromNode = (node: CategoryNode): CategoryNode[] => {
       const items: CategoryNode[] = [];
-      if (!node.children?.length) {
+      // 只有模型节点（line_model / equipment_model）是资产卡片；
+      // 分类节点（process / line_type / equipment_type）被删空后同样没有子节点，不能当资产渲染
+      if (node.type === "line_model" || node.type === "equipment_model") {
         items.push(node);
       }
       node.children?.forEach((child) => {
