@@ -310,11 +310,40 @@ class AssetUploadService:
                         existing_parent_id = cat.parent_id  # 记录已有线体的 parent_id
 
             old_set = set(old_line_map.keys())
-            # 确定新线体的 parent_id：优先复用同 location 已有线体的 parent_id；
-            # 否则按 code 运行期反查“默认线体类型”节点的真实 UUID（不能用已失效的整型常量）。
-            if existing_parent_id is not None:
-                target_parent_id = existing_parent_id
+
+            # 已有线体 parent_id 的存活校验：历史数据可能残留迁移前的失效整型 id（如 2001），
+            # 直接复用会把新线体也挂成孤儿（不在任何 line_type 下，前端树中不可见）。
+            old_parent_ids = {
+                cat.parent_id for cat, _ in old_line_map.values() if cat.parent_id
+            }
+            alive_parent_ids: set = set()
+            if old_parent_ids:
+                alive_parent_ids = set((await db.execute(
+                    select(AssetCategory.id).where(
+                        AssetCategory.id.in_(old_parent_ids),
+                        AssetCategory.is_deleted == False,
+                    )
+                )).scalars().all())
+
+            # 确定新线体的 parent_id：优先复用同 location 已有线体的【存活】parent_id
+            # （按 old_details 顺序取第一个存活的）；全部失效则按 code 运行期反查
+            # “默认线体类型”节点的真实 UUID（不能用已失效的整型常量）。
+            alive_existing_parent = next(
+                (
+                    cat.parent_id
+                    for cat, _ in old_line_map.values()
+                    if cat.parent_id and cat.parent_id in alive_parent_ids
+                ),
+                None,
+            )
+            if alive_existing_parent is not None:
+                target_parent_id = alive_existing_parent
             else:
+                if existing_parent_id is not None:
+                    logger.warning(
+                        f"已有线体的 parent_id={existing_parent_id} 在 asset_categories 中不存在或已删除，"
+                        f"回退为按 code 反查默认线体类型节点"
+                    )
                 target_parent_id = await _resolve_default_type_category_id(
                     DEFAULT_LINE_TYPE_CODE, AssetCategoryType.LINE_TYPE.value, db
                 )
@@ -345,6 +374,15 @@ class AssetUploadService:
                     # 复用已存在的 category 和 detail
                     category, existing_detail = old_line_map[subfolder]
                     logger.info(f"复用已存在的线体分类: name={subfolder}, category_id={category.id}")
+
+                    # 修复孤儿：旧线体若挂在失效父节点下（如迁移残留的整型 id 2001），
+                    # 重挂到目标父节点，使其在前端分类树中重新可见
+                    if not category.parent_id or category.parent_id not in alive_parent_ids:
+                        logger.info(
+                            f"修复孤儿线体 parent_id: name={subfolder}, "
+                            f"{category.parent_id} -> {target_parent_id}"
+                        )
+                        category.parent_id = target_parent_id
 
                     # 更新详情记录
                     existing_detail.root_usd_path = root_usd_path
