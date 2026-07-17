@@ -390,7 +390,12 @@ class AssetUploadService:
                     existing_detail.thumbnail_path = THUMBNAIL_LINE
                     # 复活：若该线体此前被软删除（如曾从上传集移除或经分类删除），
                     # 重新上传应使其恢复可见，否则会复用一条 is_deleted=True 的记录而永久隐藏。
+                    # 分类行与详情行都要复活——树查询按 asset_categories.is_deleted 过滤，
+                    # 只复活 detail 时分类行仍被过滤，卡片永远不可见。
                     existing_detail.is_deleted = False
+                    if category.is_deleted:
+                        logger.info(f"复活软删除的线体分类: name={subfolder}, category_id={category.id}")
+                        category.is_deleted = False
                     line_model_id = existing_detail.id
                     is_new = False
                     logger.info(f"更新线体详情: name={subfolder}, line_model_id={line_model_id}")
