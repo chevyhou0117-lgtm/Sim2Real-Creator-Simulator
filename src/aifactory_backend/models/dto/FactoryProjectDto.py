@@ -15,9 +15,10 @@ class FactoryProjectCreateDto(BaseModel):
 
     # 工厂信息：二选一
     # - 传 factory_id：选择已有工厂，自动加载工厂参数，版本递增
-    # - 不传 factory_id：根据 factory_name 创建新工厂
+    # - 不传 factory_id：传 factory_name + factory_code 新建工厂（factory_id 雪花自动生成）
     factory_id: Optional[SnowflakeIdIn] = Field(default=None, description="所属工厂ID（选择已有工厂时传入）")
-    factory_name: Optional[str] = Field(default=None, description="工厂名称（新建工厂时必填）", max_length=255)
+    factory_name: Optional[str] = Field(default=None, description="工厂名称（新建工厂时必填）", max_length=200)
+    factory_code: Optional[str] = Field(default=None, description="工厂编号（新建工厂时必填，对应 md_factory.factory_code）", max_length=50)
     site_length: Optional[float] = Field(default=None, description="现实物理长度")
     site_width: Optional[float] = Field(default=None, description="现实物理宽度")
     location: Optional[str] = Field(default=None, description="工厂地理位置")

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.api.scope import scoped
+from app.config import settings
 from app.models.md import (
     BOP,
     BOPProcess,
@@ -45,13 +46,14 @@ router = APIRouter(prefix="/factories", tags=["Master Data"])
 
 @router.get("", response_model=list[FactoryOut])
 def list_factories(plan_id: str | None = None, db: Session = Depends(get_db)):
-    # Factory 永久全局单例（全软件只服务 P9 一个工厂），不参与 per-plan 快照克隆。
-    # 恒返全局行；plan_id 入参保留仅为兼容前端调用签名，对 Factory 无意义。
-    return (
-        db.query(Factory)
-        .filter(Factory.status == "ACTIVE", Factory.plan_id.is_(None))
-        .all()
-    )
+    # sim 只服务 canonical 工厂（CANONICAL_FACTORY_CODE 钉死），不参与 per-plan 快照克隆。
+    # md_factory 与 Creator 共库共表：Creator 侧可写入其他工厂/纯设计用工厂，
+    # 此处必须过滤掉，否则前端 factories[0] 会随返回顺序选错厂。
+    # plan_id 入参保留仅为兼容前端调用签名，对 Factory 无意义。
+    q = db.query(Factory).filter(Factory.status == "ACTIVE", Factory.plan_id.is_(None))
+    if settings.CANONICAL_FACTORY_CODE:
+        q = q.filter(Factory.factory_code == settings.CANONICAL_FACTORY_CODE)
+    return q.all()
 
 
 @router.get("/{factory_id}/stages", response_model=list[StageOut])

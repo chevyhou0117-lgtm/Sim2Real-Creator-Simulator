@@ -48,15 +48,16 @@ def get_asset_node_service() -> FactoryAssetNodeService:
     description=(
         "创建工厂项目，返回 `{ project_id, version_id }`。\n\n"
         "**两种场景：**\n\n"
-        "1. **传入 factory_id**（选择已有工厂）：\n"
+        "1. **传入 factory_id**（绑定已有工厂）：\n"
         "   - 自动加载该工厂已有参数\n"
         "   - 查找该工厂最新项目的当前版本，自动递增版本号\n"
         "   - 复制最新版本的资产树到新版本\n"
         "   - 可选传 `copy_from_version_id` 指定复制源版本\n\n"
-        "2. **不传 factory_id，传 factory_name**（新建工厂）：\n"
-        "   - 校验工厂名称唯一性\n"
-        "   - 先创建工厂基础信息\n"
-        "   - 再创建项目，V1 版本（空资产树）"
+        "2. **不传 factory_id，传 factory_name + factory_code**（新建工厂）：\n"
+        "   - 校验工厂名称/编号唯一性（主数据范围）\n"
+        "   - 创建 md_factory 主数据行，factory_id 雪花自动生成\n"
+        "   - 创建项目 V1 版本（新工厂无制程，资产树只有根节点 + default_stage）\n"
+        "   - 不支持 `copy_from_version_id`"
     ),
 )
 async def create_factory_project(

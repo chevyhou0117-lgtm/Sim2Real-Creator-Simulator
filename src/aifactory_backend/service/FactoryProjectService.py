@@ -65,21 +65,22 @@ class FactoryProjectService:
         创建工厂项目，返回 { project_id, version_id }。
 
         逻辑分支：
-        │ 场景A：传入 factory_id（选择已有工厂）                            │
+        │ 场景A：传入 factory_id（绑定已有工厂）                            │
         │   1. 校验工厂存在                                                │
         │   2. 查询该工厂下已有项目 → 获取最新版本的 version_id              │
         │   3. 创建新项目，版本号递增                                       │
         │   4. 复制最新版本资产树到新版本                                    │
-        │ 场景B：不传 factory_id，传 factory_name（新建工厂）               │
-        │   1. 校验工厂名称唯一性                                           │
-        │   2. 创建工厂基础信息                                             │
-        │   3. 创建项目，V1 版本（空资产树）                                 │
+        │ 场景B：不传 factory_id，传 factory_name + factory_code（新建工厂）  │
+        │   1. 校验工厂名称/编号唯一性（主数据 plan_id IS NULL 范围）          │
+        │   2. 创建 md_factory 主数据行，factory_id 雪花自动生成              │
+        │   3. 创建项目，V1 版本（新工厂无制程，资产树只有根节点+default_stage）│
         """
         try:
             if dto is None:
                 raise BusinessException(ErrorCode.PARAMS_ERROR, "请求参数不能为空")
 
             factory_id = dto.factory_id
+            factory_entity = None
             base_version_id = None  # 基线版本ID（用于复制资产树）
             base_version_number = 0
 
@@ -118,14 +119,64 @@ class FactoryProjectService:
                         base_version_id = latest_version.version_id
                         base_version_number = latest_version.version_number
 
-            # 2：未传 factory_id → 报错。
-            # 工厂项目必须建在【已有工厂】之上：md_factory 是 sim_backend 拥有的主数据，
-            # 不允许在创建项目时凭空新建工厂（否则会往主数据里塞无制程/产线的空工厂）。
+            # 2：未传 factory_id → 新建工厂（factory_name + factory_code 必填，factory_id 自动生成）。
+            # 注意：sim 侧 GET /factories 已按 CANONICAL_FACTORY_CODE 过滤，
+            # Creator 新建的工厂不会进入 sim 的工厂列表/仿真链路。
             else:
-                raise BusinessException(
-                    ErrorCode.PARAMS_ERROR,
-                    extra_msg="请选择已有工厂（factoryId 必填）。工厂项目须建在已有工厂之上，"
-                              "创建项目不再支持新建工厂。",
+                if dto.copy_from_version_id:
+                    raise BusinessException(
+                        ErrorCode.PARAMS_ERROR,
+                        extra_msg="新建工厂时不支持 copyFromVersionId",
+                    )
+                factory_name = (dto.factory_name or "").strip()
+                factory_code = (dto.factory_code or "").strip()
+                if not factory_name:
+                    raise BusinessException(
+                        ErrorCode.PARAMS_ERROR,
+                        extra_msg="未选择已有工厂时，工厂名称必填",
+                    )
+                if not factory_code:
+                    raise BusinessException(
+                        ErrorCode.PARAMS_ERROR,
+                        extra_msg="未选择已有工厂时，工厂编号必填",
+                    )
+                # 名称/编号唯一性校验（仅主数据范围 plan_id IS NULL，与 BaseFactoryService 一致）
+                dup_name = (await db.execute(
+                    select(BaseFactory).where(
+                        BaseFactory.factory_name == factory_name,
+                        BaseFactory.plan_id.is_(None),
+                    )
+                )).scalar_one_or_none()
+                if dup_name is not None:
+                    raise BusinessException(
+                        ErrorCode.PARAMS_ERROR, extra_msg=f"工厂名称已存在: {factory_name}"
+                    )
+                dup_code = (await db.execute(
+                    select(BaseFactory).where(
+                        BaseFactory.factory_code == factory_code,
+                        BaseFactory.plan_id.is_(None),
+                    )
+                )).scalar_one_or_none()
+                if dup_code is not None:
+                    raise BusinessException(
+                        ErrorCode.PARAMS_ERROR, extra_msg=f"工厂编号已存在: {factory_code}"
+                    )
+                factory_entity = BaseFactory(
+                    factory_name=factory_name,
+                    factory_code=factory_code,
+                    location=dto.location,
+                    site_length=dto.site_length,
+                    site_width=dto.site_width,
+                    timezone="Asia/Shanghai",
+                    status="ACTIVE",
+                    plan_id=None,
+                )
+                db.add(factory_entity)
+                await db.flush()  # factory_id 雪花默认值在 flush 时生成
+                factory_id = factory_entity.factory_id
+                logger.info(
+                    f"[CreateProject] 新建工厂: factory_id={factory_id}, "
+                    f"name={factory_name}, code={factory_code}"
                 )
 
             # 创建工厂项目
@@ -248,6 +299,7 @@ class FactoryProjectService:
            （bind_status=BOUND，factory_process_details.ref_id=stage.stage_id）。
            线体绑定 _bind_line_node 依赖这些制程节点：按 line.stage_id 在本项目内定位归属制程，
            缺了它绑定线体会报「未找到线体所属制程对应的制程节点」。
+           新建的空工厂在 md_stage 里没有制程，第 3 步自然为空，只有根节点 + default_stage。
         """
         root_node = FactoryAssetNode(
             factory_projects_id=project_id,

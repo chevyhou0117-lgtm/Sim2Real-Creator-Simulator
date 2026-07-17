@@ -34,6 +34,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
 
   const [selectedFactoryId, setSelectedFactoryId] = useState("");
   const [factoryName, setFactoryName] = useState("");
+  const [factoryCode, setFactoryCode] = useState("");
   const [factoryId, setFactoryId] = useState("");
   const [projectName, setProjectName] = useState("");
   const [projectCode, setProjectCode] = useState("");
@@ -70,6 +71,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
       // Clear fields when "Create New Factory" is selected
       setFactoryId("");
       setFactoryName("");
+      setFactoryCode("");
       setProjectName("");
       setProjectCode("");
       setVersionNumber(1);
@@ -81,9 +83,10 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
   }, [selectedFactoryId, factoryInfos]);
 
   function handleCreate() {
-    if (!selectedFactoryId) return;  // 必须选择已有工厂
     if (!projectName.trim()) return;
     if (!projectCode.trim()) return;
+    // 未选已有工厂 = 新建工厂：工厂名称 + 工厂编号必填
+    if (!selectedFactoryId && (!factoryName.trim() || !factoryCode.trim())) return;
     createProject();
   }
 
@@ -103,7 +106,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
       if (res.code == 200) {
         let resData = res.data || [];
         console.log("factoryInfos:", resData);
-        // 工厂项目必须建在已有工厂之上：不再提供「新建工厂」选项，默认选中第一个工厂。
+        // 默认选中第一个工厂；下拉首项为「新建工厂」（value 为空，填名称+编号后端自动生成工厂ID）。
         setFactoryInfos(resData);
         if (resData.length > 0) {
           setSelectedFactoryId(resData[0].factoryId);
@@ -116,7 +119,6 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
 
   const createProject = async () => {
     let params: any = {
-      factoryName,
       projectName,
       projectCode,
       versionNumber,
@@ -127,6 +129,10 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
     };
     if (selectedFactoryId) {
       params.factoryId = selectedFactoryId;
+    } else {
+      // 新建工厂：名称 + 编号必填，工厂 ID 由后端自动生成
+      params.factoryName = factoryName.trim();
+      params.factoryCode = factoryCode.trim();
     }
     console.log("createProject params:", params);
     const res = await createFactoryProjectApi(params);
@@ -166,6 +172,7 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
               onChange={(e) => setSelectedFactoryId(e.target.value)}
               className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
             >
+              <option value="">{t("newProjectModal.createNewFactory")}</option>
               {factoryInfos.map((factory) => (
                 <option key={factory.factoryId} value={factory.factoryId}>
                   {factory.factoryName}
@@ -196,14 +203,30 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
             </Field>
           )}
 
-          <Field label={t("newProjectModal.factoryName")}>
+          <Field label={t("newProjectModal.factoryName")} required={!selectedFactoryId}>
             <input
               value={factoryName}
-              disabled={true}
+              disabled={!!selectedFactoryId}
+              onChange={(e) => setFactoryName(e.target.value)}
               placeholder={t("newProjectModal.placeholderFactoryName")}
-              className="w-full bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-400 placeholder-slate-600 focus:outline-none transition-colors cursor-not-allowed"
+              className={
+                selectedFactoryId
+                  ? "w-full bg-[var(--c-040d18)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-400 placeholder-slate-600 focus:outline-none transition-colors cursor-not-allowed"
+                  : "w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+              }
             />
           </Field>
+
+          {!selectedFactoryId && (
+            <Field label={t("newProjectModal.factoryCode")} required>
+              <input
+                value={factoryCode}
+                onChange={(e) => setFactoryCode(e.target.value)}
+                placeholder={t("newProjectModal.placeholderFactoryCode")}
+                className="w-full bg-[var(--c-071526)] border border-[var(--c-1e3a55)] rounded-md px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+              />
+            </Field>
+          )}
 
           <Field label={t("newProjectModal.projectName")} required>
             <input
@@ -295,7 +318,9 @@ export function NewProjectModal({ onClose, onCreate }: Props) {
           <button
             onClick={handleCreate}
             disabled={
-              !selectedFactoryId || !projectName.trim() || !projectCode.trim()
+              !projectName.trim() ||
+              !projectCode.trim() ||
+              (!selectedFactoryId && (!factoryName.trim() || !factoryCode.trim()))
             }
             className="px-5 py-2 text-xs bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-md font-medium transition-colors"
           >
