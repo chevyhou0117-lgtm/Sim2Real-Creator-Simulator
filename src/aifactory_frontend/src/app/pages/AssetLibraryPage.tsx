@@ -47,7 +47,6 @@ import {
   updateAssetCategoryApi,
   getFilterAssetCategoryTreeApi,
   getLineAssetListApi,
-  getBatchDownloadAssetFileApi,
   moveAssetCategoryApi,
 } from "../api/index";
 import { proxyMinioUrl } from "../utils/minioProxy";
@@ -56,6 +55,10 @@ import UploadAsset from "../components/assetLibrary/UploadAsset";
 import { toast } from "sonner";
 import { baseUrl } from "../api/baseUrl";
 import axios from "axios";
+import {
+  isZipContentType,
+  readDownloadErrorMessage,
+} from "../utils/downloadResponse";
 
 /** 资产状态 → CSS 类名映射（label 在组件内通过 t() 动态获取以响应语言切换） */
 const ASSET_STATUS_CLS: Record<AssetStatus, string> = {
@@ -784,8 +787,17 @@ export function AssetLibraryPage() {
         `${baseUrl}/v1/asset-download/${type}/batch-download`,
         params,
       );
-      if (response.status !== 200) {
-        throw new Error("HTTP error!");
+      const contentType = response.headers["content-type"]?.toString();
+      if (response.status !== 200 || !isZipContentType(contentType)) {
+        const backendMessage = !isZipContentType(contentType)
+          ? await readDownloadErrorMessage(response.data)
+          : null;
+        throw new Error(
+          backendMessage ||
+            (response.status !== 200
+              ? `HTTP ${response.status}`
+              : `Expected a ZIP response, received ${contentType || "an unknown content type"}`),
+        );
       }
 
       // 从响应头获取文件名
@@ -822,7 +834,25 @@ export function AssetLibraryPage() {
       });
     } catch (error) {
       console.error("[downloadAssetFile] Error:", error);
-      toast.error(t("asset.downloadFailMessage", { message: (error as Error).message }));
+      const backendMessage = axios.isAxiosError(error)
+        ? await readDownloadErrorMessage(error.response?.data)
+        : null;
+      const reason =
+        backendMessage ||
+        (error instanceof Error ? error.message : t("common.networkError"));
+      const assetsById = new Map(
+        findAssetsByIds(new Set(ids)).map((asset) => [asset.id, asset]),
+      );
+      setBatchResult({
+        type: "download",
+        success: 0,
+        fail: ids.map((id) => ({
+          id,
+          name: assetsById.get(id)?.name || id,
+          reason,
+        })),
+      });
+      toast.error(t("asset.downloadFailMessage", { message: reason }));
     }
   };
 

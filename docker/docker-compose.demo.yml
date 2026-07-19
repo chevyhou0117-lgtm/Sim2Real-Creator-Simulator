@@ -2,7 +2,7 @@
 # Sim2Real 单机本机演示 · 一体化编排（两个后端 + PostgreSQL + sim 前端）
 #
 # 用途：在【一台机器】上用 Docker 起全部 *后端*，并用已 seed 的 P9 工厂跑通 3D 串流。
-#       Kit（Omniverse，需 RTX GPU）仍【在宿主机原生运行，不进 Docker】。
+#       Kit（Omniverse，需 RTX GPU）独立运行：Linux 容器加入本 Compose 网络，Windows 可用宿主原生 Kit。
 #
 # 与同目录另两个 compose 的区别：
 #   - docker-compose.yml      ：旧·开发模式，仅 sim 三件套，build context 写成 ./codes/（本仓库没有该目录，会构建失败）
@@ -16,9 +16,11 @@
 #   docker compose -f docker/docker-compose.demo.yml down           # 停（保留 DB 卷）
 #   docker compose -f docker/docker-compose.demo.yml down -v        # 停并清空 DB 卷（下次重新迁移+灌种子）
 #
-# 访问：sim 前端 http://localhost:8080 ｜ sim 后端 http://localhost:8000/docs ｜ aifactory 后端 http://localhost:8129/docs
+# 访问：sim 前端 http://localhost:8080 ｜ sim 后端 http://localhost:8000/docs ｜
+#       aifactory 后端仅本机调试 http://127.0.0.1:8129/docs（远程浏览器统一走 Creator :8081 的 /api）
 #
 # ⚠️ 可被 docker/.env（见 .env.demo.example）覆盖的变量：POSTGRES_PASSWORD / AIFACTORY_STORAGE_HOST /
+#    AIFACTORY_CORS_ORIGINS / KIT_API_UPSTREAM / SIM2REAL_DOCKER_NETWORK /
 #    VITE_KIT_API_URL / VITE_KIT_STREAM_URL / VITE_BACKEND_DIRECT_URL
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -34,7 +36,9 @@ services:
       POSTGRES_DB: aifactory_simulation
     command: ["postgres", "-c", "jit=off"]   # 大批量事件 COPY 写入防段错误（见后端 Dockerfile 注释）
     ports:
-      - "5432:5432"          # 暴露给宿主，便于本机 psql / DBeaver 直连排障；不需要可删
+      # 只绑定 loopback：保留宿主原生 Kit/psql 兼容性，不向局域网暴露数据库。
+      # Linux Kit 容器仍应通过 Docker 内网的 sim-postgres:5432 访问。
+      - "127.0.0.1:5432:5432"
     volumes:
       - sim_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -84,18 +88,25 @@ services:
       DB_NAME: aifactory_simulation
       AIFACTORY_CREATE_ALL: "false"        # 不自己建表，依赖 sim_backend 的 creator_tables.sql
       AIFACTORY_STORAGE_ROOT: /data/storage
+      # 仅用于确有跨域直连 8129 的开发工具；Creator 生产流量走 :8081/nginx 同源代理。
+      # 禁止 "*"；多个 origin 用英文逗号分隔。
+      AIFACTORY_CORS_ORIGINS: ${AIFACTORY_CORS_ORIGINS:-http://localhost:8081,http://127.0.0.1:8081}
+      # nginx 以该服务端密钥认证所有 Creator 写请求；production 缺失时后端拒绝启动。
+      CREATOR_API_KEY: ${CREATOR_API_KEY:?set CREATOR_API_KEY in docker/.env (openssl rand -hex 32)}
       # DB root_usd_path 前缀（Kit 视角形式，与下方挂载源解耦，一般不用改）
       AIFACTORY_USD_HOST_ROOT: ${AIFACTORY_USD_DB_PREFIX:-../storage}
     # 不覆盖 command：用镜像内置 CMD（uvicorn main:app --port 8128 --workers 2）。
-    # 覆盖健康检查：镜像默认查 /api/v1 与 /health 都会 404 → 永远 unhealthy；改查 /docs（200）。
+    # 健康检查包含数据库 SELECT 1，避免进程存活但数据库不可用时误报 healthy。
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8128/docs || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8128/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     ports:
-      - "8129:8128"          # 宿主 8129 → 容器 8128，对齐部署文档/前端对 aifactory :8129 的预期
+      # 只绑定 loopback，避免未鉴权的 Creator 写接口直接暴露到局域网。
+      # 远程浏览器仍通过 http://<SERVER>:8081/api/* 正常访问。
+      - "127.0.0.1:8129:8128"
     volumes:
       # 资产/缩略图/USD 库根目录（仅管【挂载源】，DB 路径前缀见上方 AIFACTORY_USD_DB_PREFIX）。
       # 默认指向 docker/storage-data（空目录也能启动，main.py 会 makedirs）。
@@ -159,14 +170,18 @@ services:
     #   Kit 的 12333/12334）需要 Kit IP。换 IP 改 docker/.env 的 KIT_HOST_IP 后 `up -d` 即可，无需 rebuild。
     environment:
       KIT_HOST_IP: ${KIT_HOST_IP:-127.0.0.1}
+      CREATOR_AUTH_USERNAME: ${CREATOR_AUTH_USERNAME:-creator}
+      CREATOR_API_KEY: ${CREATOR_API_KEY:?set CREATOR_API_KEY in docker/.env (openssl rand -hex 32)}
+      # Linux/Kit 容器安全拓扑：Kit 加入本 compose 网络，8011 不发布到宿主，由 nginx 走容器 DNS。
+      # Windows/宿主原生 Kit：在 docker/.env 覆盖为 host.docker.internal:8011。
+      KIT_API_UPSTREAM: ${KIT_API_UPSTREAM:-sim2real:8011}
     depends_on:
       - aifactory-backend
     extra_hosts:
-      # 让容器内 nginx 能把 /ov 反代到【宿主机】上原生运行的 aifactory 用的 Kit :8011。
-      # 注意：sim 前端连的是另一个 Kit :8233，两者分开；这里的 8011 固定在 nginx.conf，要改需 rebuild。
+      # 仅供 KIT_API_UPSTREAM=host.docker.internal:8011 的宿主原生 Kit 兼容模式使用。
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/healthz >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -177,3 +192,9 @@ services:
 
 volumes:
   sim_pgdata:
+
+# 固定网络名，供独立 `docker run` 的 Kit 可靠加入并通过 sim-postgres:5432 访问数据库。
+# 若覆盖名称，docker/run-kit-linux.sh 会从同一 docker/.env 读取。
+networks:
+  default:
+    name: ${SIM2REAL_DOCKER_NETWORK:-sim2real-demo_default}

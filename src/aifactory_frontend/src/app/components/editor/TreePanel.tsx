@@ -135,10 +135,16 @@ export function TreeNode({
       resetAddStageDialog();
       return;
     }
+    if (!node.versionId) {
+      alert("无法创建制程：缺少项目版本信息，请刷新后重试");
+      resetAddStageDialog();
+      return;
+    }
     setAddingStage(true);
     try {
-      const payload: Record<string, unknown> = {
+      const payload: Parameters<typeof createStageNodeApi>[0] = {
         factoryProjectsId: node.factoryProjectsId,
+        versionId: node.versionId,
         name,
         type: "STAGE",
         parentId: node.id,

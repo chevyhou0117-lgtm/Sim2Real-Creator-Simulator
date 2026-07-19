@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from common.ErrorCode import ErrorCode
 from commonutils.Logs import init_logging
 from commonutils.SnowflakeUtils import generate_snowflake_id
+from commonutils.ZipSafetyUtils import UnsafeZipError, read_safe_zip_entries
 from exception.ExceptionClass import BusinessException
 from models.constant.DefaultTypeConstant import DEFAULT_LINE_TYPE_CODE, DEFAULT_EQUIPMENT_TYPE_CODE
 from models.constant.ThumbnailConstant import DEFAULT_LINE_THUMBNAIL, DEFAULT_EQUIPMENT_THUMBNAIL
@@ -259,21 +260,22 @@ class AssetUploadService:
         try:
             # 阶段1：解压 ZIP，获取线体集合（new_set）
             try:
-                zf_obj = zipfile.ZipFile(io.BytesIO(file_bytes))
-            except zipfile.BadZipFile:
-                raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="上传文件不是合法的 ZIP 压缩包")
+                with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+                    # Security validation is applied to every archive member,
+                    # including business entries later skipped as macOS junk.
+                    file_entries = read_safe_zip_entries(
+                        zf, include=_is_valid_zip_entry
+                    )
+            except (zipfile.BadZipFile, UnsafeZipError) as exc:
+                raise BusinessException(
+                    ErrorCode.PARAMS_ERROR,
+                    extra_msg=f"ZIP 压缩包不安全或格式无效: {exc}",
+                ) from exc
 
-            with zf_obj as zf:
-                # 过滤目录条目与 macOS 垃圾/隐藏文件（__MACOSX/、.DS_Store、._AppleDouble），
-                # 否则 .DS_Store 会被当成 ProdLine 下的一条线体、垃圾文件也会污染 storage。
-                valid_names = [n for n in zf.namelist() if _is_valid_zip_entry(n)]
-                root_dir = _get_zip_root_dir(valid_names)
-                location_path = root_dir.rstrip("/")
-                proline_prefix = root_dir + "ProdLine/"
-
-                file_entries: List[Tuple[str, bytes]] = [
-                    (name, zf.read(name)) for name in valid_names
-                ]
+            valid_names = [name for name, _ in file_entries]
+            root_dir = _get_zip_root_dir(valid_names)
+            location_path = root_dir.rstrip("/")
+            proline_prefix = root_dir + "ProdLine/"
 
             all_entry_names = [name for name, _ in file_entries]
             # 获取 ZIP 中的线体名集合（new_set）
@@ -560,20 +562,20 @@ class AssetUploadService:
             minio_prefix = "Library/Asset/"
             # 阶段1：解压，收集文件内容
             try:
-                zf_obj = zipfile.ZipFile(io.BytesIO(file_bytes))
-            except zipfile.BadZipFile:
-                raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="上传文件不是合法的 ZIP 压缩包")
+                with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+                    file_entries = read_safe_zip_entries(
+                        zf, include=_is_valid_zip_entry
+                    )
+            except (zipfile.BadZipFile, UnsafeZipError) as exc:
+                raise BusinessException(
+                    ErrorCode.PARAMS_ERROR,
+                    extra_msg=f"ZIP 压缩包不安全或格式无效: {exc}",
+                ) from exc
 
-            with zf_obj as zf:
-                # 过滤目录条目与 macOS 垃圾/隐藏文件（__MACOSX/、.DS_Store、._AppleDouble），
-                # 否则会污染 storage 且把 .DS_Store 当成设备文件夹。
-                valid_names = [n for n in zf.namelist() if _is_valid_zip_entry(n)]
-                # 获取 ZIP 根目录（设备文件夹的父目录）
-                root_dir = _get_zip_root_dir(valid_names)
-                location_path = (minio_prefix + root_dir).rstrip("/")
-                file_entries: List[Tuple[str, bytes]] = [
-                    (name, zf.read(name)) for name in valid_names
-                ]
+            valid_names = [name for name, _ in file_entries]
+            # 获取 ZIP 根目录（设备文件夹的父目录）
+            root_dir = _get_zip_root_dir(valid_names)
+            location_path = (minio_prefix + root_dir).rstrip("/")
 
             logger.info(f"设备模型 ZIP 解压完成: 文件数={len(file_entries)}, root={root_dir}")
 
@@ -915,6 +917,5 @@ async def _find_equipment_model_id(keyword: str, db: AsyncSession) -> Optional[i
         .limit(1)
     )
     return detail_result.scalar_one_or_none()
-
 
 

@@ -9,6 +9,9 @@ from models.enums.CategoryEnum import AssetCategoryType, Category, AssetUploadTy
 
 class AssetCategoryCreateDto(BaseModel):
     """创建资产分类请求 DTO"""
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
     name: str = Field(..., description="分类名称", min_length=1, max_length=255)
     code: str = Field(..., description="分类编码（全局唯一）", min_length=1, max_length=100)
     type: AssetCategoryType = Field(

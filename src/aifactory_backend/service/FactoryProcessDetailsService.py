@@ -14,11 +14,15 @@ from models.dto.FactoryProcessDetailsDto import (
 )
 from models.entity.BaseStageEntity import BaseStage
 from models.entity.FactoryProcessDetailsEntity import FactoryProcessDetails
+from models.enums.InstanceAssetTypeEnum import InstanceAssetType
 from models.vo.BaseStageVo import BaseStageVo
 from models.vo.FactoryProcessDetailsVo import FactoryProcessDetailsVo
+from service.FactoryAssetNodeService import FactoryAssetNodeService
 
 init_logging()
 logger = logging.getLogger(__name__)
+
+_asset_node_service = FactoryAssetNodeService()
 
 
 class FactoryProcessDetailsService:
@@ -36,6 +40,22 @@ class FactoryProcessDetailsService:
         只写入 factory_process_details 实例表，base_stage 通过 ref_id 关联不在此创建。
         """
         try:
+            await _asset_node_service.ensure_node_editable(
+                dto.factory_asset_id,
+                db,
+                InstanceAssetType.STAGE,
+            )
+            existing = (await db.execute(
+                select(FactoryProcessDetails.id).where(
+                    FactoryProcessDetails.factory_asset_id == dto.factory_asset_id,
+                    FactoryProcessDetails.is_deleted == False,
+                ).limit(1)
+            )).scalar_one_or_none()
+            if existing is not None:
+                raise BusinessException(
+                    ErrorCode.DATA_ALREADY_EXISTS,
+                    extra_msg="该制程节点已存在详情",
+                )
             entity = FactoryProcessDetails(
                 factory_asset_id=dto.factory_asset_id,
                 ref_id=dto.ref_id,
@@ -69,11 +89,26 @@ class FactoryProcessDetailsService:
         - [基础制程] base_stage（仅当 ref_id 已绑定时才更新）
         """
         entity = await self._get_or_raise(dto.id, db)
+        await _asset_node_service.ensure_node_editable(
+            entity.factory_asset_id,
+            db,
+            InstanceAssetType.STAGE,
+        )
         update_data = dto.model_dump(exclude_unset=True)
         update_data.pop("id", None)
 
+        requested_asset_id = update_data.pop("factory_asset_id", None)
+        if (
+            requested_asset_id is not None
+            and str(requested_asset_id) != str(entity.factory_asset_id)
+        ):
+            raise BusinessException(
+                ErrorCode.PARAMS_ERROR,
+                extra_msg="factory_asset_id 创建后不可修改",
+            )
+
         # 实例层允许更新的字段
-        instance_fields = {"factory_asset_id", "ref_id", "total_capacity", "extra_metadata", "description"}
+        instance_fields = {"ref_id", "total_capacity", "extra_metadata", "description"}
         # 基础制程层允许更新的字段
         stage_fields = {"stage_name", "stage_code", "sequence", "stage_type_id", "line_count", "status", "creator_binding_id"}
 
@@ -145,7 +180,10 @@ class FactoryProcessDetailsService:
 
     async def _get_or_raise(self, detail_id: int, db: AsyncSession) -> FactoryProcessDetails:
         result = await db.execute(
-            select(FactoryProcessDetails).where(FactoryProcessDetails.id == detail_id)
+            select(FactoryProcessDetails).where(
+                FactoryProcessDetails.id == detail_id,
+                FactoryProcessDetails.is_deleted == False,
+            )
         )
         entity = result.scalar_one_or_none()
         if entity is None:

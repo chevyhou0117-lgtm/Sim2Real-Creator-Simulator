@@ -413,49 +413,88 @@ export function BindPickerModal({
 
   // 使用useRef确保只调用一次
   const hasCalledRef = React.useRef(false);
+  const requestSequenceRef = React.useRef(0);
+
+  /** 后端线体查询是 Page 结构，逐页拉取，避免只能绑定前 20 条。 */
+  const fetchAllLinePages = async (filter: Record<string, string>) => {
+    const pageSize = 100;
+    const items: any[] = [];
+    let current = 1;
+    let totalPages = 1;
+
+    do {
+      const pageResponse: any = await getLineAssetListApi({
+        current,
+        pageSize,
+        sortField: "descend",
+        status: "ACTIVE",
+        ...filter,
+      });
+      if (pageResponse?.code !== 200) {
+        return { response: pageResponse, items: [] as any[] };
+      }
+
+      const pageItems = Array.isArray(pageResponse.data?.items)
+        ? pageResponse.data.items
+        : [];
+      items.push(...pageItems);
+      totalPages = Math.max(1, Number(pageResponse.data?.totalPages) || 1);
+      current += 1;
+    } while (current <= totalPages);
+
+    return { response: { code: 200 }, items };
+  };
 
   const getRecordsByNodeType = async (keyword?: string) => {
     const searchKeyword = keyword !== undefined ? keyword : search;
-    let res = null;
+    const requestSequence = ++requestSequenceRef.current;
+    let data: any[] = [];
 
     if (nodeType === "LINE") {
-      const params = {
-        current: 1,
-        pageSize: 20,
-        keyword: searchKeyword,
-        sortField: "descend",
-        status: "ACTIVE",
-      };
-      res = await getLineAssetListApi(params);
+      // 后端没有 keyword 字段，名称和编码需分别查询后去重合并。
+      const filters = searchKeyword
+        ? [{ lineName: searchKeyword }, { lineCode: searchKeyword }]
+        : [{}];
+      const results = await Promise.all(filters.map(fetchAllLinePages));
+      const failed = results.find((result) => result.response?.code !== 200);
+      if (failed) return;
+
+      const uniqueLines = new Map<string, any>();
+      results.forEach((result) => {
+        result.items.forEach((item: any) => {
+          const key = String(item.lineId || item.id || "");
+          if (key && !uniqueLines.has(key)) uniqueLines.set(key, item);
+        });
+      });
+      data = Array.from(uniqueLines.values());
     } else if (nodeType === "EQUIPMENT") {
       const params = {
         parentId: parentLineId,
         keyword: searchKeyword,
       };
-      res = await getEquipmentAssetListByLineApi(params);
+      const res: any = await getEquipmentAssetListByLineApi(params);
+      if (res?.code !== 200) return;
+      // List<BaseEquipmentVo> → 直接是数组
+      data = Array.isArray(res.data) ? res.data : [];
     }
-    if (res.code === 200) {
-      let data: any[] = [];
-      if (nodeType === "LINE") {
-        // Page<BaseProductionLineVo> → .items
-        data = res.data?.items || [];
-      } else {
-        // List<BaseEquipmentVo> → 直接是数组
-        data = Array.isArray(res.data) ? res.data : [];
-      }
 
-      data.forEach((item: any) => {
-        if (nodeType === "LINE") {
-          item.id = item.lineId;
-          item.name = item.lineName;
-          item.code = item.lineCode;
-        } else if (nodeType === "EQUIPMENT") {
-          item.id = item.equipmentId;
-          item.name = item.equipmentName;
-          item.code = item.equipmentCode;
-        }
-      });
-      setRecordsByNodeType(data);
+    const records = data.map((item: any) =>
+      nodeType === "LINE"
+        ? {
+            ...item,
+            id: item.lineId,
+            name: item.lineName,
+            code: item.lineCode,
+          }
+        : {
+            ...item,
+            id: item.equipmentId,
+            name: item.equipmentName,
+            code: item.equipmentCode,
+          },
+    );
+    if (requestSequence === requestSequenceRef.current) {
+      setRecordsByNodeType(records);
     }
   };
 

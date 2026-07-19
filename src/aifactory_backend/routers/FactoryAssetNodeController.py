@@ -11,6 +11,7 @@ from common.ErrorCode import ErrorCode
 from common.PageResponse import Page
 from commonutils.Logs import init_logging
 from commonutils.SnowflakeUtils import SnowflakeIdIn
+from commonutils.ZipSafetyUtils import UnsafeZipError, read_limited_upload
 from config.PgSqlConfig import get_db
 from exception.ExceptionClass import BusinessException
 from models.dto.FactoryAssetNodeDto import (
@@ -274,10 +275,12 @@ async def upload_factory_model(
     pid = project_id.strip()
     if not pid:
         raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="projectId 不合法")
+    current_version_id = await upload_service.get_editable_current_version_id(pid, db)
     # 校验 FACTORY 根节点是否已绑定 3D 资产模型，不允许重复上传
     factory_root = (await db.execute(
         select(FactoryAssetNode).where(
             FactoryAssetNode.factory_projects_id == pid,
+            FactoryAssetNode.version_id == current_version_id,
             FactoryAssetNode.type == InstanceAssetType.FACTORY.value,
             FactoryAssetNode.is_deleted == False,
         ).limit(1)
@@ -291,7 +294,12 @@ async def upload_factory_model(
         )).scalar_one()
         if model_count > 0:
             raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="该项目已上传模型文件，不允许重复上传")
-    file_bytes = await file.read()
+    try:
+        file_bytes = await read_limited_upload(file)
+    except UnsafeZipError as exc:
+        raise BusinessException(
+            ErrorCode.PAYLOAD_TOO_LARGE, extra_msg=str(exc)
+        ) from exc
     result = await upload_service.upload_factory_model(pid, file_bytes, db)
     return ResultUtils.ok(data=result, message="工厂模型上传成功")
 
@@ -324,10 +332,12 @@ async def upload_omniverse_usd(
     pid = project_id.strip()
     if not pid:
         raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="projectId 不合法")
+    current_version_id = await upload_service.get_editable_current_version_id(pid, db)
     # 校验 FACTORY 根节点是否已绑定 3D 资产模型，不允许重复上传
     factory_root = (await db.execute(
         select(FactoryAssetNode).where(
             FactoryAssetNode.factory_projects_id == pid,
+            FactoryAssetNode.version_id == current_version_id,
             FactoryAssetNode.type == InstanceAssetType.FACTORY.value,
             FactoryAssetNode.is_deleted == False,
         ).limit(1)
@@ -341,7 +351,11 @@ async def upload_omniverse_usd(
         )).scalar_one()
         if model_count > 0:
             raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="该项目已上传模型文件，不允许重复上传")
-    file_bytes = await file.read()
+    try:
+        file_bytes = await read_limited_upload(file)
+    except UnsafeZipError as exc:
+        raise BusinessException(
+            ErrorCode.PAYLOAD_TOO_LARGE, extra_msg=str(exc)
+        ) from exc
     result = await upload_service.upload_omniverse_usd(pid, file_bytes, db)
     return ResultUtils.ok(data=result, message="Omniverse USD 上传成功")
-

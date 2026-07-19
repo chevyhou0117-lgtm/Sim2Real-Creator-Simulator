@@ -13,7 +13,11 @@ class BusinessException(Exception):
         data: Any = None,
         extra_msg: Optional[str] = None
     ):
-
+        # 兼容历史调用 `BusinessException(code, "错误说明")`。仓库中的这些调用都把
+        # 第二个位置参数当消息使用，而不是响应 data；统一纠正，避免说明跑进 data。
+        if isinstance(data, str) and extra_msg is None:
+            extra_msg = data
+            data = None
         self.error_code = error_code
         self.data = data
         self.extra_msg = extra_msg

@@ -2,8 +2,11 @@ import React, { useState, useRef, useEffect } from "react";
 import "./UploadAsset.css";
 import { uploadAssetFileApi } from "../../api";
 import { t, useLocalized } from "../../utils/i18n";
+import { toast } from "sonner";
 
 import iconUpload from "../../assets/icon_upload2.png";
+
+const isZipFile = (file: File) => /\.zip$/i.test(file.name);
 
 interface UploadAssetProps {
   isOpen: boolean;
@@ -46,13 +49,16 @@ const UploadAsset: React.FC<UploadAssetProps> = ({
   // 处理文件选择
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-
-      setTimeout(() => {
-        handleUpload(selectedFile);
-      }, 500);
+    if (!selectedFile) return;
+    if (!isZipFile(selectedFile)) {
+      e.target.value = "";
+      setFile(null);
+      toast.error(t("asset.upload.zipOnly"));
+      return;
     }
+
+    setFile(selectedFile);
+    void handleUpload(selectedFile);
   };
 
   // 处理拖拽事件
@@ -63,12 +69,15 @@ const UploadAsset: React.FC<UploadAssetProps> = ({
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const droppedFile = e.dataTransfer.files?.[0];
-    if (droppedFile) {
-      setFile(droppedFile);
-      setTimeout(() => {
-        handleUpload(droppedFile);
-      }, 500);
+    if (!droppedFile) return;
+    if (!isZipFile(droppedFile)) {
+      setFile(null);
+      toast.error(t("asset.upload.zipOnly"));
+      return;
     }
+
+    setFile(droppedFile);
+    void handleUpload(droppedFile);
   };
 
   // 处理上传
@@ -86,7 +95,7 @@ const UploadAsset: React.FC<UploadAssetProps> = ({
       formData.append("type", uploadType);
 
       // 调用上传接口，添加进度监听
-      const response = await uploadAssetFileApi(formData, (progressEvent) => {
+      await uploadAssetFileApi(formData, (progressEvent) => {
         // console.log("上传进度:", progressEvent);
         if (progressEvent.total) {
           const progress = Math.round(
@@ -120,7 +129,12 @@ const UploadAsset: React.FC<UploadAssetProps> = ({
       setFile(null);
       setIsUploading(false);
       setUploadSuccess(false);
-      // 可以在这里添加错误提示
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("asset.upload.uploadFailed"),
+      );
     }
   };
 
@@ -155,7 +169,7 @@ const UploadAsset: React.FC<UploadAssetProps> = ({
               ref={fileInputRef}
               onChange={handleFileSelect}
               className="file-input"
-              accept=".zip,.rar,.7z,.obj,.fbx,.glb,.gltf"
+              accept=".zip"
             />
             <div className="upload-icon">
               <img src={iconUpload} alt="Upload" />

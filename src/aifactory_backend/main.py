@@ -3,6 +3,13 @@ import nest_asyncio
 import uvicorn
 import logging
 from fastapi.middleware.cors import CORSMiddleware
+from config.SecurityConfig import (
+    CreatorApiKeyMiddleware,
+    add_openapi_api_key_security,
+    get_creator_api_key,
+    parse_cors_origins,
+    validate_security_config,
+)
 from config.PgSqlConfig import engine
 from config.PgSqlConfig import Base
 import models.entity  # noqa: F401  导入全部 entity，保证 create_all/FK 解析时 metadata 完整
@@ -12,6 +19,8 @@ from commonutils.Logs import init_logging
 from dotenv import load_dotenv
 import os
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from routers.AssetCategoryController import asset_category_router
 from routers.FactoryAssetNodeController import factory_asset_node_router
 # from routers.FactoryAssetNodeController import factory_asset_node_router
@@ -55,10 +64,16 @@ logger.info("项目开始启动main.py....")
 
 load_dotenv()
 # 获取环境变量，默认值为 development
-environment = os.getenv("ENVIRONMENT", "development")
+environment = os.getenv("ENVIRONMENT", "development").strip()
 logger.info(f"environment:{environment}")
-is_production = environment == "production"
+is_production = environment.lower() == "production"
 logger.info(f"is_production:{is_production}")
+creator_api_key = get_creator_api_key()
+validate_security_config(environment, creator_api_key)
+cors_origins = parse_cors_origins(
+    os.getenv("AIFACTORY_CORS_ORIGINS"),
+    production=is_production,
+)
 
 
 # 定义上下文生命周期
@@ -129,14 +144,33 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# 允许所有来源的跨域请求
+# 浏览器生产流量通过 Creator nginx 同源访问；只有显式配置的开发/集成来源可跨域。
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 生产环境需指定具体域名，
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*", "Authorization"],
+    allow_origins=cors_origins,
+    allow_credentials=bool(cors_origins) and "*" not in cors_origins,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Accept", "Accept-Language", "Content-Type", "Authorization", "X-Creator-API-Key"],
 )
+
+# 生产环境由 Creator nginx 注入该 header；直接调用写接口时也必须携带。
+app.add_middleware(CreatorApiKeyMiddleware, api_key=creator_api_key)
+add_openapi_api_key_security(app)
+
+
+@app.get("/health", include_in_schema=False)
+async def health():
+    """真实探测数据库，而不是仅报告进程仍在运行。"""
+    try:
+        async with engine.connect() as connection:
+            await connection.execute(text("SELECT 1"))
+        return {"status": "healthy", "database": "reachable"}
+    except Exception:
+        logger.exception("Creator health check: database unavailable")
+        return JSONResponse(
+            status_code=503,
+            content={"status": "unhealthy", "database": "unreachable"},
+        )
 
 # 本地文件存储：把 AIFACTORY_STORAGE_ROOT 挂到 /static（替代 MinIO 直链/缩略图）
 from fastapi.staticfiles import StaticFiles

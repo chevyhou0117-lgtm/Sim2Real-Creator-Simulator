@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.BaseResponse import BaseResponse
 from commonutils.Logs import init_logging
+from commonutils.ZipSafetyUtils import UnsafeZipError, read_limited_upload
 from config.PgSqlConfig import get_db
 from models.dto.UsdAssetUploadDto import UsdPresignedUrlDto, AssetVersionUpdateDto
 from models.enums.CategoryEnum import AssetUploadType
@@ -84,7 +85,12 @@ async def upload_asset(
     if not file.filename or not file.filename.lower().endswith(".zip"):
         raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="仅支持上传 .zip 格式的压缩文件")
 
-    file_bytes = await file.read()
+    try:
+        file_bytes = await read_limited_upload(file)
+    except UnsafeZipError as exc:
+        raise BusinessException(
+            ErrorCode.PAYLOAD_TOO_LARGE, extra_msg=str(exc)
+        ) from exc
     result = await service.upload_asset(type, file_bytes, db)
     return ResultUtils.ok(data=result, message="上传成功")
 

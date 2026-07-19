@@ -15,16 +15,20 @@ from models.dto.FactoryLineDetailsDto import (
 from models.entity.BaseProductionLineEntity import BaseProductionLine
 from models.entity.FactoryAsset3dModelEntity import FactoryAsset3dModel
 from models.entity.FactoryLineDetailsEntity import FactoryLineDetails
+from models.enums.InstanceAssetTypeEnum import InstanceAssetType
 from models.vo.BaseProductionLineVo import BaseProductionLineVo
 from models.vo.FactoryLineDetailsVo import FactoryLineDetailsVo
+from service.FactoryAssetNodeService import FactoryAssetNodeService
 
 init_logging()
 logger = logging.getLogger(__name__)
 
+_asset_node_service = FactoryAssetNodeService()
+
 # 3D 模型层允许更新的字段集合
 _3D_FIELDS = {"usd_name", "usd_id", "root_usd_path", "bucket_name", "prim_path", "location_path", "thumbnail_path"}
 # 实例层允许更新的字段集合
-_INSTANCE_FIELDS = {"factory_asset_id", "ref_id", "capacity_per_day", "extra_metadata"}
+_INSTANCE_FIELDS = {"ref_id", "capacity_per_day", "extra_metadata"}
 # 基础线体层允许更新的字段集合
 _LINE_FIELDS = {"line_name", "line_code", "smt_pph", "operation_count", "status", "sort_order"}
 
@@ -44,6 +48,22 @@ class FactoryLineDetailsService:
         只写入 factory_line_details 实例表，3D模型和 base_production_line 通过关联独立管理。
         """
         try:
+            await _asset_node_service.ensure_node_editable(
+                dto.factory_asset_id,
+                db,
+                InstanceAssetType.LINE,
+            )
+            existing = (await db.execute(
+                select(FactoryLineDetails.id).where(
+                    FactoryLineDetails.factory_asset_id == dto.factory_asset_id,
+                    FactoryLineDetails.is_deleted == False,
+                ).limit(1)
+            )).scalar_one_or_none()
+            if existing is not None:
+                raise BusinessException(
+                    ErrorCode.DATA_ALREADY_EXISTS,
+                    extra_msg="该线体节点已存在详情",
+                )
             entity = FactoryLineDetails(
                 factory_asset_id=dto.factory_asset_id,
                 ref_id=dto.ref_id,
@@ -77,8 +97,23 @@ class FactoryLineDetailsService:
         - [基础线体] base_production_line（仅当 ref_id 已绑定时才更新）
         """
         entity = await self._get_or_raise(dto.id, db)
+        await _asset_node_service.ensure_node_editable(
+            entity.factory_asset_id,
+            db,
+            InstanceAssetType.LINE,
+        )
         update_data = dto.model_dump(exclude_unset=True)
         update_data.pop("id", None)
+
+        requested_asset_id = update_data.pop("factory_asset_id", None)
+        if (
+            requested_asset_id is not None
+            and str(requested_asset_id) != str(entity.factory_asset_id)
+        ):
+            raise BusinessException(
+                ErrorCode.PARAMS_ERROR,
+                extra_msg="factory_asset_id 创建后不可修改",
+            )
 
         try:
             # —— 更新实例层 ——
@@ -90,8 +125,7 @@ class FactoryLineDetailsService:
             # —— 更新/创建 3D 模型层 ——
             model_update = {k: v for k, v in update_data.items() if k in _3D_FIELDS}
             if model_update:
-                factory_asset_id = update_data.get("factory_asset_id", entity.factory_asset_id)
-                await self._upsert_3d_model(factory_asset_id, model_update, db)
+                await self._upsert_3d_model(entity.factory_asset_id, model_update, db)
 
             # —— 更新基础线体层 ——
             line_update = {k: v for k, v in update_data.items() if k in _LINE_FIELDS}
@@ -171,7 +205,10 @@ class FactoryLineDetailsService:
 
     async def _get_or_raise(self, detail_id: int, db: AsyncSession) -> FactoryLineDetails:
         result = await db.execute(
-            select(FactoryLineDetails).where(FactoryLineDetails.id == detail_id)
+            select(FactoryLineDetails).where(
+                FactoryLineDetails.id == detail_id,
+                FactoryLineDetails.is_deleted == False,
+            )
         )
         entity = result.scalar_one_or_none()
         if entity is None:
@@ -180,7 +217,10 @@ class FactoryLineDetailsService:
 
     async def _get_3d_model(self, factory_asset_id: int, db: AsyncSession) -> Optional[FactoryAsset3dModel]:
         result = await db.execute(
-            select(FactoryAsset3dModel).where(FactoryAsset3dModel.factory_asset_id == factory_asset_id)
+            select(FactoryAsset3dModel).where(
+                FactoryAsset3dModel.factory_asset_id == factory_asset_id,
+                FactoryAsset3dModel.is_deleted == False,
+            )
         )
         return result.scalar_one_or_none()
 

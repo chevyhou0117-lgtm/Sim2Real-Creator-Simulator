@@ -36,6 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.ErrorCode import ErrorCode
 from commonutils.Logs import init_logging
+from commonutils.ZipSafetyUtils import UnsafeZipError, read_safe_zip_entries
 from config.MinioConfig import minioConfig
 from exception.ExceptionClass import BusinessException
 from models.entity.FactoryAsset3dModelEntity import FactoryAsset3dModel
@@ -61,6 +62,7 @@ class FactoryModelUploadService:
     async def _check_folder_name_duplicate(
         self,
         project_id: int,
+        version_id: str,
         folder_name: str,
         db: AsyncSession,
     ) -> None:
@@ -75,6 +77,7 @@ class FactoryModelUploadService:
         factory_root_result = await db.execute(
             select(FactoryAssetNode).where(
                 FactoryAssetNode.factory_projects_id == project_id,
+                FactoryAssetNode.version_id == version_id,
                 FactoryAssetNode.type == InstanceAssetType.FACTORY.value,
                 FactoryAssetNode.is_deleted == False,
             )
@@ -109,6 +112,45 @@ class FactoryModelUploadService:
                     extra_msg=f"已存在相同名称的工厂建模文件: {folder_name}，不允许重复上传",
                 )
 
+    async def get_editable_current_version_id(
+        self,
+        project_id: str,
+        db: AsyncSession,
+    ) -> str:
+        proj = (await db.execute(
+            select(FactoryProject).where(
+                FactoryProject.project_id == project_id,
+                FactoryProject.is_deleted == False,
+            ).limit(1)
+        )).scalar_one_or_none()
+        if proj is None:
+            raise BusinessException(ErrorCode.NOT_FOUND_ERROR, extra_msg=f"工厂项目不存在: project_id={project_id}")
+
+        version = None
+        if proj.current_version_id:
+            version = (await db.execute(
+                select(FactoryProjectVersion).where(
+                    FactoryProjectVersion.version_id == proj.current_version_id,
+                    FactoryProjectVersion.project_id == project_id,
+                    FactoryProjectVersion.is_current == True,
+                )
+            )).scalar_one_or_none()
+        if version is None:
+            version = (await db.execute(
+                select(FactoryProjectVersion).where(
+                    FactoryProjectVersion.project_id == project_id,
+                    FactoryProjectVersion.is_current == True,
+                ).order_by(FactoryProjectVersion.version_number.desc()).limit(1)
+            )).scalar_one_or_none()
+        if version is None:
+            raise BusinessException(ErrorCode.NOT_FOUND_ERROR, extra_msg=f"项目无可用版本: project_id={project_id}")
+        if (version.version_status or "").upper() != "DRAFT":
+            raise BusinessException(
+                ErrorCode.PERMISSION_DENIED,
+                extra_msg=f"版本 {version.version_id} 已{version.version_status}，仅 DRAFT 版本允许上传模型",
+            )
+        return str(version.version_id)
+
     async def _ensure_factory_skeleton(
         self,
         project_id: int,
@@ -121,26 +163,13 @@ class FactoryModelUploadService:
         「有基线」复制了空树、或历史遗留项目可能缺失。此处自愈补齐，使上传不再依赖建项目流程。
         节点 version_id 取项目 current_version_id（兜底取最新版本）。
         """
-        proj = (await db.execute(
-            select(FactoryProject).where(FactoryProject.project_id == project_id).limit(1)
-        )).scalar_one_or_none()
-        if proj is None:
-            raise BusinessException(ErrorCode.NOT_FOUND_ERROR, extra_msg=f"工厂项目不存在: project_id={project_id}")
-        version_id = proj.current_version_id
-        if not version_id:
-            version_id = (await db.execute(
-                select(FactoryProjectVersion.version_id)
-                .where(FactoryProjectVersion.project_id == project_id)
-                .order_by(FactoryProjectVersion.version_number.desc())
-                .limit(1)
-            )).scalar_one_or_none()
-        if not version_id:
-            raise BusinessException(ErrorCode.NOT_FOUND_ERROR, extra_msg=f"项目无可用版本: project_id={project_id}")
+        version_id = await self.get_editable_current_version_id(project_id, db)
 
         # FACTORY 根节点（缺则建）
         root = (await db.execute(
             select(FactoryAssetNode).where(
                 FactoryAssetNode.factory_projects_id == project_id,
+                FactoryAssetNode.version_id == version_id,
                 FactoryAssetNode.type == InstanceAssetType.FACTORY.value,
                 FactoryAssetNode.is_deleted == False,
             ).limit(1)
@@ -162,6 +191,7 @@ class FactoryModelUploadService:
         default_stage = (await db.execute(
             select(FactoryAssetNode).where(
                 FactoryAssetNode.factory_projects_id == project_id,
+                FactoryAssetNode.version_id == version_id,
                 FactoryAssetNode.type == InstanceAssetType.STAGE.value,
                 FactoryAssetNode.code == "default_stage",
                 FactoryAssetNode.is_deleted == False,
@@ -199,31 +229,30 @@ class FactoryModelUploadService:
         :return:            统计信息字典
         """
         try:
+            current_version_id = await self.get_editable_current_version_id(project_id, db)
             # 阶段1：解压 ZIP
             try:
-                zf_obj = zipfile.ZipFile(io.BytesIO(file_bytes))
-            except zipfile.BadZipFile:
-                raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="上传文件不是合法的 ZIP 压缩包")
-            with zf_obj as zf:
-                all_names = zf.namelist()
-                root_dir = _get_zip_root_dir(all_names)
-                if not root_dir:
-                    raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="ZIP 文件结构异常：未找到根目录")
+                with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+                    file_entries = read_safe_zip_entries(zf)
+            except (zipfile.BadZipFile, UnsafeZipError) as exc:
+                raise BusinessException(
+                    ErrorCode.PARAMS_ERROR,
+                    extra_msg=f"ZIP 压缩包不安全或格式无效: {exc}",
+                ) from exc
 
-                folder_name = root_dir.rstrip("/")       # e.g. "MBD"
-                folder_00   = f"{folder_name}_V01"       # e.g. "MBD_V01"（USD prim 根标识）
+            all_names = [name for name, _ in file_entries]
+            root_dir = _get_zip_root_dir(all_names)
+            if not root_dir:
+                raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="ZIP 文件结构异常：未找到根目录")
 
-                file_entries: List[Tuple[str, bytes]] = []
-                for name in all_names:
-                    if name.endswith("/"):
-                        continue
-                    file_entries.append((name, zf.read(name)))
+            folder_name = root_dir.rstrip("/")       # e.g. "MBD"
+            folder_00   = f"{folder_name}_V01"       # e.g. "MBD_V01"（USD prim 根标识）
 
             all_names_flat = [n for n, _ in file_entries]
             logger.info(f"[FactoryUpload] ZIP 解压完成: folder={folder_name}, 文件数={len(file_entries)}")
 
             # 阶段1.5：校验文件夹名是否与已有工厂建模文件重名
-            await self._check_folder_name_duplicate(project_id, folder_name, db)
+            await self._check_folder_name_duplicate(project_id, current_version_id, folder_name, db)
 
             # 阶段2：上传所有文件到 MinIO
             minio_entries: List[Tuple[str, bytes]] = [
@@ -262,6 +291,7 @@ class FactoryModelUploadService:
             ds_result = await db.execute(
                 select(FactoryAssetNode).where(
                     FactoryAssetNode.factory_projects_id == project_id,
+                    FactoryAssetNode.version_id == current_version_id,
                     FactoryAssetNode.type == InstanceAssetType.STAGE.value,
                     FactoryAssetNode.code == "default_stage",
                     FactoryAssetNode.is_deleted == False,
@@ -279,6 +309,7 @@ class FactoryModelUploadService:
             factory_root_result = await db.execute(
                 select(FactoryAssetNode).where(
                     FactoryAssetNode.factory_projects_id == project_id,
+                    FactoryAssetNode.version_id == current_version_id,
                     FactoryAssetNode.type == InstanceAssetType.FACTORY.value,
                     FactoryAssetNode.is_deleted == False,
                 ).limit(1)
@@ -443,19 +474,16 @@ class FactoryModelUploadService:
           └── Library/                   # 资产库文件
         """
         try:
+            current_version_id = await self.get_editable_current_version_id(project_id, db)
             # 阶段1：解压 ZIP
             try:
-                zf_obj = zipfile.ZipFile(io.BytesIO(file_bytes))
-            except zipfile.BadZipFile:
-                raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="上传文件不是合法的 ZIP 压缩包")
-
-            with zf_obj as zf:
-                all_names = zf.namelist()
-                file_entries: List[Tuple[str, bytes]] = []
-                for name in all_names:
-                    if name.endswith("/"):
-                        continue
-                    file_entries.append((name, zf.read(name)))
+                with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+                    file_entries = read_safe_zip_entries(zf)
+            except (zipfile.BadZipFile, UnsafeZipError) as exc:
+                raise BusinessException(
+                    ErrorCode.PARAMS_ERROR,
+                    extra_msg=f"ZIP 压缩包不安全或格式无效: {exc}",
+                ) from exc
 
             all_names_flat = [n for n, _ in file_entries]
             logger.info(f"[OmniverseUpload] ZIP 解压完成: 文件数={len(file_entries)}")
@@ -481,7 +509,7 @@ class FactoryModelUploadService:
             )
 
             # 校验文件夹名是否与已有工厂建模文件重名
-            await self._check_folder_name_duplicate(project_id, factory_folder_name, db)
+            await self._check_folder_name_duplicate(project_id, current_version_id, factory_folder_name, db)
 
             # 阶段2：上传所有文件到 MinIO（直接以 ZIP 路径上传，无额外前缀）
             minio_entries: List[Tuple[str, bytes]] = [
@@ -519,6 +547,7 @@ class FactoryModelUploadService:
             ds_result = await db.execute(
                 select(FactoryAssetNode).where(
                     FactoryAssetNode.factory_projects_id == project_id,
+                    FactoryAssetNode.version_id == current_version_id,
                     FactoryAssetNode.type == InstanceAssetType.STAGE.value,
                     FactoryAssetNode.code == "default_stage",
                     FactoryAssetNode.is_deleted == False,
@@ -534,6 +563,7 @@ class FactoryModelUploadService:
             factory_root_result = await db.execute(
                 select(FactoryAssetNode).where(
                     FactoryAssetNode.factory_projects_id == project_id,
+                    FactoryAssetNode.version_id == current_version_id,
                     FactoryAssetNode.type == InstanceAssetType.FACTORY.value,
                     FactoryAssetNode.is_deleted == False,
                 ).limit(1)
@@ -889,6 +919,3 @@ def _find_line_usd_minio(
             return name
 
     return None
-
-
-

@@ -263,9 +263,10 @@ const WebComposerView: React.FC<{
     console.error("Stream failed to start");
     setLoadingText(t("editor.stream.streamFailed"));
     setIsLoading(false);
-    if (sessionId) {
-      console.error("handleStreamFailed", destroyStreamingSession);
-      destroyStreamingSession(streamServer, sessionId);
+    if (StreamConfig.source === "stream" && streamServer && sessionId) {
+      void destroyStreamingSession(streamServer, sessionId).catch((error) => {
+        console.warn("Error destroying failed streaming session:", error);
+      });
     }
   };
 
@@ -394,9 +395,12 @@ const WebComposerView: React.FC<{
       // 只有在流真正启动时才清理流媒体资源
       if (streamStarted) {
         try {
-          if (sessionId) {
-            console.error("handleStreamFailed", destroyStreamingSession);
-            destroyStreamingSession(streamServer, sessionId);
+          if (StreamConfig.source === "stream" && streamServer && sessionId) {
+            void destroyStreamingSession(streamServer, sessionId).catch(
+              (error) => {
+                console.warn("Error destroying streaming session:", error);
+              },
+            );
           }
           AppStream.terminate();
         } catch (error) {
@@ -434,7 +438,7 @@ const WebComposerView: React.FC<{
         <AppStream
           sessionId={sessionId}
           backendUrl={backendUrl}
-          signalingserver={signalingport}
+          signalingserver={signalingserver}
           signalingport={signalingport}
           mediaserver={mediaserver}
           mediaport={mediaport}

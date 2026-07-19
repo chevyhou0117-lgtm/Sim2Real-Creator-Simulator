@@ -25,6 +25,7 @@ from models.entity.BaseEquipmentSopEntity import BaseEquipmentSop
 from models.entity.BaseEquipmentOperationRecordEntity import BaseEquipmentOperationRecord
 from models.entity.FactoryAsset3dModelEntity import FactoryAsset3dModel
 from models.entity.FactoryEquipmentDetailsEntity import FactoryEquipmentDetails
+from models.enums.InstanceAssetTypeEnum import InstanceAssetType
 from models.vo.BaseEquipmentFullDetailVo import BaseEquipmentFullDetailVo
 from models.vo.BaseEquipmentTechnicalSpecVo import BaseEquipmentTechnicalSpecVo
 from models.vo.BaseEquipmentProcessParamVo import BaseEquipmentProcessParamVo
@@ -32,15 +33,18 @@ from models.vo.BaseEquipmentBomPartVo import BaseEquipmentBomPartVo
 from models.vo.BaseEquipmentSopVo import BaseEquipmentSopVo
 from models.vo.BaseEquipmentOperationRecordVo import BaseEquipmentOperationRecordVo
 from models.vo.FactoryEquipmentDetailsVo import FactoryEquipmentDetailsVo
+from service.FactoryAssetNodeService import FactoryAssetNodeService
 
 init_logging()
 logger = logging.getLogger(__name__)
+
+_asset_node_service = FactoryAssetNodeService()
 
 # 字段分层定义
 _3D_FIELDS = {"usd_name", "usd_id", "root_usd_path", "bucket_name", "prim_path", "location_path", "thumbnail_path"}
 
 _INSTANCE_FIELDS = {
-    "factory_asset_id", "ref_id", "specifications", "installation_date",
+    "ref_id", "specifications", "installation_date",
     "position_data", "rotation_data", "extra_metadata", "description",
 }
 
@@ -69,6 +73,22 @@ class FactoryEquipmentDetailsService:
         只写入 factory_equipment_details 实例表，3D模型和 base_equipment 通过关联独立管理。
         """
         try:
+            await _asset_node_service.ensure_node_editable(
+                dto.factory_asset_id,
+                db,
+                InstanceAssetType.EQUIPMENT,
+            )
+            existing = (await db.execute(
+                select(FactoryEquipmentDetails.id).where(
+                    FactoryEquipmentDetails.factory_asset_id == dto.factory_asset_id,
+                    FactoryEquipmentDetails.is_deleted == False,
+                ).limit(1)
+            )).scalar_one_or_none()
+            if existing is not None:
+                raise BusinessException(
+                    ErrorCode.DATA_ALREADY_EXISTS,
+                    extra_msg="该设备节点已存在详情",
+                )
             entity = FactoryEquipmentDetails(
                 factory_asset_id=dto.factory_asset_id,
                 ref_id=dto.ref_id,
@@ -109,8 +129,23 @@ class FactoryEquipmentDetailsService:
         - [运行记录] base_equipment_operation_record（1:N，id有值=更新，无值=新增）
         """
         entity = await self._get_or_raise(dto.id, db)
+        await _asset_node_service.ensure_node_editable(
+            entity.factory_asset_id,
+            db,
+            InstanceAssetType.EQUIPMENT,
+        )
         update_data = dto.model_dump(exclude_unset=True)
         update_data.pop("id", None)
+
+        requested_asset_id = update_data.pop("factory_asset_id", None)
+        if (
+            requested_asset_id is not None
+            and str(requested_asset_id) != str(entity.factory_asset_id)
+        ):
+            raise BusinessException(
+                ErrorCode.PARAMS_ERROR,
+                extra_msg="factory_asset_id 创建后不可修改",
+            )
 
         try:
             # 更新实例层
@@ -122,8 +157,7 @@ class FactoryEquipmentDetailsService:
             # 更新/创建 3D 模型层
             model_update = {k: v for k, v in update_data.items() if k in _3D_FIELDS}
             if model_update:
-                factory_asset_id = update_data.get("factory_asset_id", entity.factory_asset_id)
-                await self._upsert_3d_model(factory_asset_id, model_update, db)
+                await self._upsert_3d_model(entity.factory_asset_id, model_update, db)
 
             # 确定 equipment_id（用于子表操作）
             ref_id = update_data.get("ref_id", entity.ref_id)
@@ -251,14 +285,20 @@ class FactoryEquipmentDetailsService:
             item_id = data.pop("id", None)
             if item_id:
                 result = await db.execute(
-                    select(BaseEquipmentBomPart).where(BaseEquipmentBomPart.id == item_id)
+                    select(BaseEquipmentBomPart).where(
+                        BaseEquipmentBomPart.id == item_id,
+                        BaseEquipmentBomPart.equipment_id == equipment_id,
+                    )
                 )
                 record = result.scalar_one_or_none()
                 if record:
                     for k, v in data.items():
                         setattr(record, k, v)
                 else:
-                    logger.warning(f"BOM备件 id={item_id} 不存在，跳过更新")
+                    raise BusinessException(
+                        ErrorCode.PARAMS_ERROR,
+                        extra_msg=f"BOM备件 id={item_id} 不存在或不属于设备 {equipment_id}",
+                    )
             else:
                 db.add(BaseEquipmentBomPart(equipment_id=equipment_id, **data))
 
@@ -271,14 +311,20 @@ class FactoryEquipmentDetailsService:
             item_id = data.pop("id", None)
             if item_id:
                 result = await db.execute(
-                    select(BaseEquipmentSop).where(BaseEquipmentSop.id == item_id)
+                    select(BaseEquipmentSop).where(
+                        BaseEquipmentSop.id == item_id,
+                        BaseEquipmentSop.equipment_id == equipment_id,
+                    )
                 )
                 record = result.scalar_one_or_none()
                 if record:
                     for k, v in data.items():
                         setattr(record, k, v)
                 else:
-                    logger.warning(f"SOP id={item_id} 不存在，跳过更新")
+                    raise BusinessException(
+                        ErrorCode.PARAMS_ERROR,
+                        extra_msg=f"SOP id={item_id} 不存在或不属于设备 {equipment_id}",
+                    )
             else:
                 db.add(BaseEquipmentSop(equipment_id=equipment_id, **data))
 
@@ -291,14 +337,20 @@ class FactoryEquipmentDetailsService:
             item_id = data.pop("id", None)
             if item_id:
                 result = await db.execute(
-                    select(BaseEquipmentOperationRecord).where(BaseEquipmentOperationRecord.id == item_id)
+                    select(BaseEquipmentOperationRecord).where(
+                        BaseEquipmentOperationRecord.id == item_id,
+                        BaseEquipmentOperationRecord.equipment_id == equipment_id,
+                    )
                 )
                 record = result.scalar_one_or_none()
                 if record:
                     for k, v in data.items():
                         setattr(record, k, v)
                 else:
-                    logger.warning(f"运行记录 id={item_id} 不存在，跳过更新")
+                    raise BusinessException(
+                        ErrorCode.PARAMS_ERROR,
+                        extra_msg=f"运行记录 id={item_id} 不存在或不属于设备 {equipment_id}",
+                    )
             else:
                 db.add(BaseEquipmentOperationRecord(equipment_id=equipment_id, **data))
 
@@ -345,7 +397,10 @@ class FactoryEquipmentDetailsService:
 
     async def _get_or_raise(self, detail_id: int, db: AsyncSession) -> FactoryEquipmentDetails:
         result = await db.execute(
-            select(FactoryEquipmentDetails).where(FactoryEquipmentDetails.id == detail_id)
+            select(FactoryEquipmentDetails).where(
+                FactoryEquipmentDetails.id == detail_id,
+                FactoryEquipmentDetails.is_deleted == False,
+            )
         )
         entity = result.scalar_one_or_none()
         if entity is None:
@@ -354,7 +409,10 @@ class FactoryEquipmentDetailsService:
 
     async def _get_3d_model(self, factory_asset_id: int, db: AsyncSession) -> Optional[FactoryAsset3dModel]:
         result = await db.execute(
-            select(FactoryAsset3dModel).where(FactoryAsset3dModel.factory_asset_id == factory_asset_id)
+            select(FactoryAsset3dModel).where(
+                FactoryAsset3dModel.factory_asset_id == factory_asset_id,
+                FactoryAsset3dModel.is_deleted == False,
+            )
         )
         return result.scalar_one_or_none()
 
@@ -363,4 +421,3 @@ class FactoryEquipmentDetailsService:
             select(BaseEquipment).where(BaseEquipment.equipment_id == equipment_id)
         )
         return result.scalar_one_or_none()
-

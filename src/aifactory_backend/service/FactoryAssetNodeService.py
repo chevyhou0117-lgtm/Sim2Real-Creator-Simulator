@@ -20,6 +20,7 @@ from models.entity.FactoryEquipmentDetailsEntity import FactoryEquipmentDetails
 from models.entity.FactoryAsset3dModelEntity import FactoryAsset3dModel
 from models.entity.FactoryLineDetailsEntity import FactoryLineDetails
 from models.entity.FactoryProcessDetailsEntity import FactoryProcessDetails
+from models.entity.LineLeaderEntity import LineLeader
 from models.entity.LineModelDetailEntity import LineModelDetail
 from models.entity.LineModelEquipmentRelEntity import LineModelEquipmentRel
 from models.entity.EquipmentModelDetailEntity import EquipmentModelDetail
@@ -33,6 +34,7 @@ from models.entity.BaseEquipmentBomPartEntity import BaseEquipmentBomPart
 from models.entity.BaseEquipmentSopEntity import BaseEquipmentSop
 from models.entity.BaseEquipmentOperationRecordEntity import BaseEquipmentOperationRecord
 from models.entity.FactoryProjectEntity import FactoryProject
+from models.entity.FactoryProjectVersionEntity import FactoryProjectVersion
 from models.enums.InstanceAssetTypeEnum import InstanceAssetType
 from models.enums.BindStatusEnum import BindStatus
 from models.vo.FactoryAssetNodeVo import (
@@ -74,10 +76,12 @@ class FactoryAssetNodeService:
     async def get_factory_tree(self, factory_projects_id: int, db: AsyncSession) -> List[FactoryAssetNodeTreeVo]:
         """根据工厂项目 ID 获取完整工厂结构树（仅节点层级关系 + 基础字段，不含 detail）"""
         try:
+            current_version_id = await self._get_current_version_id(factory_projects_id, db)
             all_result = await db.execute(
                 select(FactoryAssetNode)
                 .where(
                     FactoryAssetNode.factory_projects_id == factory_projects_id,
+                    FactoryAssetNode.version_id == current_version_id,
                     FactoryAssetNode.is_deleted == False,   # 排除软删节点，否则删了还显示
                 )
                 .order_by(FactoryAssetNode.created_at.asc())
@@ -117,10 +121,12 @@ class FactoryAssetNodeService:
         LINE/EQUIPMENT 节点的 detail 携带 primPath，供前端工厂编辑器渲染结构树 + 双击节点高亮。
         """
         try:
+            current_version_id = await self._get_current_version_id(factory_projects_id, db)
             all_result = await db.execute(
                 select(FactoryAssetNode)
                 .where(
                     FactoryAssetNode.factory_projects_id == factory_projects_id,
+                    FactoryAssetNode.version_id == current_version_id,
                     FactoryAssetNode.is_deleted == False,   # 排除软删节点，否则删了还显示
                 )
                 .order_by(FactoryAssetNode.created_at.asc())
@@ -157,10 +163,12 @@ class FactoryAssetNodeService:
     async def get_stage_list_by_project(self, factory_projects_id: str, db: AsyncSession) -> List[FactoryAssetNodeVo]:
         """根据工厂项目 ID 获取该项目下所有制程（STAGE）节点的平铺列表（不含树形嵌套、不含 detail）。"""
         try:
+            current_version_id = await self._get_current_version_id(factory_projects_id, db)
             result = await db.execute(
                 select(FactoryAssetNode)
                 .where(
                     FactoryAssetNode.factory_projects_id == factory_projects_id,
+                    FactoryAssetNode.version_id == current_version_id,
                     FactoryAssetNode.type == InstanceAssetType.STAGE.value,
                     FactoryAssetNode.is_deleted == False,
                 )
@@ -187,6 +195,7 @@ class FactoryAssetNodeService:
         )).scalar_one_or_none()
         if node is None:
             raise BusinessException(ErrorCode.NOT_FOUND_ERROR, extra_msg=f"资产节点不存在: id={dto.factory_asset_id}")
+        await self._ensure_version_editable(node.version_id, node.factory_projects_id, db)
         if node.type == InstanceAssetType.LINE.value:
             return await self._bind_line_node(node, dto.ref_id, db)
         elif node.type == InstanceAssetType.EQUIPMENT.value:
@@ -204,6 +213,7 @@ class FactoryAssetNodeService:
         )).scalar_one_or_none()
         if node is None:
             raise BusinessException(ErrorCode.NOT_FOUND_ERROR, extra_msg=f"资产节点不存在: id={dto.factory_asset_id}")
+        await self._ensure_version_editable(node.version_id, node.factory_projects_id, db)
         if node.type == InstanceAssetType.LINE.value:
             detail = (await db.execute(
                 select(FactoryLineDetails).where(
@@ -262,6 +272,7 @@ class FactoryAssetNodeService:
                 FactoryProcessDetails.ref_id == line.stage_id,
                 FactoryProcessDetails.is_deleted == False,
                 FactoryAssetNode.factory_projects_id == node.factory_projects_id,
+                FactoryAssetNode.version_id == node.version_id,
                 FactoryAssetNode.is_deleted == False,
             )
         )).scalar_one_or_none()
@@ -410,10 +421,13 @@ class FactoryAssetNodeService:
 
     async def add_line_node(self, dto: AddLineNodeDto, db: AsyncSession) -> FactoryAssetNodeVo:
         """在项目 default 制程下新增线体节点（拖拽资产库线体），并批量创建其挂载的设备子节点。"""
+        current_version_id = await self._get_current_version_id(dto.factory_project_id, db)
+        await self._ensure_version_editable(current_version_id, dto.factory_project_id, db)
         # Step 1: 查找 default_stage 节点
         default_stage = (await db.execute(
             select(FactoryAssetNode).where(
                 FactoryAssetNode.factory_projects_id == dto.factory_project_id,
+                FactoryAssetNode.version_id == current_version_id,
                 FactoryAssetNode.type == InstanceAssetType.STAGE.value,
                 FactoryAssetNode.code == "default_stage",
                 FactoryAssetNode.is_deleted == False,
@@ -568,8 +582,17 @@ class FactoryAssetNodeService:
 
     async def create_node(self, dto: FactoryAssetNodeCreateDto, db: AsyncSession) -> FactoryAssetNodeVo:
         """新增树形结构节点"""
+        await self._ensure_version_editable(dto.version_id, dto.factory_projects_id, db)
         if dto.parent_id is not None:
-            await self._get_node_or_raise(dto.parent_id, db)
+            parent = await self._get_node_or_raise(dto.parent_id, db)
+            if (
+                parent.factory_projects_id != dto.factory_projects_id
+                or parent.version_id != dto.version_id
+            ):
+                raise BusinessException(
+                    ErrorCode.PARAMS_ERROR,
+                    extra_msg="父节点必须属于同一项目和同一版本",
+                )
 
         try:
             entity = FactoryAssetNode(
@@ -597,6 +620,7 @@ class FactoryAssetNodeService:
     async def update_node(self, node_id: int, dto: FactoryAssetNodeUpdateDto, db: AsyncSession) -> FactoryAssetNodeVo:
         """仅更新节点基础信息"""
         entity = await self._get_node_or_raise(node_id, db)
+        await self._ensure_version_editable(entity.version_id, entity.factory_projects_id, db)
 
         update_data = dto.model_dump(exclude_unset=True)
         update_data.pop("id", None)
@@ -604,16 +628,32 @@ class FactoryAssetNodeService:
         if not update_data:
             return self._to_vo(entity)
 
-        allowed_fields = {
-            "factory_projects_id", "version_id", "name", "code", "type",
-            "parent_id", "description",
-        }
+        for immutable_field in ("factory_projects_id", "version_id", "type"):
+            if immutable_field in update_data:
+                requested = update_data.pop(immutable_field)
+                current = getattr(entity, immutable_field)
+                requested = getattr(requested, "value", requested)
+                if requested != current:
+                    raise BusinessException(
+                        ErrorCode.PARAMS_ERROR,
+                        extra_msg=f"{immutable_field} 创建后不可修改",
+                    )
+
+        allowed_fields = {"name", "code", "parent_id", "description"}
 
         try:
             if "parent_id" in update_data and update_data["parent_id"] is not None:
                 if update_data["parent_id"] == node_id:
                     raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="父级节点不能指向自身")
-                await self._get_node_or_raise(update_data["parent_id"], db)
+                parent = await self._get_node_or_raise(update_data["parent_id"], db)
+                if (
+                    parent.factory_projects_id != entity.factory_projects_id
+                    or parent.version_id != entity.version_id
+                ):
+                    raise BusinessException(
+                        ErrorCode.PARAMS_ERROR,
+                        extra_msg="父节点必须属于同一项目和同一版本",
+                    )
 
             for field, value in update_data.items():
                 if field in allowed_fields:
@@ -634,8 +674,10 @@ class FactoryAssetNodeService:
     async def delete_node(self, node_id: int, db: AsyncSession) -> int:
         """软删除节点及其所有子孙节点，并同步软删除各详情子表/3D模型（is_deleted=True）。
         软删除而非物理删除：与全仓 Creator 表 is_deleted 约定一致。
-        （原实现走 FK ON DELETE CASCADE 物理删除，软删除下 CASCADE 不触发，故需显式软删除子表。）"""
+        line_leaders_info 无 is_deleted 字段，因此对子树内负责人做显式物理清理。
+        （原实现走 FK ON DELETE CASCADE 物理删除，软删除下 CASCADE 不触发，故需显式处理子表。）"""
         entity = await self._get_node_or_raise(node_id, db)
+        await self._ensure_version_editable(entity.version_id, entity.factory_projects_id, db)
 
         try:
             if entity.type in EQUIPMENT_TYPE_CODES:
@@ -666,32 +708,21 @@ class FactoryAssetNodeService:
                 .where(FactoryAssetNode.id.in_(ids_to_delete))
                 .values(is_deleted=True)
             )
-            # 2) 软删除详情子表（原依赖 FK CASCADE，软删除需显式处理）
-            if entity.type in EQUIPMENT_TYPE_CODES:
+            # 2) 对整个子树的三类详情统一软删除；根可能是 FACTORY/STAGE/LINE/EQUIPMENT。
+            for detail_model in (FactoryProcessDetails, FactoryLineDetails, FactoryEquipmentDetails):
                 await db.execute(
-                    sa_update(FactoryEquipmentDetails)
-                    .where(FactoryEquipmentDetails.factory_asset_id == node_id)
+                    sa_update(detail_model)
+                    .where(detail_model.factory_asset_id.in_(ids_to_delete))
                     .values(is_deleted=True)
                 )
-            else:
-                await db.execute(
-                    sa_update(FactoryLineDetails)
-                    .where(FactoryLineDetails.factory_asset_id == node_id)
-                    .values(is_deleted=True)
-                )
-                child_ids = ids_to_delete - {node_id}
-                if child_ids:
-                    await db.execute(
-                        sa_update(FactoryEquipmentDetails)
-                        .where(FactoryEquipmentDetails.factory_asset_id.in_(child_ids))
-                        .values(is_deleted=True)
-                    )
             # 3) 受影响节点的 3D 模型记录统一软删除
             await db.execute(
                 sa_update(FactoryAsset3dModel)
                 .where(FactoryAsset3dModel.factory_asset_id.in_(ids_to_delete))
                 .values(is_deleted=True)
             )
+            # 4) 负责人表无软删除字段；若不显式清理，节点软删除不会触发 FK CASCADE。
+            await self._delete_line_leaders_for_nodes(ids_to_delete, db)
 
             await db.commit()
             logger.info(f"软删除节点及详情: node_id={node_id}, 共 {len(ids_to_delete)} 个节点")
@@ -703,6 +734,19 @@ class FactoryAssetNodeService:
             await db.rollback()
             logger.error(f"[Error in delete_node]: {e}")
             raise BusinessException(ErrorCode.DB_ERROR, extra_msg=f"删除节点失败: {e}")
+
+    async def _delete_line_leaders_for_nodes(
+        self,
+        node_ids: set,
+        db: AsyncSession,
+    ) -> None:
+        if not node_ids:
+            return
+        await db.execute(
+            sa_delete(LineLeader).where(
+                LineLeader.factory_asset_id.in_(node_ids)
+            )
+        )
 
     async def get_node_detail_by_prim_path(
             self, prim_path: str, db: AsyncSession,
@@ -745,7 +789,10 @@ class FactoryAssetNodeService:
         """
         try:
             node_result = await db.execute(
-                select(FactoryAssetNode).where(FactoryAssetNode.id == node_id)
+                select(FactoryAssetNode).where(
+                    FactoryAssetNode.id == node_id,
+                    FactoryAssetNode.is_deleted == False,
+                )
             )
             node = node_result.scalar_one_or_none()
 
@@ -784,7 +831,10 @@ class FactoryAssetNodeService:
 
         # 批量预加载 3D 模型信息
         model_3d_result = await db.execute(
-            select(FactoryAsset3dModel).where(FactoryAsset3dModel.factory_asset_id.in_(node_ids))
+            select(FactoryAsset3dModel).where(
+                FactoryAsset3dModel.factory_asset_id.in_(node_ids),
+                FactoryAsset3dModel.is_deleted == False,
+            )
         )
         model_3d_map: Dict[int, FactoryAsset3dModel] = {
             r.factory_asset_id: r for r in model_3d_result.scalars().all()
@@ -792,7 +842,10 @@ class FactoryAssetNodeService:
 
         # 制程详情（ref_id 已在此表中）
         process_result = await db.execute(
-            select(FactoryProcessDetails).where(FactoryProcessDetails.factory_asset_id.in_(node_ids))
+            select(FactoryProcessDetails).where(
+                FactoryProcessDetails.factory_asset_id.in_(node_ids),
+                FactoryProcessDetails.is_deleted == False,
+            )
         )
         for r in process_result.scalars().all():
             detail_map[r.factory_asset_id] = ProcessDetailsSpecialVo(
@@ -803,7 +856,10 @@ class FactoryAssetNodeService:
 
         # 线体详情（ref_id 已在此表中）
         line_result = await db.execute(
-            select(FactoryLineDetails).where(FactoryLineDetails.factory_asset_id.in_(node_ids))
+            select(FactoryLineDetails).where(
+                FactoryLineDetails.factory_asset_id.in_(node_ids),
+                FactoryLineDetails.is_deleted == False,
+            )
         )
         for r in line_result.scalars().all():
             model_3d = model_3d_map.get(r.factory_asset_id)
@@ -816,7 +872,10 @@ class FactoryAssetNodeService:
             )
         # 设备详情（ref_id + spatial 已合并）
         equip_result = await db.execute(
-            select(FactoryEquipmentDetails).where(FactoryEquipmentDetails.factory_asset_id.in_(node_ids))
+            select(FactoryEquipmentDetails).where(
+                FactoryEquipmentDetails.factory_asset_id.in_(node_ids),
+                FactoryEquipmentDetails.is_deleted == False,
+            )
         )
         for r in equip_result.scalars().all():
             model_3d = model_3d_map.get(r.factory_asset_id)
@@ -871,6 +930,105 @@ class FactoryAssetNodeService:
             children=[],
         )
 
+    async def _get_current_version_id(self, project_id: str, db: AsyncSession) -> str:
+        project = (await db.execute(
+            select(FactoryProject).where(
+                FactoryProject.project_id == project_id,
+                FactoryProject.is_deleted == False,
+            )
+        )).scalar_one_or_none()
+        if project is None:
+            raise BusinessException(
+                ErrorCode.NOT_FOUND_ERROR,
+                extra_msg=f"工厂项目不存在: project_id={project_id}",
+            )
+        if project.current_version_id:
+            pointed_version_id = (await db.execute(
+                select(FactoryProjectVersion.version_id).where(
+                    FactoryProjectVersion.version_id == project.current_version_id,
+                    FactoryProjectVersion.project_id == project_id,
+                    FactoryProjectVersion.is_current == True,
+                )
+            )).scalar_one_or_none()
+            if pointed_version_id is not None:
+                return str(pointed_version_id)
+
+        current_version_id = (await db.execute(
+            select(FactoryProjectVersion.version_id).where(
+                FactoryProjectVersion.project_id == project_id,
+                FactoryProjectVersion.is_current == True,
+            ).order_by(FactoryProjectVersion.version_number.desc()).limit(1)
+        )).scalar_one_or_none()
+        if current_version_id is None:
+            raise BusinessException(
+                ErrorCode.NOT_FOUND_ERROR,
+                extra_msg=f"工厂项目没有当前版本: project_id={project_id}",
+            )
+        return str(current_version_id)
+
+    async def _ensure_version_editable(
+        self,
+        version_id: str,
+        project_id: str,
+        db: AsyncSession,
+    ) -> FactoryProjectVersion:
+        version = (await db.execute(
+            select(FactoryProjectVersion)
+            .join(
+                FactoryProject,
+                FactoryProject.project_id == FactoryProjectVersion.project_id,
+            )
+            .where(
+                FactoryProjectVersion.version_id == version_id,
+                FactoryProjectVersion.project_id == project_id,
+                FactoryProject.is_deleted == False,
+            )
+        )).scalar_one_or_none()
+        if version is None:
+            raise BusinessException(
+                ErrorCode.PARAMS_ERROR,
+                extra_msg="版本不存在、项目已删除或版本不属于指定项目",
+            )
+        if (version.version_status or "").upper() != "DRAFT":
+            raise BusinessException(
+                ErrorCode.PERMISSION_DENIED,
+                extra_msg=f"版本 {version_id} 已{version.version_status}，仅 DRAFT 版本允许修改",
+            )
+        if not version.is_current:
+            raise BusinessException(
+                ErrorCode.PERMISSION_DENIED,
+                extra_msg=f"版本 {version_id} 不是当前编辑版本，请先切换版本",
+            )
+        return version
+
+    async def ensure_node_editable(
+        self,
+        node_id: int,
+        db: AsyncSession,
+        expected_type: Optional[str] = None,
+    ) -> FactoryAssetNode:
+        """Return an active node only when its current project version is editable.
+
+        Detail-oriented services use this public guard so their direct endpoints
+        cannot bypass the same DRAFT/current-version protection as node writes.
+        """
+        node = await self._get_node_or_raise(node_id, db)
+        expected_value = getattr(expected_type, "value", expected_type)
+        if expected_value is not None and node.type != expected_value:
+            raise BusinessException(
+                ErrorCode.PARAMS_ERROR,
+                extra_msg=(
+                    f"资产节点类型不匹配: id={node_id}, "
+                    f"期望 {expected_value}, 实际 {node.type}"
+                ),
+            )
+        await self._ensure_version_editable(
+            node.version_id,
+            node.factory_projects_id,
+            db,
+        )
+        return node
+
     async def _get_node_or_raise(self, node_id: int, db: AsyncSession) -> FactoryAssetNode:
         result = await db.execute(
             select(FactoryAssetNode).where(
@@ -886,7 +1044,10 @@ class FactoryAssetNodeService:
     async def _get_factory_project_detail(self, project_id: int, db: AsyncSession) -> FactoryProjectVo:
         """node_id 不在 factory_asset_node 时，尝试按工厂项目ID查询"""
         result = await db.execute(
-            select(FactoryProject).where(FactoryProject.project_id == project_id)
+            select(FactoryProject).where(
+                FactoryProject.project_id == project_id,
+                FactoryProject.is_deleted == False,
+            )
         )
         project = result.scalar_one_or_none()
         if project is None:
@@ -899,7 +1060,10 @@ class FactoryAssetNodeService:
     async def _get_process_detail(self, node_id: int, db: AsyncSession) -> FactoryProcessDetailsVo:
         """STAGE 节点 → 查询制程详情 + base_stage"""
         result = await db.execute(
-            select(FactoryProcessDetails).where(FactoryProcessDetails.factory_asset_id == node_id)
+            select(FactoryProcessDetails).where(
+                FactoryProcessDetails.factory_asset_id == node_id,
+                FactoryProcessDetails.is_deleted == False,
+            )
         )
         detail = result.scalar_one_or_none()
         if detail is None:
@@ -931,7 +1095,10 @@ class FactoryAssetNodeService:
     async def _get_line_detail(self, node_id: int, db: AsyncSession) -> FactoryLineDetailsVo:
         """LINE 节点 → 查询线体详情 + 3D模型 + base_production_line"""
         result = await db.execute(
-            select(FactoryLineDetails).where(FactoryLineDetails.factory_asset_id == node_id)
+            select(FactoryLineDetails).where(
+                FactoryLineDetails.factory_asset_id == node_id,
+                FactoryLineDetails.is_deleted == False,
+            )
         )
         detail = result.scalar_one_or_none()
         if detail is None:
@@ -941,7 +1108,10 @@ class FactoryAssetNodeService:
             )
 
         model_result = await db.execute(
-            select(FactoryAsset3dModel).where(FactoryAsset3dModel.factory_asset_id == node_id)
+            select(FactoryAsset3dModel).where(
+                FactoryAsset3dModel.factory_asset_id == node_id,
+                FactoryAsset3dModel.is_deleted == False,
+            )
         )
         model_3d = model_result.scalar_one_or_none()
 
@@ -974,7 +1144,10 @@ class FactoryAssetNodeService:
     async def _get_equipment_detail(self, node_id: int, db: AsyncSession) -> FactoryEquipmentDetailsVo:
         """EQUIPMENT 节点 → 查询设备详情 + 3D模型 + BaseEquipmentFullDetailVo（含5张扩展子表）"""
         result = await db.execute(
-            select(FactoryEquipmentDetails).where(FactoryEquipmentDetails.factory_asset_id == node_id)
+            select(FactoryEquipmentDetails).where(
+                FactoryEquipmentDetails.factory_asset_id == node_id,
+                FactoryEquipmentDetails.is_deleted == False,
+            )
         )
         detail = result.scalar_one_or_none()
         if detail is None:
@@ -984,7 +1157,10 @@ class FactoryAssetNodeService:
             )
 
         model_result = await db.execute(
-            select(FactoryAsset3dModel).where(FactoryAsset3dModel.factory_asset_id == node_id)
+            select(FactoryAsset3dModel).where(
+                FactoryAsset3dModel.factory_asset_id == node_id,
+                FactoryAsset3dModel.is_deleted == False,
+            )
         )
         model_3d = model_result.scalar_one_or_none()
 

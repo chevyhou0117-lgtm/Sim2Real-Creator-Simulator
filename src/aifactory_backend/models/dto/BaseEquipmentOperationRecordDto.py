@@ -7,7 +7,7 @@ from commonutils.SnowflakeUtils import SnowflakeIdIn
 
 class BaseEquipmentOperationRecordCreateDto(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-    equipment_id: int = Field(..., description="设备ID")
+    equipment_id: SnowflakeIdIn = Field(..., description="设备ID")
     record_code: str = Field(..., description="记录编号", max_length=36)
     record_type: str = Field(..., description="记录类型：EQUIPMENT_ADD / EQUIPMENT_REPAIR / EQUIPMENT_MOVE / EQUIPMENT_MAINTENANCE / EQUIPMENT_SCRAP", max_length=50)
     related_department: Optional[str] = Field(default=None, description="相关部门", max_length=100)
@@ -19,7 +19,7 @@ class BaseEquipmentOperationRecordCreateDto(BaseModel):
 class BaseEquipmentOperationRecordUpdateDto(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
     id: SnowflakeIdIn = Field(..., description="主键ID")
-    equipment_id: Optional[int] = Field(default=None, description="设备ID")
+    equipment_id: Optional[SnowflakeIdIn] = Field(default=None, description="设备ID")
     record_code: Optional[str] = Field(default=None, description="记录编号", max_length=36)
     record_type: Optional[str] = Field(default=None, description="记录类型", max_length=50)
     related_department: Optional[str] = Field(default=None, description="相关部门")
@@ -35,7 +35,7 @@ class BaseEquipmentOperationRecordDeleteDto(BaseModel):
 
 class BaseEquipmentOperationRecordQueryDto(PageRequest):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-    equipment_id: Optional[int] = Field(default=None, description="设备ID过滤")
+    equipment_id: Optional[SnowflakeIdIn] = Field(default=None, description="设备ID过滤")
     record_code: Optional[str] = Field(default=None, description="记录编号（模糊搜索）")
     record_type: Optional[str] = Field(default=None, description="记录类型过滤")
     stage_status: Optional[str] = Field(default=None, description="阶段状态过滤")

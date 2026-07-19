@@ -7,7 +7,7 @@ from commonutils.SnowflakeUtils import SnowflakeIdIn
 
 class BaseEquipmentSopCreateDto(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-    equipment_id: int = Field(..., description="设备ID")
+    equipment_id: SnowflakeIdIn = Field(..., description="设备ID")
     document_no: str = Field(..., description="文档编号", max_length=50)
     document_title: str = Field(..., description="文档标题", max_length=200)
     document_version: str = Field(..., description="文档版本", max_length=36)
@@ -18,7 +18,7 @@ class BaseEquipmentSopCreateDto(BaseModel):
 class BaseEquipmentSopUpdateDto(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
     id: SnowflakeIdIn = Field(..., description="主键ID")
-    equipment_id: Optional[int] = Field(default=None, description="设备ID")
+    equipment_id: Optional[SnowflakeIdIn] = Field(default=None, description="设备ID")
     document_no: Optional[str] = Field(default=None, description="文档编号", max_length=50)
     document_title: Optional[str] = Field(default=None, description="文档标题", max_length=200)
     document_version: Optional[str] = Field(default=None, description="文档版本", max_length=36)
@@ -33,6 +33,6 @@ class BaseEquipmentSopDeleteDto(BaseModel):
 
 class BaseEquipmentSopQueryDto(PageRequest):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-    equipment_id: Optional[int] = Field(default=None, description="设备ID过滤")
+    equipment_id: Optional[SnowflakeIdIn] = Field(default=None, description="设备ID过滤")
     document_no: Optional[str] = Field(default=None, description="文档编号（模糊搜索）")
     document_title: Optional[str] = Field(default=None, description="文档标题（模糊搜索）")

@@ -11,7 +11,7 @@ export type ProjectBindStatus =
 
 export type ProjectType = "FACTORY" | "STAGE" | "LINE" | "EQUIPMENT";
 
-interface FactoryNode {
+export interface FactoryNode {
   id: string;
   name: string;
   type: ProjectType;
@@ -19,6 +19,7 @@ interface FactoryNode {
   primPath?: string; // USD 场景中的 Prim 路径，用于 OV 高亮定位
   detail?: string; // 详情（制程用）
   factoryProjectsId?: string; // 工厂项目ID
+  versionId?: string; // 项目版本ID（后端创建节点时必填）
   children?: FactoryNode[];
   parentId?: string; // 父节点ID
   bindStatus?: ProjectBindStatus;

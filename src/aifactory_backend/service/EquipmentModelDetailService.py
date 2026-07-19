@@ -97,6 +97,9 @@ class EquipmentModelDetailService:
         source = await self._get_or_raise(source_detail_id, db)
         # 谱系 ID：源行 asset_version_id 优先；历史数据可能为空，回退为源行自身 id
         lineage_id = source.asset_version_id or source.id
+        # 兼容 asset_version_id 尚未回填的历史首版，确保旧 current 行能被同谱系更新命中。
+        if source.asset_version_id is None:
+            source.asset_version_id = lineage_id
 
         # version_tag 在同一谱系下唯一性校验（排除软删除）
         tag_check = await db.execute(

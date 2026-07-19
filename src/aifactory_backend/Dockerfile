@@ -39,7 +39,7 @@ EXPOSE 8128
 
 # 健康检查（兼容多路径，降低失败概率）
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8128/api/v1 || curl -f http://localhost:8128/health || exit 1
+    CMD curl -f http://localhost:8128/health || exit 1
 
 # 启动命令
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8128", "--workers", "2", "--log-level", "info"]

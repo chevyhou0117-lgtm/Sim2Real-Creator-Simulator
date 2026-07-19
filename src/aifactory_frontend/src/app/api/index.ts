@@ -68,7 +68,7 @@ export const uploadAssetFileApi = (
   return Http.post(
     `${baseUrl}/v1/asset-upload/upload`,
     params,
-    onUploadProgress,
+    { onUploadProgress },
   );
 };
 
@@ -122,7 +122,7 @@ export const uploadFactoryModelApi = (
   return Http.post(
     `${baseUrl}/v1/factory-asset-node/upload-factory-model`,
     params,
-    onUploadProgress,
+    { onUploadProgress },
   );
 };
 
@@ -184,6 +184,7 @@ export const saveOVModelApi = (params: any) => {
 // 创建制程节点（STAGE）
 export const createStageNodeApi = (params: {
   factoryProjectsId: string;
+  versionId: string;
   name: string;
   type: "STAGE";
   parentId?: string | null;
@@ -305,9 +306,7 @@ export const updateFactoryProjectThumbnailApi = (
   const formData = new FormData();
   formData.append("project_id", projectId);
   formData.append("file", file);
-  return Http.post(`${baseUrl}/v1/factory-project/update-thumbnail`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  return Http.post(`${baseUrl}/v1/factory-project/update-thumbnail`, formData);
 };
 
 // 更新资产缩略图（by category_id）
@@ -324,9 +323,6 @@ export const updateThumbnailApi = (
   return Http.post(
     `${baseUrl}/v1/asset-upload/update-thumbnail-by-category`,
     formData,
-    {
-      headers: { "Content-Type": "multipart/form-data" },
-    },
   );
 };
 

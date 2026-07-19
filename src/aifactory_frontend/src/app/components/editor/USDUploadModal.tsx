@@ -14,6 +14,18 @@ import type { USDFile, USDFileFormat } from "../../../types/factoryEditor";
 
 import { uploadFactoryModelApi } from "../../api";
 import { t, useLocalized } from "../../utils/i18n";
+import { toast } from "sonner";
+
+const isZipFile = (file: File) => /\.zip$/i.test(file.name);
+
+const toUSDFile = (file: File): USDFile => ({
+  id: `selected-${Date.now()}`,
+  name: file.name,
+  size: Math.round(file.size / 1024 / 1024),
+  format: "zip",
+  uploadedAt: new Date().toISOString().slice(0, 10),
+  status: "uploaded",
+});
 
 const FORMAT_COLOR: Record<USDFileFormat, string> = {
   usd: "bg-blue-600/20 text-blue-400 border-blue-600/40",
@@ -38,6 +50,7 @@ export function USDUploadModal({
   projectId: string;
   projectName: string;
   files: USDFile[];
+  onSuccess: () => void;
   onClose: () => void;
   onLink: (id: string) => void;
   onUnlink: (id: string) => void;
@@ -48,38 +61,25 @@ export function USDUploadModal({
   const [selectedFile, setSelectedFile] = useState<USDFile | null>(null);
   const [manualPath, setManualPath] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const folderInputRef = useRef<HTMLInputElement>(null);
 
   // 确保语言切换时组件重渲染
   useLocalized();
 
-  function handlePathSelect(pathOrFiles: string | FileList | null) {
-    let path = "";
-
-    if (typeof pathOrFiles === "string") {
-      path = pathOrFiles.trim();
-    } else if (pathOrFiles && pathOrFiles.length > 0) {
-      // FileList 情况，取第一个文件
-      path = pathOrFiles[0].name;
-    } else {
+  function handlePathSelect(pathValue: string) {
+    const path = pathValue.trim();
+    if (!path) return;
+    if (!/\.zip$/i.test(path)) {
+      toast.error(t("usdUploadModal.zipOnly"));
       return;
     }
-
-    if (!path) return;
-
-    // 检查是文件还是文件夹
-    const isUSD = /\.(usd|usda|usdc|usdz)$/i.test(path);
-    const isFolder = false; // 如果不是USD文件扩展名，则假定为文件夹
 
     const fileName = path.split("/").pop() || path.split("\\").pop() || path;
 
     const newFile: USDFile = {
       id: `selected-${Date.now()}`,
       name: fileName,
-      size: isFolder ? 0 : 1.0, // 文件夹大小设为0，文件设为默认1MB
-      format: isFolder
-        ? "folder"
-        : (path.split(".").pop()!.toLowerCase() as USDFileFormat),
+      size: 1.0,
+      format: "zip",
       uploadedAt: new Date().toISOString().slice(0, 10),
       status: "uploaded",
     };
@@ -92,23 +92,15 @@ export function USDUploadModal({
 
     const selectedFile = e?.target?.files?.[0];
     console.log(selectedFile);
-    if (selectedFile) {
-      const newFile: USDFile = {
-        id: `selected-${Date.now()}`,
-        name: selectedFile.name,
-        size: Math.round(selectedFile.size / 1024 / 1024), // 转换为MB // 文件夹大小设为0，文件设为默认1MB
-        format: "zip",
-        uploadedAt: new Date().toISOString().slice(0, 10),
-        status: "uploaded",
-        // uploadStatus: "uploading",
-        // progress: 0,
-      };
-      setSelectedFile(newFile);
-
-      setTimeout(() => {
-        handleUpload(selectedFile);
-      }, 500);
+    if (!selectedFile) return;
+    if (!isZipFile(selectedFile)) {
+      e.target.value = "";
+      toast.error(t("usdUploadModal.zipOnly"));
+      return;
     }
+
+    setSelectedFile(toUSDFile(selectedFile));
+    void handleUpload(selectedFile);
   };
 
   function handleDrop(e: React.DragEvent) {
@@ -117,48 +109,14 @@ export function USDUploadModal({
 
     const droppedFile = e.dataTransfer.files?.[0];
     console.log("handleDrop", droppedFile);
-    if (droppedFile) {
-      setSelectedFile(droppedFile);
-
-      setTimeout(() => {
-        handleUpload(droppedFile);
-      }, 500);
+    if (!droppedFile) return;
+    if (!isZipFile(droppedFile)) {
+      toast.error(t("usdUploadModal.zipOnly"));
+      return;
     }
-    // 处理拖放的文件
-    // if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-    //   const file = e.dataTransfer.files[0];
-    //   handlePathSelect(file.name);
-    // } else if (e.dataTransfer.items) {
-    //   // 尝试获取路径信息
-    //   for (let i = 0; i < e.dataTransfer.items.length; i++) {
-    //     const item = e.dataTransfer.items[i];
-    //     if (item.kind === "file") {
-    //       const file = item.getAsFile();
-    //       if (file) {
-    //         handlePathSelect(file.name);
-    //         break;
-    //       }
-    //     }
-    //   }
-    // }
-  }
 
-  function handleFolderSelect(files: FileList | null) {
-    if (!files || files.length === 0) return;
-
-    // Get folder name from first file's relative path
-    const firstFile = files[0];
-    const folderPath = firstFile.webkitRelativePath.split("/")[0];
-
-    const newFile: USDFile = {
-      id: `folder-${Date.now()}`,
-      name: folderPath,
-      size: 0, // Folder size
-      format: "folder",
-      uploadedAt: new Date().toISOString().slice(0, 10),
-      status: "uploaded",
-    };
-    setSelectedFile(newFile);
+    setSelectedFile(toUSDFile(droppedFile));
+    void handleUpload(droppedFile);
   }
 
   function handleLink() {
@@ -186,11 +144,9 @@ export function USDUploadModal({
 
   // 处理上传
   const handleUpload = async (file: File) => {
-    setSelectedFile((prev) => ({
-      ...prev,
-      uploadStatus: "uploading",
-      progress: 0,
-    }));
+    setSelectedFile((prev) =>
+      prev ? { ...prev, uploadStatus: "uploading", progress: 0 } : prev,
+    );
 
     try {
       // 创建 FormData 对象
@@ -199,7 +155,7 @@ export function USDUploadModal({
       formData.append("project_id", projectId);
 
       // 调用上传接口，添加进度监听
-      const response = await uploadFactoryModelApi(
+      await uploadFactoryModelApi(
         formData,
         (progressEvent) => {
           // console.log("上传进度:", progressEvent);
@@ -207,21 +163,17 @@ export function USDUploadModal({
             const progress = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total,
             );
-            setSelectedFile((prev) => ({
-              ...prev,
-              uploadStatus: "uploading",
-              progress,
-            }));
+            setSelectedFile((prev) =>
+              prev ? { ...prev, uploadStatus: "uploading", progress } : prev,
+            );
           }
         },
       );
       console.log("上传成功");
       // 先设置上传成功状态，保持进度条显示
-      setSelectedFile((prev) => ({
-        ...prev,
-        uploadStatus: "completed",
-        progress: 100,
-      }));
+      setSelectedFile((prev) =>
+        prev ? { ...prev, uploadStatus: "completed", progress: 100 } : prev,
+      );
 
       // 上传成功后调用回调;
       onSuccess();
@@ -233,11 +185,15 @@ export function USDUploadModal({
     } catch (error) {
       console.error("上传失败:", error);
       // 上传失败处理
-      setSelectedFile((prev) => ({
-        ...prev,
-        uploadStatus: "error",
-        progress: 0,
-      }));
+      setSelectedFile((prev) =>
+        prev ? { ...prev, uploadStatus: "error", progress: 0 } : prev,
+      );
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("usdUploadModal.uploadFailed"),
+      );
     }
   };
 
@@ -310,7 +266,7 @@ export function USDUploadModal({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".usd,.usda,.usdc,.usdz,.zip,.rar,.7z"
+                  accept=".zip"
                   className="hidden"
                   onChange={handleFileSelect}
                 />
@@ -325,13 +281,6 @@ export function USDUploadModal({
                     <FolderOpen size={11} /> {t("usdUploadModal.selectFile")}
                   </button>
                 </div>
-                <input
-                  ref={folderInputRef}
-                  type="file"
-                  {...({ webkitdirectory: "true" } as any)}
-                  className="hidden"
-                  onChange={(e) => handleFolderSelect(e.target.files)}
-                />
                 <div className="mt-3 pt-3 border-t border-[var(--c-142235)] w-full">
                   <p className="text-[11px] text-slate-500 mb-2 text-center">
                     {t("usdUploadModal.manualPathLabel")}

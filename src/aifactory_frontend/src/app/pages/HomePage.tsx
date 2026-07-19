@@ -41,26 +41,41 @@ const STATUS_CONFIG: Record<
   ProjectStatus,
   { label: string; cls: string; icon: React.ReactNode }
 > = {
-  DRAFT: {
+  draft: {
     label: t("status.draft"),
     cls: "bg-amber-500/20 text-amber-400 border-amber-500/40",
     icon: <FileEdit size={10} />,
   },
-  COMPLETED: {
+  complete: {
     label: t("status.complete"),
     cls: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
     icon: <CheckCircle2 size={10} />,
   },
-  PUBLISHED: {
+  published: {
     label: t("status.published"),
     cls: "bg-blue-500/20 text-blue-400 border-blue-500/40",
     icon: <Send size={10} />,
   },
-  ARCHIVED: {
+  archived: {
     label: t("status.archived"),
     cls: "bg-slate-500/20 text-slate-400 border-slate-500/40",
     icon: <FolderArchive size={10} />,
   },
+};
+
+const normalizeProjectStatus = (status?: string): ProjectStatus => {
+  const normalized = (status || "").toLowerCase();
+  if (normalized === "active" || normalized === "inactive") return "draft";
+  if (normalized === "completed") return "complete";
+  if (
+    normalized === "draft" ||
+    normalized === "complete" ||
+    normalized === "published" ||
+    normalized === "archived"
+  ) {
+    return normalized;
+  }
+  return "draft";
 };
 
 const SOURCE_STATUS: Record<SourceStatus, { dot: string; label: string }> = {
@@ -585,7 +600,7 @@ export function HomePage() {
               </div>
 
               {factoryProjects.map((proj) => {
-                const sc = STATUS_CONFIG[proj.status];
+                const sc = STATUS_CONFIG[normalizeProjectStatus(proj.status)];
                 return (
                   <div
                     key={proj.projectId}

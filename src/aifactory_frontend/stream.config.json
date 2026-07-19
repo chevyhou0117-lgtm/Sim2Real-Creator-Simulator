@@ -17,7 +17,7 @@
     "server": "127.0.0.1",
     "signalingPort": 12334,
     "mediaPort": 12333,
-    "streamWidth": 3840,
-    "streamHeight": 2720
+    "streamWidth": 1920,
+    "streamHeight": 1080
   }
 }

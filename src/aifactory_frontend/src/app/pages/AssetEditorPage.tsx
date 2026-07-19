@@ -37,14 +37,18 @@ import {
   archiveAssetApi,
   updateLineModelDetailApi,
   updateEquipmentModelDetailApi,
+  updateAssetCategoryApi,
   getEquipmentsByLineApi,
-  getDownloadAssetFileApi,
   highlightNodeApi,
 } from "../api";
 import { useLocalized, t } from "../utils/i18n";
 import { LanguageToggle } from "../components/LanguageToggle";
 import { toast } from "sonner";
 import { baseUrl } from "../api/baseUrl";
+import {
+  isZipContentType,
+  readFetchDownloadError,
+} from "../utils/downloadResponse";
 
 // ── Asset status display config (computed dynamically for i18n reactivity) ──
 function getStatusConfig(lang: string): Record<string, { label: string; cls: string }> {
@@ -132,6 +136,7 @@ export function AssetEditorPage() {
   // Name editing state
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(asset?.name ?? "New Asset");
+  const [originalAssetName, setOriginalAssetName] = useState("");
 
   // 当前资产的 assetType 和 detailId（用于状态变更 API）
   const [assetType, setAssetType] = useState<"line" | "equipment">("line");
@@ -157,7 +162,7 @@ export function AssetEditorPage() {
     alert(t("editor.uploadNewVersion"));
   }
   function handleSave() {
-    alert(t("editor.assetSaved"));
+    void saveBiz();
   }
   function handleDownload() {
     // alert("Download started");
@@ -226,44 +231,70 @@ export function AssetEditorPage() {
       toast.error(t("editor.noDetailId"));
       return;
     }
+    const nextName = (asset?.name ?? editName).trim();
+    if (!nextName) {
+      toast.error(t("asset.nameRequired"));
+      return;
+    }
     setSavingBiz(true);
     try {
-      const params: Record<string, any> = {
-        id: detailId,
-        name: asset?.name || "",
-        rootUsdPath: asset?.rootUsdPath || "",
-        format: asset?.format || "",
-        polyCount: asset?.polyCount || 0,
-        width: asset?.width || 0,
-        height: asset?.height || 0,
-        depth: asset?.depth || 0,
+      const params: Record<string, any> = { id: detailId };
+      const editableDetailFields = {
+        rootUsdPath: asset?.rootUsdPath,
+        format: asset?.format,
+        polyCount: asset?.polyCount,
+        width: asset?.width,
+        height: asset?.height,
+        depth: asset?.depth,
       };
-      // 设备模型：将 IoT / 生产 / 维保数据打包进 specifications (JSONB)
-      const specs: Record<string, any> = {};
-      const map: [string, string][] = [
-        ["protocol", "protocol"],
-        ["ipAddress", "ipAddress"],
-        ["port", "port"],
-        ["standardCT", "standardCT"],
-        ["capacityPerHr", "capacityPerHr"],
-        ["availability", "availability"],
-        ["mtbf", "mtbf"],
-        ["lastMaintenance", "lastMaintenance"],
-      ];
-      for (const [bizKey, specKey] of map) {
-        const v = pendingBiz[bizKey as keyof typeof emptyBiz];
-        if (v !== undefined && v !== "") specs[specKey] = v;
+      for (const [key, value] of Object.entries(editableDetailFields)) {
+        if (value !== undefined && value !== null && value !== "") {
+          params[key] = value;
+        }
       }
-      if (Object.keys(specs).length > 0) params.specifications = specs;
-
       if (assetType === "equipment") {
+        // specifications only exists on EquipmentModelDetailUpdateDto.
+        const specs: Record<string, any> = {
+          ...((asset as any)?.specifications || {}),
+        };
+        const map: [keyof typeof emptyBiz, string][] = [
+          ["protocol", "protocol"],
+          ["ipAddress", "ipAddress"],
+          ["port", "port"],
+          ["standardCT", "standardCT"],
+          ["capacityPerHr", "capacityPerHr"],
+          ["availability", "availability"],
+          ["mtbf", "mtbf"],
+          ["lastMaintenance", "lastMaintenance"],
+        ];
+        for (const [bizKey, specKey] of map) {
+          const value = pendingBiz[bizKey];
+          if (value === undefined || value === "") {
+            delete specs[specKey];
+          } else {
+            specs[specKey] = value;
+          }
+        }
+        params.specifications = specs;
         await updateEquipmentModelDetailApi(params);
       } else {
-        // 线体模型：
+        // LineModelDetailUpdateDto does not support name/specifications.
         await updateLineModelDetailApi(params);
       }
 
+      const categoryId = String(asset?.categoryId || assetId || "");
+      if (nextName !== originalAssetName) {
+        if (!categoryId) {
+          throw new Error(t("editor.noDetailId"));
+        }
+        await updateAssetCategoryApi({ id: categoryId, name: nextName });
+        setOriginalAssetName(nextName);
+      }
+
       setBizData({ ...pendingBiz });
+      setAsset((prev) => ({ ...prev, name: nextName }));
+      setEditName(nextName);
+      setIsEditingName(false);
       setIsEditingBiz(false);
       toast.success(t("editor.detailUpdated"));
     } catch (error: any) {
@@ -285,6 +316,7 @@ export function AssetEditorPage() {
 
   const updateAsset = (key: string, value: string) => {
     setAsset((prev) => ({ ...prev, [key]: value }));
+    if (key === "name") setEditName(value);
   };
 
   const viewTools = [
@@ -369,6 +401,9 @@ export function AssetEditorPage() {
     if (res.code == 200) {
       const resData = res.data || {};
       setTree(resData);
+      const categoryName = resData?.name || "";
+      setOriginalAssetName(categoryName);
+      setEditName(categoryName);
       const rootUsdPath2 = resData?.detail?.rootUsdPath || "";
       setRootUsdPath(rootUsdPath2);
 
@@ -387,7 +422,7 @@ export function AssetEditorPage() {
       if (rawStatus && typeof rawStatus === "string") {
         setCurrentStatus(rawStatus.toLowerCase() as AssetStatus);
       }
-      fetchAssetDetail(type, dId);
+      fetchAssetDetail(type, dId, resData);
       // 通知OV要打开的资产场景
       if (rootUsdPath2) {
         openAssetStage(rootUsdPath2);
@@ -408,7 +443,11 @@ export function AssetEditorPage() {
     }
   };
 
-  const fetchAssetDetail = async (type: string, detailId: string) => {
+  const fetchAssetDetail = async (
+    type: string,
+    detailId: string,
+    categoryNode?: CategoryNode,
+  ) => {
     let res = null;
     if (type.includes("line")) {
       res = await getLineAssetDetailApi(detailId);
@@ -417,11 +456,18 @@ export function AssetEditorPage() {
     }
     if (res?.code == 200) {
       const resData = res.data || {};
-      setAsset(resData);
+      setAsset({
+        ...categoryNode,
+        ...resData,
+        id: categoryNode?.id || resData.categoryId || resData.id,
+        name: categoryNode?.name || resData.name || "",
+        type: categoryNode?.type || type,
+        categoryId: resData.categoryId || categoryNode?.id,
+      });
 
       // 回填可编辑的业务字段
       const specs = resData.specifications || {};
-      setBizData({
+      const loadedBiz = {
         protocol: specs.protocol || "",
         ipAddress: specs.ipAddress || "",
         port: specs.port || "",
@@ -430,7 +476,9 @@ export function AssetEditorPage() {
         availability: specs.availability || "",
         mtbf: specs.mtbf || "",
         lastMaintenance: specs.lastMaintenance || "",
-      });
+      };
+      setBizData(loadedBiz);
+      setPendingBiz(loadedBiz);
     }
   };
 
@@ -448,8 +496,9 @@ export function AssetEditorPage() {
         `${baseUrl}/v1/asset-download/${type}/download/${id}`,
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const contentType = response.headers.get("Content-Type");
+      if (!response.ok || !isZipContentType(contentType)) {
+        throw new Error(await readFetchDownloadError(response));
       }
 
       // 从响应头获取文件名
@@ -511,7 +560,7 @@ export function AssetEditorPage() {
               {isEditingName ? (
                 <input
                   value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
+                  onChange={(e) => updateAsset("name", e.target.value)}
                   onBlur={() => setIsEditingName(false)}
                   onKeyDown={(e) =>
                     e.key === "Enter" && setIsEditingName(false)

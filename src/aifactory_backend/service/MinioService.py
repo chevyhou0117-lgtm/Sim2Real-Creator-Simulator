@@ -19,6 +19,7 @@ from config.MinioConfig import minioConfig
 from exception.ExceptionClass import BusinessException
 from commonutils.GenerateFileNameUtils import generate_date_filename
 from commonutils.Logs import init_logging
+from commonutils.StoragePathUtils import resolve_path_within_root
 
 init_logging()
 logger = logging.getLogger(__name__)
@@ -36,8 +37,7 @@ class MinioManagerService:
 
     # ── 路径工具 ─────────────────────────────────────────────────────────────
     def _local_path(self, object_name: str) -> str:
-        rel = (object_name or "").replace("\\", "/").lstrip("/")
-        return os.path.normpath(os.path.join(self.storage_root, *rel.split("/")))
+        return resolve_path_within_root(self.storage_root, object_name)
 
     def build_full_url(self, object_name: str, bucket_name: Optional[str] = None) -> str:
         """返回 /static 前缀的访问 URL（浏览器用）。"""
@@ -167,8 +167,7 @@ class MinioManagerService:
 
     # ── 资产库（USD 模型文件夹）读取：基于 asset_library_root，用于下载打包 ──────────
     def _asset_library_path(self, object_name: str) -> str:
-        rel = (object_name or "").replace("\\", "/").lstrip("/")
-        return os.path.normpath(os.path.join(self.asset_library_root, *rel.split("/")))
+        return resolve_path_within_root(self.asset_library_root, object_name)
 
     def list_objects_by_prefix(self, prefix: str) -> List[str]:
         """列出资产库根下 prefix（目录前缀）下的所有文件，返回相对资产库根的 key 列表（正斜杠）。"""

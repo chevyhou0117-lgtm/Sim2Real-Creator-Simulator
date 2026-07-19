@@ -48,4 +48,5 @@ class LineLeaderQueryDto(PageRequest):
     factory_asset_id: Optional[SnowflakeIdIn] = Field(default=None, description="按线体资产节点ID过滤（雪花算法）")
     line_leader_name: Optional[str] = Field(default=None, description="按负责人姓名模糊搜索", max_length=255)
     employee_id: Optional[str] = Field(default=None, description="按员工ID过滤", max_length=50)
+    contact_number: Optional[str] = Field(default=None, description="按联系电话模糊搜索", max_length=50)
     email: Optional[str] = Field(default=None, description="按邮箱过滤", max_length=255)

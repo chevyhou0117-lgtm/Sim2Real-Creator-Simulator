@@ -10,6 +10,24 @@ from commonutils.Logs import init_logging
 logger = init_logging()
 
 
+_ERROR_HTTP_STATUS = {
+    ErrorCode.PARAMS_ERROR: status.HTTP_400_BAD_REQUEST,
+    ErrorCode.PAYLOAD_TOO_LARGE: status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+    ErrorCode.DATA_NOT_FOUND: status.HTTP_404_NOT_FOUND,
+    ErrorCode.NOT_FOUND_ERROR: status.HTTP_404_NOT_FOUND,
+    ErrorCode.DATA_ALREADY_EXISTS: status.HTTP_409_CONFLICT,
+    ErrorCode.OPERATION_ERROR: status.HTTP_422_UNPROCESSABLE_ENTITY,
+    ErrorCode.AUTH_FAILED: status.HTTP_401_UNAUTHORIZED,
+    ErrorCode.PERMISSION_DENIED: status.HTTP_403_FORBIDDEN,
+    ErrorCode.DB_ERROR: status.HTTP_500_INTERNAL_SERVER_ERROR,
+    ErrorCode.SYSTEM_ERROR: status.HTTP_500_INTERNAL_SERVER_ERROR,
+}
+
+
+def http_status_for_error(error_code: ErrorCode) -> int:
+    return _ERROR_HTTP_STATUS.get(error_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 def _make_json_safe(obj: Any) -> Any:
     """
     递归将对象转为 JSON 可序列化的安全类型。
@@ -38,13 +56,24 @@ def setup_exception_handlers(app):
         核心逻辑：
         捕获异常 -> 调用工具类 -> 返回标准响应
         """
+        http_status = http_status_for_error(exc.error_code)
+        is_server_error = http_status >= 500
+        if is_server_error:
+            logger.error(
+                "Business error %s %s: code=%s detail=%s",
+                request.method,
+                request.url.path,
+                exc.error_code.code,
+                exc.extra_msg,
+            )
         response_obj = ResultUtils.fail(
             error_code=exc.error_code,
-            data=exc.data,
-            extra_message=exc.extra_msg
+            data=None if is_server_error else exc.data,
+            # SQL/驱动/内部路径等细节只写服务端日志，不回传给客户端。
+            extra_message=None if is_server_error else exc.extra_msg,
         )
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
+            status_code=http_status,
             content=response_obj.model_dump()
         )
 
@@ -61,17 +90,17 @@ def setup_exception_handlers(app):
             extra_message=err_msg
         )
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             content=response_obj.model_dump()
         )
 
     # 3. 捕获所有未处理异常
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
-        logger.error(f"[Global Error]: {exc}")
+        logger.exception("[Global Error] %s %s", request.method, request.url.path)
         response_obj = ResultUtils.fail(
             error_code=ErrorCode.SYSTEM_ERROR,
-            data=str(exc)
+            data=None,
         )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

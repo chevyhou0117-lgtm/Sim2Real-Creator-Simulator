@@ -21,7 +21,6 @@ from models.dto.FactoryProjectVersionDto import (
 )
 from models.entity.FactoryProjectVersionEntity import FactoryProjectVersion
 from models.entity.FactoryProjectEntity import FactoryProject
-from models.entity.FactoryAssetNodeEntity import FactoryAssetNode
 from models.vo.FactoryProjectVersionVo import FactoryProjectVersionVo
 
 init_logging()
@@ -132,6 +131,7 @@ class FactoryProjectVersionService:
         """
         try:
             version = await self._get_version_or_raise(dto.version_id, db)
+            project = await self._get_project_or_raise(version.project_id, db)
 
             if version.version_status != VersionStatusEnum.DRAFT:
                 raise BusinessException(
@@ -139,12 +139,22 @@ class FactoryProjectVersionService:
                     extra_msg=f"只有 DRAFT 状态的版本才能发布，当前状态: {version.version_status}",
                 )
 
+            # 无论发布的是当前还是某个历史 DRAFT，都先清除项目内全部 current
+            # 标记，避免同时存在两个 is_current=True 的版本。
+            await db.execute(
+                update(FactoryProjectVersion)
+                .where(
+                    FactoryProjectVersion.project_id == version.project_id,
+                    FactoryProjectVersion.is_current == True,
+                )
+                .values(is_current=False)
+            )
+
             # 发布
             from datetime import datetime, timezone
             version.version_status = VersionStatusEnum.PUBLISHED
             version.published_by = dto.published_by
             version.published_at = datetime.now(timezone.utc)
-            version.is_current = False
 
             # 自动创建新的 DRAFT 版本
             max_ver_result = await db.execute(
@@ -176,13 +186,8 @@ class FactoryProjectVersionService:
             )
 
             # 更新项目冗余字段
-            project_result = await db.execute(
-                select(FactoryProject).where(FactoryProject.project_id == version.project_id)
-            )
-            project = project_result.scalar_one_or_none()
-            if project:
-                project.current_version_id = new_version.version_id
-                project.version_count = (project.version_count or 0) + 1
+            project.current_version_id = new_version.version_id
+            project.version_count = (project.version_count or 0) + 1
 
             await db.commit()
             await db.refresh(version)
@@ -206,6 +211,7 @@ class FactoryProjectVersionService:
         """归档版本：PUBLISHED → ARCHIVED"""
         try:
             version = await self._get_version_or_raise(dto.version_id, db)
+            await self._get_project_or_raise(version.project_id, db)
 
             if version.version_status != VersionStatusEnum.PUBLISHED:
                 raise BusinessException(
@@ -241,6 +247,7 @@ class FactoryProjectVersionService:
         - 取消原 is_current=TRUE，设置新 is_current=TRUE
         """
         try:
+            project = await self._get_project_or_raise(dto.project_id, db)
             target_version = await self._get_version_or_raise(dto.version_id, db)
 
             if target_version.project_id != dto.project_id:
@@ -268,12 +275,7 @@ class FactoryProjectVersionService:
             target_version.is_current = True
 
             # 更新项目冗余字段
-            project_result = await db.execute(
-                select(FactoryProject).where(FactoryProject.project_id == dto.project_id)
-            )
-            project = project_result.scalar_one_or_none()
-            if project:
-                project.current_version_id = target_version.version_id
+            project.current_version_id = target_version.version_id
 
             await db.commit()
             await db.refresh(target_version)
@@ -296,6 +298,12 @@ class FactoryProjectVersionService:
     ) -> FactoryProjectVersionVo:
         """更新版本名称/备注"""
         version = await self._get_version_or_raise(dto.version_id, db)
+        await self._get_project_or_raise(version.project_id, db)
+        if version.version_status != VersionStatusEnum.DRAFT:
+            raise BusinessException(
+                ErrorCode.PERMISSION_DENIED,
+                extra_msg="已发布或已归档版本为只读，不能修改版本信息",
+            )
 
         try:
             if dto.version_name is not None:
@@ -326,6 +334,7 @@ class FactoryProjectVersionService:
         - 不允许删除项目最后一个版本
         """
         version = await self._get_version_or_raise(dto.version_id, db)
+        project = await self._get_project_or_raise(version.project_id, db)
 
         if version.is_current:
             raise BusinessException(ErrorCode.PARAMS_ERROR, extra_msg="当前编辑版本不能删除，请先切换到其他版本")
@@ -344,12 +353,7 @@ class FactoryProjectVersionService:
             await db.delete(version)
 
             # 更新项目版本计数
-            project_result = await db.execute(
-                select(FactoryProject).where(FactoryProject.project_id == version.project_id)
-            )
-            project = project_result.scalar_one_or_none()
-            if project:
-                project.version_count = max(0, (project.version_count or 1) - 1)
+            project.version_count = max(0, (project.version_count or 1) - 1)
 
             await db.commit()
             logger.info(f"删除版本: version_id={dto.version_id}")
@@ -419,55 +423,23 @@ class FactoryProjectVersionService:
         target_project_id: int,
         db: AsyncSession,
     ) -> None:
-        """
-        复制源版本的所有资产节点到目标版本。
-        保持树形结构（parent_id 映射）。
-        """
-        # 查询源版本所有节点
-        source_result = await db.execute(
-            select(FactoryAssetNode)
-            .where(FactoryAssetNode.version_id == source_version_id)
+        """复用项目服务的完整复制实现，包含节点、详情、3D 模型和绑定状态。"""
+        # 局部导入避免两个 service 在模块加载阶段形成不必要的依赖环。
+        from service.FactoryProjectService import FactoryProjectService
+
+        await FactoryProjectService()._copy_asset_tree(
+            source_version_id=source_version_id,
+            target_version_id=target_version_id,
+            target_project_id=target_project_id,
+            db=db,
         )
-        source_nodes = list(source_result.scalars().all())
-
-        if not source_nodes:
-            return
-
-        # 建立 旧ID → 新ID 的映射
-        id_mapping: dict[int, int] = {}
-
-        # 第一遍：创建所有节点（parent_id 暂时为 None）
-        for node in source_nodes:
-            new_node = FactoryAssetNode(
-                factory_projects_id=target_project_id,
-                version_id=target_version_id,
-                name=node.name,
-                code=node.code,
-                type=node.type,
-                parent_id=None,  # 第二遍更新
-                thumbnail_path=node.thumbnail_path,
-                description=node.description,
-            )
-            db.add(new_node)
-            await db.flush()
-            id_mapping[node.id] = new_node.id
-
-        # 第二遍：更新 parent_id 映射
-        for node in source_nodes:
-            if node.parent_id is not None and node.parent_id in id_mapping:
-                new_id = id_mapping[node.id]
-                new_parent_id = id_mapping[node.parent_id]
-                await db.execute(
-                    update(FactoryAssetNode)
-                    .where(FactoryAssetNode.id == new_id)
-                    .values(parent_id=new_parent_id)
-                )
-
-        logger.info(f"复制资产树: source_v={source_version_id} → target_v={target_version_id}, nodes={len(source_nodes)}")
 
     async def _get_project_or_raise(self, project_id: int, db: AsyncSession) -> FactoryProject:
         result = await db.execute(
-            select(FactoryProject).where(FactoryProject.project_id == project_id)
+            select(FactoryProject).where(
+                FactoryProject.project_id == project_id,
+                FactoryProject.is_deleted == False,
+            )
         )
         entity = result.scalar_one_or_none()
         if entity is None:

@@ -241,7 +241,9 @@
       "equipment": "Equipment",
       "clickToUpload": "Click To Upload",
       "done": "Done",
-      "uploadSuccess": "Upload successful!"
+      "uploadSuccess": "Upload successful!",
+      "uploadFailed": "Upload failed",
+      "zipOnly": "Only .zip files are supported"
     },
     "batchResult": {
       "titleDownload": "Batch Download",
@@ -711,15 +713,16 @@
     }
   },
   "usdUploadModal": {
-    "title": "USD Model File/Folder",
-    "subtitle": "{projectName} · Select single USD file or folder",
+    "title": "Factory Model ZIP",
+    "subtitle": "{projectName} · Select a .zip model package",
     "filesTotal": "{count} files total",
     "linkedCount": "{count} linked",
-    "dropHint": "Drag & drop or browse USD file",
-    "supportedFormats": "Supports .usd · .usda · .usdc · .usdz · .zip · .rar · .7z",
+    "dropHint": "Drag & drop or browse a ZIP model package",
+    "supportedFormats": "Supports .zip only",
+    "zipOnly": "Only .zip files are supported",
     "selectFile": "Select file",
     "manualPathLabel": "Or enter path manually",
-    "pathPlaceholder": "e.g., /path/to/file.usd or /path/to/folder",
+    "pathPlaceholder": "e.g., /path/to/factory-model.zip",
     "use": "Use",
     "uploading": "Uploading...",
     "uploadCompleted": "Upload completed",

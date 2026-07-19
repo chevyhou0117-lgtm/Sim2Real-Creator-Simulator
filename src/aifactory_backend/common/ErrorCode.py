@@ -9,6 +9,7 @@ class ErrorCode(Enum):
     SUCCESS = (200, "操作成功")
     SYSTEM_ERROR = (50001, "系统繁忙，请稍后再试")
     PARAMS_ERROR = (10001, "参数校验失败")
+    PAYLOAD_TOO_LARGE = (10002, "上传文件过大")
 
     DB_ERROR = (20001, "数据库操作异常")
     DATA_NOT_FOUND = (20002, "数据不存在")

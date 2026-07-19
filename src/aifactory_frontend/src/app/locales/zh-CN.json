@@ -241,7 +241,9 @@
       "equipment": "设备",
       "clickToUpload": "点击上传",
       "done": "完成",
-      "uploadSuccess": "上传成功！"
+      "uploadSuccess": "上传成功！",
+      "uploadFailed": "上传失败",
+      "zipOnly": "仅支持 .zip 文件"
     },
     "batchResult": {
       "titleDownload": "批量下载",
@@ -711,15 +713,16 @@
     }
   },
   "usdUploadModal": {
-    "title": "USD 模型文件/文件夹",
-    "subtitle": "{projectName} · 选择单个 USD 文件或文件夹",
+    "title": "工厂模型 ZIP 包",
+    "subtitle": "{projectName} · 请选择 .zip 模型包",
     "filesTotal": "{count} 个文件",
     "linkedCount": "{count} 个已关联",
-    "dropHint": "拖放或浏览 USD 文件",
-    "supportedFormats": "支持 .usd · .usda · .usdc · .usdz · .zip · .rar · .7z",
+    "dropHint": "拖放或浏览 ZIP 模型包",
+    "supportedFormats": "仅支持 .zip",
+    "zipOnly": "仅支持 .zip 文件",
     "selectFile": "选择文件",
     "manualPathLabel": "或手动输入路径",
-    "pathPlaceholder": "例如 /path/to/file.usd 或 /path/to/folder",
+    "pathPlaceholder": "例如 /path/to/factory-model.zip",
     "use": "使用",
     "uploading": "上传中...",
     "uploadCompleted": "上传完成",

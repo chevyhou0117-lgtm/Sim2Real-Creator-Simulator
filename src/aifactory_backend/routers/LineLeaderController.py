@@ -34,7 +34,7 @@ def get_service() -> LineLeaderService:
 
 @line_leader_router.post(
     "/create",
-    response_model=BaseResponse[int],
+    response_model=BaseResponse[str],
     summary="创建线体负责人信息（返回ID）",
 )
 async def create_line_leader(
@@ -50,7 +50,7 @@ async def create_line_leader(
 
 @line_leader_router.put(
     "/update",
-    response_model=BaseResponse[int],
+    response_model=BaseResponse[str],
     summary="更新线体负责人信息（返回ID）",
 )
 async def update_line_leader(
@@ -66,7 +66,7 @@ async def update_line_leader(
 
 @line_leader_router.delete(
     "/delete",
-    response_model=BaseResponse[int],
+    response_model=BaseResponse[str],
     summary="删除线体负责人信息（返回ID）",
 )
 async def delete_line_leader(

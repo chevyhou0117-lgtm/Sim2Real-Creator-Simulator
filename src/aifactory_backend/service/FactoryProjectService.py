@@ -24,6 +24,7 @@ from models.entity.FactoryAsset3dModelEntity import FactoryAsset3dModel
 from models.entity.FactoryProcessDetailsEntity import FactoryProcessDetails
 from models.entity.FactoryLineDetailsEntity import FactoryLineDetails
 from models.entity.FactoryEquipmentDetailsEntity import FactoryEquipmentDetails
+from models.entity.LineLeaderEntity import LineLeader
 from models.entity.BaseFactoryEntity import BaseFactory
 from models.entity.BaseStageEntity import BaseStage
 from models.entity.BaseProductionLineEntity import BaseProductionLine
@@ -467,11 +468,16 @@ class FactoryProjectService:
     ) -> FactoryProjectDetailVo:
         entity = await self._get_or_raise(project_id, db)
         vo = FactoryProjectDetailVo.model_validate(entity)
+        # 局部导入避免与 FactoryAssetNodeService 的模块级循环依赖。
+        from service.FactoryAssetNodeService import FactoryAssetNodeService
+        asset_node_service = FactoryAssetNodeService()
+        current_version_id = await asset_node_service._get_current_version_id(project_id, db)
 
         # FACTORY 根节点入口 USD：前端工厂编辑器据此自动打开 OV 场景（/open_factory_stage）
         root_node_row = (await db.execute(
             select(FactoryAssetNode.id).where(
                 FactoryAssetNode.factory_projects_id == project_id,
+                FactoryAssetNode.version_id == current_version_id,
                 FactoryAssetNode.parent_id.is_(None),
                 FactoryAssetNode.type == InstanceAssetType.FACTORY.value,
                 FactoryAssetNode.is_deleted == False,
@@ -488,9 +494,7 @@ class FactoryProjectService:
                 vo.root_usd_path = model_row.root_usd_path
 
         # 完整资产树（根节点列表，含 children），供前端左侧结构树渲染
-        # 局部导入避免与 FactoryAssetNodeService 的潜在循环依赖
-        from service.FactoryAssetNodeService import FactoryAssetNodeService
-        vo.factory_asset_node_vo = await FactoryAssetNodeService().get_factory_tree_with_detail(project_id, db)
+        vo.factory_asset_node_vo = await asset_node_service.get_factory_tree_with_detail(project_id, db)
 
         return vo
 
@@ -612,7 +616,8 @@ class FactoryProjectService:
         if src.current_version_id:
             src_version = (await db.execute(
                 select(FactoryProjectVersion).where(
-                    FactoryProjectVersion.version_id == src.current_version_id
+                    FactoryProjectVersion.version_id == src.current_version_id,
+                    FactoryProjectVersion.project_id == source_project_id,
                 )
             )).scalar_one_or_none()
         if src_version is None:
@@ -624,6 +629,11 @@ class FactoryProjectService:
             )).scalar_one_or_none()
         if src_version is not None and src_version.version_number:
             old_version_number = src_version.version_number
+        if src_version is None:
+            raise BusinessException(
+                ErrorCode.DATA_NOT_FOUND,
+                extra_msg=f"源项目不存在可复制版本: project_id={source_project_id}",
+            )
         new_version_number = old_version_number + 1 if old_version_number > 0 else 1
 
         try:
@@ -648,7 +658,7 @@ class FactoryProjectService:
                 remark=f"复制自项目 {source_project_id}（V{old_version_number}）",
                 version_status="DRAFT",
                 is_current=True,
-                base_version_id=src_version.version_id if src_version else None,
+                base_version_id=src_version.version_id,
                 created_by=src.owner_id,
             )
             db.add(new_version)
@@ -660,75 +670,28 @@ class FactoryProjectService:
                 f"version_number={new_version_number}"
             )
 
-            # 3. 加载源项目所有未删除节点
-            nodes_result = await db.execute(
-                select(FactoryAssetNode).where(
-                    FactoryAssetNode.factory_projects_id == source_project_id,
-                    FactoryAssetNode.is_deleted == False,
-                ).order_by(FactoryAssetNode.created_at.asc())
+            # 3. 严格复制已选源版本，统一复用完整 tree copier：节点、详情、3D 模型
+            #    以及 parent_id 映射都只能来自 src_version.version_id。
+            copy_summary = await self._copy_asset_tree(
+                source_version_id=src_version.version_id,
+                target_version_id=new_version_id,
+                target_project_id=new_project_id,
+                db=db,
             )
-            all_nodes: List[FactoryAssetNode] = list(nodes_result.scalars().all())
-
-            # 4. 批量预加载源节点的所有 3D 模型记录（排除已软删除）
-            src_node_ids = [n.id for n in all_nodes]
-            models_3d_map: Dict[str, List[FactoryAsset3dModel]] = {}
-            if src_node_ids:
-                models_result = await db.execute(
-                    select(FactoryAsset3dModel).where(
-                        FactoryAsset3dModel.factory_asset_id.in_(src_node_ids),
-                        FactoryAsset3dModel.is_deleted == False,
-                    )
-                )
-                for m in models_result.scalars().all():
-                    models_3d_map.setdefault(m.factory_asset_id, []).append(m)
-            has_3d_models = bool(models_3d_map)
-
-            # 5. BFS 复制节点，维护 old_id → new_id 映射（保证父先于子）
-            old_to_new: Dict[str, str] = {}
-            queue = [n for n in all_nodes if n.parent_id is None]
-            # 若存在 parent_id 指向不在集合内（如已被删父）的节点，也作为根处理
-            node_id_set = set(src_node_ids)
-            queue.extend([n for n in all_nodes if n.parent_id is not None and n.parent_id not in node_id_set])
-
-            while queue:
-                src_node = queue.pop(0)
-                new_parent_id = old_to_new.get(src_node.parent_id) if src_node.parent_id else None
-
-                new_node = FactoryAssetNode(
-                    factory_projects_id=new_project_id,
-                    version_id=new_version_id,
-                    name=src_node.name,
-                    code=src_node.code,
-                    type=src_node.type,
-                    parent_id=new_parent_id,
-                    description=src_node.description,
-                    bind_status=src_node.bind_status,
-                )
-                db.add(new_node)
-                await db.flush()
-                old_to_new[src_node.id] = new_node.id
-
-                # 复制节点类型详情记录（STAGE/LINE/EQUIPMENT）
-                await self._copy_node_details(src_node, new_node.id, db)
-
-                # 复制 3D 模型记录（root_usd_path 原样保留）
-                if has_3d_models:
-                    await self._copy_3d_models(models_3d_map.get(src_node.id, []), new_node.id, db)
-
-                # 将直接子节点入队
-                children = [n for n in all_nodes if n.parent_id == src_node.id]
-                queue.extend(children)
+            copied_nodes = copy_summary["copied_nodes"]
+            has_3d_models = copy_summary["has_3d_models"]
 
             logger.info(
                 f"[CopyProject] 节点复制完成: 源项目={source_project_id}, "
-                f"新项目={new_project_id}, 共 {len(all_nodes)} 个节点"
+                f"源版本={src_version.version_id}, 新项目={new_project_id}, "
+                f"共 {copied_nodes} 个节点"
             )
             await db.commit()
             return {
                 "newProjectId": str(new_project_id),
                 "newVersionId": str(new_version_id),
                 "newVersionNumber": new_version_number,
-                "copiedNodes": len(all_nodes),
+                "copiedNodes": copied_nodes,
                 "has3dModels": has_3d_models,
             }
 
@@ -840,10 +803,13 @@ class FactoryProjectService:
         """
         try:
             project = await self._get_or_raise(project_id, db)
+            from service.FactoryAssetNodeService import FactoryAssetNodeService
+            current_version_id = await FactoryAssetNodeService()._get_current_version_id(project_id, db)
 
             # 获取所有未删除节点
             nodes_query = select(FactoryAssetNode).where(
                 FactoryAssetNode.factory_projects_id == project_id,
+                FactoryAssetNode.version_id == current_version_id,
                 FactoryAssetNode.is_deleted == False,
             )
             nodes: List[FactoryAssetNode] = list(
@@ -1252,8 +1218,8 @@ class FactoryProjectService:
         target_version_id: int,
         target_project_id: int,
         db: AsyncSession,
-    ) -> None:
-        """复制源版本的所有资产节点到目标版本，保持树形结构（parent_id 映射）。"""
+    ) -> dict:
+        """复制源版本的完整资产树并返回复制摘要；源节点严格按 version_id 隔离。"""
         source_result = await db.execute(
             select(FactoryAssetNode)
             .where(FactoryAssetNode.version_id == source_version_id,
@@ -1262,9 +1228,10 @@ class FactoryProjectService:
         source_nodes = list(source_result.scalars().all())
 
         if not source_nodes:
-            return
+            return {"copied_nodes": 0, "has_3d_models": False}
 
         id_mapping: dict[int, int] = {}
+        has_3d_models = False
 
         # 第一遍：创建所有节点（parent_id 暂时为 None）+ 复制各自的详情/3D 模型
         for node in source_nodes:
@@ -1283,6 +1250,8 @@ class FactoryProjectService:
             id_mapping[node.id] = new_node.id
             # 复制详情（含 STAGE 的 process_details.ref_id，否则复制出的项目制程会丢绑定）
             await self._copy_node_details(node, new_node.id, db)
+            if node.type == InstanceAssetType.LINE.value:
+                await self._copy_line_leaders(node.id, new_node.id, db)
             models = (await db.execute(
                 select(FactoryAsset3dModel).where(
                     FactoryAsset3dModel.factory_asset_id == node.id,
@@ -1290,6 +1259,7 @@ class FactoryProjectService:
                 )
             )).scalars().all()
             if models:
+                has_3d_models = True
                 await self._copy_3d_models(list(models), new_node.id, db)
 
         # 第二遍：更新 parent_id 映射
@@ -1304,10 +1274,44 @@ class FactoryProjectService:
                 )
 
         logger.info(f"复制资产树: source_v={source_version_id} → target_v={target_version_id}, nodes={len(source_nodes)}")
+        return {
+            "copied_nodes": len(source_nodes),
+            "has_3d_models": has_3d_models,
+        }
+
+    async def _copy_line_leaders(
+        self,
+        source_node_id: str,
+        target_node_id: str,
+        db: AsyncSession,
+    ) -> None:
+        """Copy personnel attached to one source LINE node to its new node."""
+        source_leaders = (await db.execute(
+            select(LineLeader).where(
+                LineLeader.factory_asset_id == source_node_id
+            )
+        )).scalars().all()
+        for leader in source_leaders:
+            db.add(LineLeader(
+                factory_asset_id=target_node_id,
+                line_leader_name=leader.line_leader_name,
+                employee_id=leader.employee_id,
+                contact_number=leader.contact_number,
+                email=leader.email,
+                shift_schedule=leader.shift_schedule,
+                shift_a_leader=leader.shift_a_leader,
+                shift_b_leader=leader.shift_b_leader,
+                shift_c_leader=leader.shift_c_leader,
+            ))
+        if source_leaders:
+            await db.flush()
 
     async def _get_project_or_raise(self, project_id: int, db: AsyncSession) -> FactoryProject:
         result = await db.execute(
-            select(FactoryProject).where(FactoryProject.project_id == project_id)
+            select(FactoryProject).where(
+                FactoryProject.project_id == project_id,
+                FactoryProject.is_deleted == False,
+            )
         )
         entity = result.scalar_one_or_none()
         if entity is None:
