@@ -93,6 +93,12 @@ services:
       AIFACTORY_CORS_ORIGINS: ${AIFACTORY_CORS_ORIGINS:-http://localhost:8081,http://127.0.0.1:8081}
       # nginx 以该服务端密钥认证所有 Creator 写请求；production 缺失时后端拒绝启动。
       CREATOR_API_KEY: ${CREATOR_API_KEY:?set CREATOR_API_KEY in docker/.env (openssl rand -hex 32)}
+      # ZIP 上传安全阈值。必须在 Compose 中显式转发；docker/.env 只负责插值，不会自动注入容器。
+      AIFACTORY_ZIP_MAX_ENTRIES: "${AIFACTORY_ZIP_MAX_ENTRIES:-10000}"
+      AIFACTORY_ZIP_MAX_SINGLE_FILE_BYTES: "${AIFACTORY_ZIP_MAX_SINGLE_FILE_BYTES:-536870912}"
+      AIFACTORY_ZIP_MAX_TOTAL_UNCOMPRESSED_BYTES: "${AIFACTORY_ZIP_MAX_TOTAL_UNCOMPRESSED_BYTES:-2147483648}"
+      AIFACTORY_ZIP_MAX_COMPRESSION_RATIO: "${AIFACTORY_ZIP_MAX_COMPRESSION_RATIO:-200}"
+      AIFACTORY_ZIP_MAX_ARCHIVE_BYTES: "${AIFACTORY_ZIP_MAX_ARCHIVE_BYTES:-536870912}"
       # DB root_usd_path 前缀（Kit 视角形式，与下方挂载源解耦，一般不用改）
       AIFACTORY_USD_HOST_ROOT: ${AIFACTORY_USD_DB_PREFIX:-../storage}
     # 不覆盖 command：用镜像内置 CMD（uvicorn main:app --port 8128 --workers 2）。
